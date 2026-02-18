@@ -1,0 +1,2183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QURURi — 案件入力(合計欄パターンD統合版)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #f5f6f8;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f0f1f4;
+    --bg-card: #ffffff;
+    
+    --border-subtle: #e8eaed;
+    --border-default: #d4d7dd;
+    --border-focus: rgba(55,110,230,0.45);
+    
+    --text-primary: #1a1d26;
+    --text-secondary: #5f6577;
+    --text-tertiary: #9198a8;
+    --text-label: #6e7585;
+    
+    --input-direct: #376ee6;
+    --input-direct-bg: #eef3fc;
+    --input-direct-border: #c7d7f5;
+    
+    --input-dropdown: #d9503f;
+    --input-dropdown-bg: #fdf0ee;
+    --input-dropdown-border: #f2cbc5;
+    
+    --input-auto-fill: #1a8f5c;
+    --input-auto-fill-bg: #edf8f2;
+    --input-auto-fill-border: #bce4cf;
+    
+    --input-calc: #6e7585;
+    --input-calc-bg: #f5f6f8;
+    
+    --accent-blue: #376ee6;
+    --accent-blue-glow: #eef3fc;
+    --danger: #d9503f;
+    --danger-bg: #fdf0ee;
+    
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .app-shell {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* Sidebar - Dark Theme */
+  .sidebar {
+    width: 240px;
+    background: #1a1d26;
+    border-right: none;
+    padding: 24px 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-logo {
+    padding: 0 20px;
+    margin-bottom: 32px;
+  }
+
+  .sidebar-logo-main {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #ffffff;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-logo-sub {
+    font-size: 11px;
+    font-weight: 500;
+    color: #9ca3af;
+    letter-spacing: 0.5px;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 0;
+  }
+
+  .nav-section-label {
+    padding: 0 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 8px;
+    margin-top: 20px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    color: #9ca3af;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 400;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+  }
+
+  .nav-item:hover {
+    color: #e5e7eb;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .nav-item.active {
+    color: #60a5fa;
+    background: #1e3a8a;
+    border-left-color: #3b82f6;
+    font-weight: 500;
+  }
+
+  .nav-item svg {
+    width: 18px;
+    height: 18px;
+    opacity: 0.8;
+  }
+
+  .nav-item.active svg {
+    opacity: 1;
+  }
+
+  /* Main Content */
+  main {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .content-wrapper {
+    padding: 32px 40px 60px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* Page Header */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .page-title-group h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .case-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent-blue);
+    background: var(--accent-blue-glow);
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid #c7d7f5;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+
+  /* Legend */
+  .legend-help-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .legend-help-btn:hover {
+    background: var(--accent-blue-glow);
+    color: var(--accent-blue);
+    border-color: var(--accent-blue);
+  }
+
+  .legend-popup {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 280px;
+    display: none;
+  }
+
+  .legend-popup.show {
+    display: block;
+  }
+
+  .legend-popup-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .input-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-dot.direct { background: var(--input-direct); }
+  .legend-dot.dropdown { background: var(--input-dropdown); }
+  .legend-dot.autofill { background: var(--input-auto-fill); }
+  .legend-dot.calc { background: var(--input-calc); }
+
+  .legend-label { color: var(--text-secondary); }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 20px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .card:hover {
+    border-color: var(--border-default);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-header-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background: var(--accent-blue-glow);
+    color: var(--accent-blue);
+  }
+
+  .card-header-icon svg { width: 15px; height: 15px; }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+  }
+
+  .card-body {
+    padding: 24px;
+  }
+
+  /* Form Fields - Pattern A: 視覚的分離 */
+  .form-section {
+    margin-bottom: 24px;
+  }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    padding-left: 4px;
+  }
+
+  .input-section {
+    border: 2px solid var(--accent-blue);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    background: white;
+  }
+
+  .autofill-section {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+  }
+
+  .form-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .form-row:last-child {
+    border-bottom: none;
+  }
+
+  .field-number {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-blue);
+    background: var(--accent-blue-glow);
+    border-radius: 6px;
+    flex-shrink: 0;
+    margin-right: 4px;
+  }
+
+  .field-label {
+    width: 120px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-label);
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  .field-value {
+    flex: 1;
+    position: relative;
+  }
+
+  .autofill-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .autofill-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .autofill-item:not(:first-child) {
+    border-left: 1px solid var(--border-default);
+    padding-left: 12px;
+  }
+
+  .autofill-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    min-width: 70px;
+  }
+
+  .autofill-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--input-auto-fill);
+    background: var(--input-auto-fill-bg);
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--input-auto-fill-border);
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .input-direct-type {
+    background: var(--input-direct-bg);
+    color: var(--input-direct);
+    border-color: var(--input-direct-border);
+  }
+
+  .input-direct-type:focus {
+    border-color: var(--input-direct);
+    box-shadow: 0 0 0 3px rgba(99,144,255,0.1);
+  }
+
+  .input-dropdown-type {
+    background: var(--input-dropdown-bg);
+    color: var(--input-dropdown);
+    border-color: var(--input-dropdown-border);
+    cursor: pointer;
+    appearance: none;
+    padding-right: 32px;
+  }
+
+  .select-wrapper {
+    position: relative;
+  }
+
+  .select-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--input-dropdown);
+    pointer-events: none;
+  }
+
+  .input-autofill-type {
+    background: var(--input-auto-fill-bg);
+    color: var(--input-auto-fill);
+    border-color: var(--input-auto-fill-border);
+    cursor: default;
+  }
+
+  .input-calc-type {
+    background: var(--input-calc-bg);
+    color: var(--input-calc);
+    border: 1px solid transparent;
+    cursor: default;
+  }
+
+  /* Probability indicator */
+  .probability-display {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .prob-bar-track {
+    flex: 1;
+    max-width: 200px;
+    height: 8px;
+    background: #e4e7ed;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .prob-bar-track:hover {
+    background: #d4d7dd;
+  }
+
+  .prob-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--accent-blue), #7c6dd8);
+    transition: width 0.3s ease;
+    pointer-events: none;
+  }
+
+  .prob-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent-blue);
+    min-width: 42px;
+  }
+
+  .prob-label {
+    font-size: 12px;
+    padding: 4px 10px;
+    background: #f0ecfa;
+    border-radius: 20px;
+    border: 1px solid #ddd6f3;
+    color: #6b5bb5;
+    font-weight: 500;
+    min-width: 80px;
+    text-align: center;
+  }
+
+  /* Product Detail Table */
+  .detail-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .detail-table thead th {
+    padding: 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+    background: var(--accent-blue-glow);
+    border-bottom: 2px solid var(--accent-blue);
+    white-space: nowrap;
+  }
+
+  .detail-table thead th:first-child {
+    border-radius: var(--radius-sm) 0 0 0;
+    width: 50px;
+    text-align: center;
+  }
+
+  .detail-table thead th:last-child {
+    border-radius: 0 var(--radius-sm) 0 0;
+    width: 50px;
+    text-align: center;
+  }
+
+  .detail-table thead th.col-product { width: auto; }
+  .detail-table thead th.col-qty { width: 50px; }
+  .detail-table thead th.col-price { width: 130px; }
+  .detail-table thead th.col-currency { width: 65px; }
+  .detail-table thead th.col-tax { width: 65px; }
+  .detail-table thead th.col-total { width: 130px; }
+
+  .detail-table tbody tr {
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background 0.15s ease;
+  }
+
+  .detail-table tbody tr:hover {
+    background: #f8f9fb;
+  }
+
+  .detail-table tbody td {
+    padding: 10px 12px;
+    vertical-align: middle;
+  }
+
+  .detail-table tbody td:first-child {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-blue);
+  }
+
+  /* Product autofill details */
+  .product-autofill-section {
+    margin-top: 16px;
+    padding: 16px 20px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+  }
+
+  .product-autofill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .product-autofill-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .product-autofill-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .product-autofill-values {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .product-autofill-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .product-autofill-number {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-blue);
+    background: white;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .product-autofill-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--input-auto-fill);
+    background: var(--input-auto-fill-bg);
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--input-auto-fill-border);
+    flex: 1;
+  }
+
+  /* Table inputs */
+  .table-input {
+    width: 100%;
+    padding: 6px 4px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .table-input.direct {
+    background: var(--input-direct-bg);
+    color: var(--input-direct);
+    border-color: var(--input-direct-border);
+  }
+
+  .table-input.direct:focus {
+    border-color: var(--input-direct);
+    box-shadow: 0 0 0 2px rgba(99,144,255,0.1);
+  }
+
+  .table-input.dropdown {
+    background: var(--input-dropdown-bg);
+    color: var(--input-dropdown);
+    border-color: var(--input-dropdown-border);
+    cursor: pointer;
+    appearance: none;
+    padding-right: 20px;
+  }
+
+  .table-select-wrapper {
+    position: relative;
+  }
+
+  .table-select-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 4px solid var(--input-dropdown);
+    pointer-events: none;
+  }
+
+  .table-input.autofill {
+    background: var(--input-auto-fill-bg);
+    color: var(--input-auto-fill);
+    border-color: var(--input-auto-fill-border);
+    cursor: default;
+    font-weight: 500;
+  }
+
+  .table-input.calc {
+    background: var(--input-calc-bg);
+    color: var(--input-calc);
+    cursor: default;
+    font-weight: 600;
+  }
+
+  .table-input.price {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .table-input.qty {
+    text-align: center;
+    font-size: 14px;
+    padding: 6px 4px;
+  }
+
+  .btn-delete {
+    padding: 4px;
+    border: none;
+    background: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-delete:hover {
+    background: var(--danger-bg);
+    color: var(--danger);
+  }
+
+  .btn-delete svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .btn-add-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--input-direct-border);
+    background: var(--input-direct-bg);
+    color: var(--input-direct);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-add-row:hover {
+    background: #dde6fa;
+    border-color: #b8cbf0;
+  }
+
+  .btn-add-row svg { width: 14px; height: 14px; }
+
+  /* Tax Summary (合計欄) */
+  .tax-summary-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding: 0 20px 20px 20px;
+  }
+
+  .tax-summary-box {
+    background: white;
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    min-width: 320px;
+  }
+
+  .tax-summary-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tax-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .tax-summary-row.subtotal {
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .tax-summary-row.tax-detail {
+    padding: 10px 0;
+  }
+
+  .tax-summary-row.total {
+    padding-top: 10px;
+    border-top: 2px solid var(--border-default);
+  }
+
+  .tax-summary-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .tax-summary-value {
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-primary);
+    text-align: right;
+  }
+
+  /* Memo */
+  .memo-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 13px;
+    resize: vertical;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .memo-textarea::placeholder {
+    color: var(--text-tertiary);
+  }
+
+  .memo-textarea:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(99,144,255,0.08);
+  }
+
+  /* Instant Feedback Panel */
+  .feedback-panel {
+    background: #f7f9fe;
+    border: 1px solid #d6e0f5;
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+
+  .feedback-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .feedback-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99,144,255,0.15);
+    border-radius: 6px;
+    color: var(--accent-blue);
+  }
+
+  .feedback-icon svg { width: 13px; height: 13px; }
+
+  .feedback-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-blue);
+    letter-spacing: 0.3px;
+  }
+
+  .feedback-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .feedback-item {
+    padding: 14px 16px;
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    border: 1px solid #e4e8f0;
+  }
+
+  .feedback-item-label {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+    letter-spacing: 0.2px;
+  }
+
+  .feedback-item-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+
+  .feedback-item-value .unit {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-tertiary);
+    margin-left: 2px;
+  }
+
+  .feedback-item-sub {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+  }
+
+  .feedback-item-sub .highlight {
+    color: #1a8f5c;
+    font-weight: 500;
+  }
+
+  /* Footer Actions */
+  .form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 24px;
+    margin-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  .autosave-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #1a8f5c;
+  }
+
+  .footer-right {
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+  }
+
+  .btn-ghost:hover {
+    background: var(--bg-tertiary);
+  }
+
+  .btn-primary {
+    background: var(--accent-blue);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #2d5fc7;
+  }
+
+  /* ===== トースト通知 ===== */
+  .toast-container {
+    position: fixed; top: 24px; right: 24px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .toast {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 18px; border-radius: var(--radius-md);
+    background: #1a1d26; color: #fff; font-size: 13px; font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25); min-width: 260px;
+    opacity: 0; transform: translateY(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .toast.success { border-left: 3px solid #1a8f5c; }
+  .toast.error   { border-left: 3px solid #d9503f; }
+  .toast-icon { font-size: 16px; }
+  .toast-msg  { flex: 1; }
+  /* ===== バリデーションエラー ===== */
+  .field-error { border-color: var(--danger) !important; background: var(--danger-bg) !important; }
+  .error-msg { color: var(--danger); font-size: 11px; margin-top: 4px; }
+  .section-error-msg {
+    color: var(--danger); font-size: 12px; padding: 6px 12px;
+    background: var(--danger-bg); border-radius: var(--radius-sm); margin-top: 6px;
+  }
+
+</style>
+<script src="https://qururi-prototype.github.io/database/dataManager.js"></script>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+<div class="app-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-main">QURURi</div>
+      <div class="sidebar-logo-sub">予算編成システム</div>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">メインメニュー</div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        ダッシュボード
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        案件入力
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+        案件集計DB
+      </div>
+      
+      <div class="nav-section-label">マスター管理</div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        製品マスタ
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        単価マスタ
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        為替マスタ
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        取引先マスタ
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        担当者マスタ
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main>
+    <div class="content-wrapper">
+      
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-group">
+          <h1>
+            案件入力
+            <span class="case-id" id="projectNoDisplay">新規案件</span>
+          </h1>
+          <p class="page-subtitle">営業担当が商談情報を入力すると、自動で粗利分析・納期予測・BOM展開が行われます</p>
+        </div>
+      </div>
+
+      <!-- Card: Basic Info -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-header-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <h2 class="card-title">基本情報</h2>
+          </div>
+          <div style="position: relative;">
+            <button class="legend-help-btn" id="legendBtn" onclick="toggleLegend()">?</button>
+            <div class="legend-popup" id="legendPopup">
+              <div class="legend-popup-title">入力タイプ</div>
+              <div class="input-legend">
+                <div class="legend-item">
+                  <span class="legend-dot direct"></span>
+                  <span class="legend-label">直接入力</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot dropdown"></span>
+                  <span class="legend-label">選択入力</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot autofill"></span>
+                  <span class="legend-label">自動転記</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot calc"></span>
+                  <span class="legend-label">自動計算</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-section">
+            <div class="section-title">入力項目</div>
+            <div class="input-section">
+              <div class="form-row">
+                <div class="field-number">1</div>
+                <div class="field-label">案件名称</div>
+                <div class="field-value">
+                  <input type="text" id="projectName" class="input-field input-direct-type" value="トヨタ自動車 2026年度設備投資" placeholder="案件名を入力">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field-number">2</div>
+                <div class="field-label">受注確度</div>
+                <div class="field-value">
+                  <div class="probability-display">
+                    <div class="prob-bar-track" id="probBar" onclick="updateProbability(event)">
+                      <div class="prob-bar-fill" id="probFill" style="width: 50%;"></div>
+                    </div>
+                    <span class="prob-value" id="probValue">50%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field-number">3</div>
+                <div class="field-label">納品日付</div>
+                <div class="field-value">
+                  <input type="date" id="deliveryDate" class="input-field input-direct-type" value="2026-07-25">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field-number">4</div>
+                <div class="field-label">営業担当</div>
+                <div class="field-value">
+                  <div class="select-wrapper">
+                    <select id="salesPerson" class="input-field input-dropdown-type">
+                      <option selected>佐藤 健一(営業第一部)</option>
+                      <option>田中 美咲(営業第二部)</option>
+                      <option>鈴木 大輔(営業第三部)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field-number">5</div>
+                <div class="field-label">取引先</div>
+                <div class="field-value">
+                  <div class="select-wrapper">
+                    <select id="customer" class="input-field input-dropdown-type">
+                      <option selected>トヨタ自動車</option>
+                      <option>デンソー</option>
+                      <option>本田技研工業</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">自動転記</div>
+            <div class="autofill-section">
+              <div class="autofill-grid">
+                <div class="autofill-item">
+                  <span class="autofill-label">販売地域</span>
+                  <span class="autofill-value">JP</span>
+                </div>
+                <div class="autofill-item">
+                  <span class="autofill-label">業界</span>
+                  <span class="autofill-value">自動車</span>
+                </div>
+                <div class="autofill-item">
+                  <span class="autofill-label">商流</span>
+                  <span class="autofill-value">直販</span>
+                </div>
+                <div class="autofill-item">
+                  <span class="autofill-label">自社セグ</span>
+                  <span class="autofill-value">検査装置</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Product Details -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-header-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+            <h2 class="card-title">製品明細</h2>
+          </div>
+          <button class="btn-add-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            明細を追加
+          </button>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div class="detail-table-wrapper">
+            <table class="detail-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th class="col-product">製品名</th>
+                  <th class="col-qty" style="text-align: center;">数量</th>
+                  <th class="col-price" style="text-align: right;">税抜単価</th>
+                  <th class="col-currency" style="text-align: center;">通貨</th>
+                  <th class="col-tax" style="text-align: center;">税率</th>
+                  <th class="col-total" style="text-align: right;">数量 × 税抜単価</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="productTableBody">
+                <tr>
+                  <td>1</td>
+                  <td>
+                    <div class="table-select-wrapper">
+                      <select class="table-input dropdown">
+                        <option selected>CVD装置</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="1"></td>
+                  <td><input class="table-input direct price" value="200,000,000"></td>
+                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
+                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
+                  <td><input class="table-input calc price" value="200,000,000" readonly></td>
+                  <td style="text-align: center;">
+                    <button class="btn-delete" title="削除">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>
+                    <div class="table-select-wrapper">
+                      <select class="table-input dropdown">
+                        <option selected>マスクアライナー</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="2"></td>
+                  <td><input class="table-input direct price" value="150,000,000"></td>
+                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
+                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
+                  <td><input class="table-input calc price" value="300,000,000" readonly></td>
+                  <td style="text-align: center;">
+                    <button class="btn-delete" title="削除">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>
+                    <div class="table-select-wrapper">
+                      <select class="table-input dropdown">
+                        <option selected>ウェットエッチング装置</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="1"></td>
+                  <td><input class="table-input direct price" value="300,000,000"></td>
+                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
+                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
+                  <td><input class="table-input calc price" value="300,000,000" readonly></td>
+                  <td style="text-align: center;">
+                    <button class="btn-delete" title="削除">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 合計欄(税率別集計) -->
+          <div class="tax-summary-container">
+            <div class="tax-summary-box">
+              <div class="tax-summary-rows">
+                <div class="tax-summary-row subtotal">
+                  <div class="tax-summary-label">小計(税抜)</div>
+                  <div class="tax-summary-value">¥800,000,000</div>
+                </div>
+                <div class="tax-summary-row tax-detail">
+                  <div class="tax-summary-label">消費税(10%)</div>
+                  <div class="tax-summary-value">¥80,000,000</div>
+                </div>
+                <div class="tax-summary-row total">
+                  <div class="tax-summary-label" style="font-weight: 600; color: var(--accent-blue);">合計(税込)</div>
+                  <div class="tax-summary-value" style="font-size: 18px; color: var(--accent-blue);">¥880,000,000</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="product-autofill-section">
+            <div class="product-autofill-grid">
+              <div class="product-autofill-item">
+                <div class="product-autofill-label">大区分</div>
+                <div class="product-autofill-values">
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">1</span>
+                    <span class="product-autofill-value">半導体製造装置</span>
+                  </div>
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">2</span>
+                    <span class="product-autofill-value">半導体製造装置</span>
+                  </div>
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">3</span>
+                    <span class="product-autofill-value">半導体製造装置</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="product-autofill-item">
+                <div class="product-autofill-label">中区分</div>
+                <div class="product-autofill-values">
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">1</span>
+                    <span class="product-autofill-value">前工程</span>
+                  </div>
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">2</span>
+                    <span class="product-autofill-value">前工程</span>
+                  </div>
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">3</span>
+                    <span class="product-autofill-value">前工程</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="product-autofill-item">
+                <div class="product-autofill-label">小区分</div>
+                <div class="product-autofill-values">
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">1</span>
+                    <span class="product-autofill-value">成膜</span>
+                  </div>
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">2</span>
+                    <span class="product-autofill-value">露光</span>
+                  </div>
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">3</span>
+                    <span class="product-autofill-value">エッチング</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Memo -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-header-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+            <h2 class="card-title">メモ</h2>
+          </div>
+        </div>
+        <div class="card-body">
+          <textarea id="memo" class="memo-textarea" placeholder="案件に関する補足情報があれば入力してください…"></textarea>
+        </div>
+      </div>
+
+      <!-- Instant Feedback Panel -->
+      <div class="feedback-panel">
+        <div class="feedback-header">
+          <div class="feedback-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <span class="feedback-title">リアルタイム分析 — 【検討中】営業サポート情報</span>
+        </div>
+        <div class="feedback-grid">
+          <div class="feedback-item" style="opacity: 0.5;">
+            <div class="feedback-item-label">検討中の項目 1</div>
+            <div class="feedback-item-value" style="font-size: 14px; color: var(--text-tertiary);">—</div>
+            <div class="feedback-item-sub">営業支援情報を検討中</div>
+          </div>
+          <div class="feedback-item" style="opacity: 0.5;">
+            <div class="feedback-item-label">検討中の項目 2</div>
+            <div class="feedback-item-value" style="font-size: 14px; color: var(--text-tertiary);">—</div>
+            <div class="feedback-item-sub">営業支援情報を検討中</div>
+          </div>
+          <div class="feedback-item" style="opacity: 0.5;">
+            <div class="feedback-item-label">検討中の項目 3</div>
+            <div class="feedback-item-value" style="font-size: 14px; color: var(--text-tertiary);">—</div>
+            <div class="feedback-item-sub">営業支援情報を検討中</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="form-footer">
+        <div class="footer-left">
+          <div class="autosave-dot"></div>
+          自動保存済み — 2026/02/17 14:32
+        </div>
+        <div class="footer-right">
+          <button class="btn btn-ghost" id="btnCancel">キャンセル</button>
+          <button class="btn btn-ghost" id="btnSaveDraft">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            下書き保存
+          </button>
+          <button class="btn btn-primary" id="btnRegister">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="20 6 9 17 4 12"/></svg>
+            案件申請
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+// ===================================================
+// QURURi 案件入力画面 Phase 2A — dataManager.js 連携
+// ===================================================
+
+// ----- 受注確度バー -----
+function updateProbability(event) {
+  const bar   = document.getElementById('probBar');
+  const fill  = document.getElementById('probFill');
+  const label = document.getElementById('probValue');
+  const rect  = bar.getBoundingClientRect();
+  const pct   = Math.max(0, Math.min(100, Math.round((event.clientX - rect.left) / rect.width * 10) * 10));
+  fill.style.width  = pct + '%';
+  label.textContent = pct + '%';
+}
+
+// ----- 凡例ポップアップ -----
+function toggleLegend() {
+  document.getElementById('legendPopup').classList.toggle('show');
+}
+document.addEventListener('click', function(e) {
+  const popup = document.getElementById('legendPopup');
+  const btn   = document.getElementById('legendBtn');
+  if (popup && btn && !popup.contains(e.target) && !btn.contains(e.target)) {
+    popup.classList.remove('show');
+  }
+});
+
+// ===================================================
+// トースト通知
+// ===================================================
+function showToast(message, type = 'success', duration = 3000) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.innerHTML = '<span class="toast-icon">' + (type === 'success' ? '✓' : '✕') + '</span>'
+                  + '<span class="toast-msg">' + message + '</span>';
+  container.appendChild(toast);
+  requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 250);
+  }, duration);
+}
+
+// ===================================================
+// フォームデータの収集
+// ===================================================
+function collectFormData() {
+  const projectName  = (document.getElementById('projectName')?.value  || '').trim();
+  const deliveryDate = document.getElementById('deliveryDate')?.value  || '';
+  const salesPerson  = document.getElementById('salesPerson')?.value   || '';
+  const customer     = document.getElementById('customer')?.value      || '';
+  const probability  = parseInt(document.getElementById('probValue')?.textContent) || 50;
+  const memo         = (document.getElementById('memo')?.value || '').trim();
+
+  // 自動転記項目（autofill-value から取得）
+  const autoData = { salesRegion: '', industry: '', channel: '', segment: '' };
+  document.querySelectorAll('.autofill-item').forEach(item => {
+    const label = item.querySelector('.autofill-label')?.textContent?.trim();
+    const value = item.querySelector('.autofill-value')?.textContent?.trim();
+    if (label === '販売地域') autoData.salesRegion = value;
+    if (label === '業界')    autoData.industry    = value;
+    if (label === '商流')    autoData.channel     = value;
+    if (label === '自社セグ') autoData.segment     = value;
+  });
+
+  // 製品明細
+  const products = [];
+  let subtotal = 0;
+  document.querySelectorAll('#productTableBody tr').forEach((row, index) => {
+    const productSelect = row.querySelector('select.table-input.dropdown');
+    const qtyInput      = row.querySelector('input.table-input.direct.qty');
+    const priceInput    = row.querySelector('input.table-input.direct.price');
+    const autofills     = row.querySelectorAll('input.table-input.autofill');
+    if (!productSelect || !qtyInput || !priceInput) return;
+
+    const productName = (productSelect.value || '').trim();
+    const qty         = parseFloat((qtyInput.value   || '').replace(/,/g, '')) || 0;
+    const unitPrice   = parseFloat((priceInput.value || '').replace(/,/g, '')) || 0;
+    const currency    = autofills[0]?.value?.trim() || 'JPY';
+    const taxRate     = parseFloat((autofills[1]?.value || '10').replace('%', '')) || 10;
+    const lineTotal   = qty * unitPrice;
+
+    products.push({ lineNo: index + 1, productName, productId: null,
+                    qty, unitPrice, currency, taxRate, lineTotal,
+                    categoryL: '', categoryM: '', categoryS: '' });
+    subtotal += lineTotal;
+  });
+
+  // 税率別集計（インボイス対応）
+  const taxMap = {};
+  products.forEach(p => {
+    if (!taxMap[p.taxRate]) taxMap[p.taxRate] = { taxRate: p.taxRate, taxBase: 0, taxAmount: 0 };
+    taxMap[p.taxRate].taxBase += p.lineTotal;
+  });
+  const taxDetails = Object.values(taxMap).map(t => ({
+    ...t, taxAmount: Math.floor(t.taxBase * t.taxRate / 100)
+  }));
+  const total = subtotal + taxDetails.reduce((s, t) => s + t.taxAmount, 0);
+
+  return {
+    projectName, probability, deliveryDate, salesPerson, customer,
+    salesRegion: autoData.salesRegion, industry: autoData.industry,
+    channel: autoData.channel, segment: autoData.segment,
+    products, subtotal, taxDetails, total, memo, status: 'draft'
+  };
+}
+
+// ===================================================
+// バリデーション（案件申請時のみ）
+// ===================================================
+function clearValidationErrors() {
+  document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+  document.querySelectorAll('.error-msg, .section-error-msg').forEach(el => el.remove());
+}
+
+function addFieldError(el, message) {
+  if (!el) return;
+  el.classList.add('field-error');
+  const msg = document.createElement('div');
+  msg.className = 'error-msg';
+  msg.textContent = message;
+  el.parentNode.appendChild(msg);
+}
+
+function validateForSubmit(data) {
+  clearValidationErrors();
+  const errors = [];
+
+  if (!data.projectName) {
+    addFieldError(document.getElementById('projectName'), '案件名は必須です');
+    errors.push('案件名');
+  }
+  if (!data.customer) {
+    addFieldError(document.getElementById('customer'), '取引先は必須です');
+    errors.push('取引先');
+  }
+  if (!data.salesPerson || data.salesPerson === '-- 選択してください --') {
+    addFieldError(document.getElementById('salesPerson'), '営業担当者は必須です');
+    errors.push('営業担当者');
+  }
+  if (!data.deliveryDate) {
+    addFieldError(document.getElementById('deliveryDate'), '納品日付は必須です');
+    errors.push('納品日付');
+  }
+  if (data.products.length === 0) {
+    const tbl = document.getElementById('productTableBody')?.closest('table');
+    if (tbl) {
+      const msg = document.createElement('div');
+      msg.className = 'section-error-msg';
+      msg.textContent = '製品明細を1行以上入力してください';
+      tbl.after(msg);
+    }
+    errors.push('製品明細');
+  } else {
+    data.products.forEach((p, i) => {
+      const row = document.querySelectorAll('#productTableBody tr')[i];
+      if (!p.productName) {
+        addFieldError(row?.querySelector('select.table-input.dropdown'), '品名は必須です');
+        errors.push('明細' + (i+1) + '行目:品名');
+      }
+      if (!p.qty || p.qty <= 0) {
+        addFieldError(row?.querySelector('input.table-input.direct.qty'), '数量を入力してください');
+        errors.push('明細' + (i+1) + '行目:数量');
+      }
+      if (!p.unitPrice || p.unitPrice <= 0) {
+        addFieldError(row?.querySelector('input.table-input.direct.price'), '単価を入力してください');
+        errors.push('明細' + (i+1) + '行目:単価');
+      }
+    });
+  }
+  return errors;
+}
+
+// ===================================================
+// 現在の案件番号を取得
+// ===================================================
+function getCurrentProjectNo() {
+  const text = document.getElementById('projectNoDisplay')?.textContent?.trim() || '';
+  return text.startsWith('PJ-') ? text : null;
+}
+
+// ===================================================
+// 下書き保存
+// ===================================================
+document.getElementById('btnSaveDraft').addEventListener('click', async function() {
+  const btn = this;
+  btn.disabled = true;
+  btn.textContent = '保存中...';
+  try {
+    const data = collectFormData();
+    const existingNo = getCurrentProjectNo();
+    if (existingNo) data.projectNo = existingNo;
+
+    const saved = await DataAPI.saveProject(data);
+    document.getElementById('projectNoDisplay').textContent = saved.projectNo;
+    showToast('下書きとして保存しました（' + saved.projectNo + '）', 'success');
+    setTimeout(() => { window.location.href = 'https://qururi-prototype.github.io/app/pages/project-list.html'; }, 1500);
+  } catch (err) {
+    console.error('保存エラー:', err);
+    showToast('保存に失敗しました: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 下書き保存';
+  }
+});
+
+// ===================================================
+// 案件申請
+// ===================================================
+document.getElementById('btnRegister').addEventListener('click', async function() {
+  const btn = this;
+  const data = collectFormData();
+  const errors = validateForSubmit(data);
+  if (errors.length > 0) {
+    showToast('入力エラーがあります（' + errors.length + '件）', 'error', 4000);
+    const firstError = document.querySelector('.field-error');
+    if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = '申請中...';
+  try {
+    const existingNo = getCurrentProjectNo();
+    if (existingNo) data.projectNo = existingNo;
+
+    const saved = await DataAPI.saveProject(data);
+    document.getElementById('projectNoDisplay').textContent = saved.projectNo;
+    showToast('案件を申請しました（' + saved.projectNo + '）', 'success');
+    setTimeout(() => { window.location.href = 'https://qururi-prototype.github.io/app/pages/project-list.html'; }, 1500);
+  } catch (err) {
+    console.error('申請エラー:', err);
+    showToast('申請に失敗しました: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="20 6 9 17 4 12"/></svg> 案件申請';
+  }
+});
+
+// ===================================================
+// キャンセル
+// ===================================================
+document.getElementById('btnCancel').addEventListener('click', function() {
+  if (confirm('入力内容を破棄して案件一覧に戻りますか？')) {
+    window.location.href = 'https://qururi-prototype.github.io/app/pages/project-list.html';
+  }
+});
+
+// ===================================================
+// ページ読み込み時の初期化（編集モード対応）
+// ===================================================
+document.addEventListener('DOMContentLoaded', async function() {
+  const params = new URLSearchParams(window.location.search);
+  const projectNo = params.get('projectNo');
+  if (!projectNo) return;
+
+  try {
+    const data = await DataAPI.loadProject(projectNo);
+    if (!data) { showToast('案件が見つかりません: ' + projectNo, 'error'); return; }
+
+    document.getElementById('projectNoDisplay').textContent = data.projectNo;
+    if (document.getElementById('projectName'))
+      document.getElementById('projectName').value = data.projectName || '';
+    if (document.getElementById('deliveryDate'))
+      document.getElementById('deliveryDate').value = data.deliveryDate || '';
+    if (document.getElementById('memo'))
+      document.getElementById('memo').value = data.memo || '';
+
+    const pct = data.probability || 50;
+    const fill  = document.getElementById('probFill');
+    const label = document.getElementById('probValue');
+    if (fill)  fill.style.width  = pct + '%';
+    if (label) label.textContent = pct + '%';
+
+    console.log('[QURURi] 案件データを読み込みました:', data.projectNo);
+  } catch (err) {
+    console.error('読み込みエラー:', err);
+    showToast('案件の読み込みに失敗しました', 'error');
+  }
+});
+</script>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+<div class="app-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-main">QURURi</div>
+      <div class="sidebar-logo-sub">予算編成システム</div>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">メインメニュー</div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        ダッシュボード
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        案件入力
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+        案件集計DB
+      </div>
+      
+      <div class="nav-section-label">マスター管理</div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        製品マスタ
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        単価マスタ
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        為替マスタ
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        取引先マスタ
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        担当者マスタ
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main>
+    <div class="content-wrapper">
+      
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-group">
+          <h1>
+            案件入力
+            <span class="case-id" id="projectNoDisplay">新規案件</span>
+          </h1>
+          <p class="page-subtitle">営業担当が商談情報を入力すると、自動で粗利分析・納期予測・BOM展開が行われます</p>
+        </div>
+      </div>
+
+      <!-- Card: Basic Info -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-header-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <h2 class="card-title">基本情報</h2>
+          </div>
+          <div style="position: relative;">
+            <button class="legend-help-btn" id="legendBtn" onclick="toggleLegend()">?</button>
+            <div class="legend-popup" id="legendPopup">
+              <div class="legend-popup-title">入力タイプ</div>
+              <div class="input-legend">
+                <div class="legend-item">
+                  <span class="legend-dot direct"></span>
+                  <span class="legend-label">直接入力</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot dropdown"></span>
+                  <span class="legend-label">選択入力</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot autofill"></span>
+                  <span class="legend-label">自動転記</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot calc"></span>
+                  <span class="legend-label">自動計算</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-section">
+            <div class="section-title">入力項目</div>
+            <div class="input-section">
+              <div class="form-row">
+                <div class="field-number">1</div>
+                <div class="field-label">案件名称</div>
+                <div class="field-value">
+                  <input type="text" id="projectName" class="input-field input-direct-type" value="トヨタ自動車 2026年度設備投資" placeholder="案件名を入力">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field-number">2</div>
+                <div class="field-label">受注確度</div>
+                <div class="field-value">
+                  <div class="probability-display">
+                    <div class="prob-bar-track" id="probBar" onclick="updateProbability(event)">
+                      <div class="prob-bar-fill" id="probFill" style="width: 50%;"></div>
+                    </div>
+                    <span class="prob-value" id="probValue">50%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field-number">3</div>
+                <div class="field-label">納品日付</div>
+                <div class="field-value">
+                  <input type="date" id="deliveryDate" class="input-field input-direct-type" value="2026-07-25">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field-number">4</div>
+                <div class="field-label">営業担当</div>
+                <div class="field-value">
+                  <div class="select-wrapper">
+                    <select id="salesPerson" class="input-field input-dropdown-type">
+                      <option selected>佐藤 健一(営業第一部)</option>
+                      <option>田中 美咲(営業第二部)</option>
+                      <option>鈴木 大輔(営業第三部)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field-number">5</div>
+                <div class="field-label">取引先</div>
+                <div class="field-value">
+                  <div class="select-wrapper">
+                    <select id="customer" class="input-field input-dropdown-type">
+                      <option selected>トヨタ自動車</option>
+                      <option>デンソー</option>
+                      <option>本田技研工業</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">自動転記</div>
+            <div class="autofill-section">
+              <div class="autofill-grid">
+                <div class="autofill-item">
+                  <span class="autofill-label">販売地域</span>
+                  <span class="autofill-value">JP</span>
+                </div>
+                <div class="autofill-item">
+                  <span class="autofill-label">業界</span>
+                  <span class="autofill-value">自動車</span>
+                </div>
+                <div class="autofill-item">
+                  <span class="autofill-label">商流</span>
+                  <span class="autofill-value">直販</span>
+                </div>
+                <div class="autofill-item">
+                  <span class="autofill-label">自社セグ</span>
+                  <span class="autofill-value">検査装置</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Product Details -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-header-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+            <h2 class="card-title">製品明細</h2>
+          </div>
+          <button class="btn-add-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            明細を追加
+          </button>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div class="detail-table-wrapper">
+            <table class="detail-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th class="col-product">製品名</th>
+                  <th class="col-qty" style="text-align: center;">数量</th>
+                  <th class="col-price" style="text-align: right;">税抜単価</th>
+                  <th class="col-currency" style="text-align: center;">通貨</th>
+                  <th class="col-tax" style="text-align: center;">税率</th>
+                  <th class="col-total" style="text-align: right;">数量 × 税抜単価</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="productTableBody">
+                <tr>
+                  <td>1</td>
+                  <td>
+                    <div class="table-select-wrapper">
+                      <select class="table-input dropdown">
+                        <option selected>CVD装置</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="1"></td>
+                  <td><input class="table-input direct price" value="200,000,000"></td>
+                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
+                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
+                  <td><input class="table-input calc price" value="200,000,000" readonly></td>
+                  <td style="text-align: center;">
+                    <button class="btn-delete" title="削除">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>
+                    <div class="table-select-wrapper">
+                      <select class="table-input dropdown">
+                        <option selected>マスクアライナー</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="2"></td>
+                  <td><input class="table-input direct price" value="150,000,000"></td>
+                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
+                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
+                  <td><input class="table-input calc price" value="300,000,000" readonly></td>
+                  <td style="text-align: center;">
+                    <button class="btn-delete" title="削除">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>
+                    <div class="table-select-wrapper">
+                      <select class="table-input dropdown">
+                        <option selected>ウェットエッチング装置</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="1"></td>
+                  <td><input class="table-input direct price" value="300,000,000"></td>
+                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
+                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
+                  <td><input class="table-input calc price" value="300,000,000" readonly></td>
+                  <td style="text-align: center;">
+                    <button class="btn-delete" title="削除">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 合計欄(税率別集計) -->
+          <div class="tax-summary-container">
+            <div class="tax-summary-box">
+              <div class="tax-summary-rows">
+                <div class="tax-summary-row subtotal">
+                  <div class="tax-summary-label">小計(税抜)</div>
+                  <div class="tax-summary-value">¥800,000,000</div>
+                </div>
+                <div class="tax-summary-row tax-detail">
+                  <div class="tax-summary-label">消費税(10%)</div>
+                  <div class="tax-summary-value">¥80,000,000</div>
+                </div>
+                <div class="tax-summary-row total">
+                  <div class="tax-summary-label" style="font-weight: 600; color: var(--accent-blue);">合計(税込)</div>
+                  <div class="tax-summary-value" style="font-size: 18px; color: var(--accent-blue);">¥880,000,000</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="product-autofill-section">
+            <div class="product-autofill-grid">
+              <div class="product-autofill-item">
+                <div class="product-autofill-label">大区分</div>
+                <div class="product-autofill-values">
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">1</span>
+                    <span class="product-autofill-value">半導体製造装置</span>
+                  </div>
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">2</span>
+                    <span class="product-autofill-value">半導体製造装置</span>
+                  </div>
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">3</span>
+                    <span class="product-autofill-value">半導体製造装置</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="product-autofill-item">
+                <div class="product-autofill-label">中区分</div>
+                <div class="product-autofill-values">
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">1</span>
+                    <span class="product-autofill-value">前工程</span>
+                  </div>
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">2</span>
+                    <span class="product-autofill-value">前工程</span>
+                  </div>
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">3</span>
+                    <span class="product-autofill-value">前工程</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="product-autofill-item">
+                <div class="product-autofill-label">小区分</div>
+                <div class="product-autofill-values">
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">1</span>
+                    <span class="product-autofill-value">成膜</span>
+                  </div>
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">2</span>
+                    <span class="product-autofill-value">露光</span>
+                  </div>
+                  <div class="product-autofill-row">
+                    <span class="product-autofill-number">3</span>
+                    <span class="product-autofill-value">エッチング</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Memo -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-header-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+            <h2 class="card-title">メモ</h2>
+          </div>
+        </div>
+        <div class="card-body">
+          <textarea id="memo" class="memo-textarea" placeholder="案件に関する補足情報があれば入力してください…"></textarea>
+        </div>
+      </div>
+
+      <!-- Instant Feedback Panel -->
+      <div class="feedback-panel">
+        <div class="feedback-header">
+          <div class="feedback-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <span class="feedback-title">リアルタイム分析 — 【検討中】営業サポート情報</span>
+        </div>
+        <div class="feedback-grid">
+          <div class="feedback-item" style="opacity: 0.5;">
+            <div class="feedback-item-label">検討中の項目 1</div>
+            <div class="feedback-item-value" style="font-size: 14px; color: var(--text-tertiary);">—</div>
+            <div class="feedback-item-sub">営業支援情報を検討中</div>
+          </div>
+          <div class="feedback-item" style="opacity: 0.5;">
+            <div class="feedback-item-label">検討中の項目 2</div>
+            <div class="feedback-item-value" style="font-size: 14px; color: var(--text-tertiary);">—</div>
+            <div class="feedback-item-sub">営業支援情報を検討中</div>
+          </div>
+          <div class="feedback-item" style="opacity: 0.5;">
+            <div class="feedback-item-label">検討中の項目 3</div>
+            <div class="feedback-item-value" style="font-size: 14px; color: var(--text-tertiary);">—</div>
+            <div class="feedback-item-sub">営業支援情報を検討中</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="form-footer">
+        <div class="footer-left">
+          <div class="autosave-dot"></div>
+          自動保存済み — 2026/02/17 14:32
+        </div>
+        <div class="footer-right">
+          <button class="btn btn-ghost" id="btnCancel">キャンセル</button>
+          <button class="btn btn-ghost" id="btnSaveDraft">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            下書き保存
+          </button>
+          <button class="btn btn-primary" id="btnRegister">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="20 6 9 17 4 12"/></svg>
+            案件申請
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+
+</body>
+</html>
