@@ -672,22 +672,33 @@
   }
 
   /* Table inputs */
+  /* スピナー（ちょぼちょぼ）除去 */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+
   .table-input {
     width: 100%;
-    padding: 6px 4px;
+    padding: 6px 8px;
     border-radius: 4px;
-    font-family: inherit;
+    font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
     font-weight: 500;
     border: 1px solid transparent;
     outline: none;
     transition: all 0.2s ease;
+    text-align: right;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    resize: none;
   }
 
   .table-input.direct {
     background: var(--input-direct-bg);
     color: var(--input-direct);
     border-color: var(--input-direct-border);
+    padding-right: 10px;
   }
 
   .table-input.direct:focus {
@@ -728,13 +739,18 @@
     border-color: var(--input-auto-fill-border);
     cursor: default;
     font-weight: 500;
+    padding-right: 10px;
+    padding-left: 10px;
+    text-align: center;
   }
 
   .table-input.calc {
+    display: block;
     background: var(--input-calc-bg);
     color: var(--input-calc);
     cursor: default;
     font-weight: 600;
+    user-select: none;
   }
 
   .table-input.price {
@@ -1275,7 +1291,7 @@
                   <td><input class="table-input direct price" value="200,000,000"></td>
                   <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
                   <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
-                  <td><input class="table-input calc price" value="200,000,000" readonly></td>
+                  <td><span class="table-input calc price">200,000,000</span></td>
                   <td style="text-align: center;">
                     <button class="btn-delete" title="削除">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1295,7 +1311,7 @@
                   <td><input class="table-input direct price" value="150,000,000"></td>
                   <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
                   <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
-                  <td><input class="table-input calc price" value="300,000,000" readonly></td>
+                  <td><span class="table-input calc price">300,000,000</span></td>
                   <td style="text-align: center;">
                     <button class="btn-delete" title="削除">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1315,7 +1331,7 @@
                   <td><input class="table-input direct price" value="300,000,000"></td>
                   <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
                   <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
-                  <td><input class="table-input calc price" value="300,000,000" readonly></td>
+                  <td><span class="table-input calc price">300,000,000</span></td>
                   <td style="text-align: center;">
                     <button class="btn-delete" title="削除">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1332,15 +1348,15 @@
               <div class="tax-summary-rows">
                 <div class="tax-summary-row subtotal">
                   <div class="tax-summary-label">小計(税抜)</div>
-                  <div class="tax-summary-value">¥800,000,000</div>
+                  <div class="tax-summary-value" id="displaySubtotal">¥800,000,000</div>
                 </div>
                 <div class="tax-summary-row tax-detail">
-                  <div class="tax-summary-label">消費税(10%)</div>
-                  <div class="tax-summary-value">¥80,000,000</div>
+                  <div class="tax-summary-label" id="displayTaxLabel">消費税(10%)</div>
+                  <div class="tax-summary-value" id="displayTaxAmount">¥80,000,000</div>
                 </div>
                 <div class="tax-summary-row total">
                   <div class="tax-summary-label" style="font-weight: 600; color: var(--accent-blue);">合計(税込)</div>
-                  <div class="tax-summary-value" style="font-size: 18px; color: var(--accent-blue);">¥880,000,000</div>
+                  <div class="tax-summary-value" style="font-size:18px;font-weight:700;color:var(--accent-blue);font-family:\'JetBrains Mono\',monospace;" id="displayTotal">¥880,000,000</div>
                 </div>
               </div>
             </div>
@@ -1475,6 +1491,60 @@
 // ===================================================
 // QURURi 案件入力画面 Phase 2A — dataManager.js 連携
 // ===================================================
+
+// ===================================================
+// 数値フォーマット・リアルタイム計算
+// ===================================================
+function parseNumber(str) {
+  return parseFloat((str || '').replace(/,/g, '')) || 0;
+}
+function formatNumber(num) {
+  return Math.floor(num).toLocaleString('ja-JP');
+}
+function calcRowTotal(row) {
+  const qty       = parseNumber(row.querySelector('input.table-input.direct.qty')?.value);
+  const unitPrice = parseNumber(row.querySelector('input.table-input.direct.price')?.value);
+  const lineTotal = qty * unitPrice;
+  const calcEl    = row.querySelector('span.table-input.calc.price');
+  if (calcEl) calcEl.textContent = formatNumber(lineTotal);
+  return lineTotal;
+}
+function updateTotals() {
+  const rows = document.querySelectorAll('#productTableBody tr');
+  let subtotal = 0;
+  rows.forEach(row => { subtotal += calcRowTotal(row); });
+  const taxRate   = 10;
+  const taxAmount = Math.floor(subtotal * taxRate / 100);
+  const total     = subtotal + taxAmount;
+  const subtotalEl = document.getElementById('displaySubtotal');
+  const taxEl      = document.getElementById('displayTaxAmount');
+  const totalEl    = document.getElementById('displayTotal');
+  if (subtotalEl) subtotalEl.textContent = '¥' + formatNumber(subtotal);
+  if (taxEl)      taxEl.textContent      = '¥' + formatNumber(taxAmount);
+  if (totalEl)    totalEl.textContent    = '¥' + formatNumber(total);
+}
+function setupPriceInput(input) {
+  input.addEventListener('focus', function() {
+    const raw = parseNumber(this.value);
+    this.value = raw === 0 ? '' : String(raw);
+  });
+  input.addEventListener('blur', function() {
+    const raw = parseNumber(this.value);
+    this.value = raw === 0 ? '' : formatNumber(raw);
+    updateTotals();
+  });
+  input.addEventListener('input', updateTotals);
+}
+function setupQtyInput(input) {
+  input.addEventListener('blur', updateTotals);
+  input.addEventListener('input', updateTotals);
+}
+function setupRowEvents(row) {
+  const priceInput = row.querySelector('input.table-input.direct.price');
+  const qtyInput   = row.querySelector('input.table-input.direct.qty');
+  if (priceInput) setupPriceInput(priceInput);
+  if (qtyInput)   setupQtyInput(qtyInput);
+}
 
 // ----- 受注確度バー -----
 function updateProbability(event) {
@@ -1722,6 +1792,9 @@ document.getElementById('btnCancel').addEventListener('click', function() {
 // ページ読み込み時の初期化（編集モード対応）
 // ===================================================
 document.addEventListener('DOMContentLoaded', async function() {
+  // 既存行にイベント設定
+  document.querySelectorAll('#productTableBody tr').forEach(row => setupRowEvents(row));
+  updateTotals();
   const params = new URLSearchParams(window.location.search);
   const projectNo = params.get('projectNo');
   if (!projectNo) return;
