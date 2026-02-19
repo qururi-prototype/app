@@ -579,8 +579,8 @@
   .detail-table thead th.col-product { width: auto; }
   .detail-table thead th.col-qty { width: 50px; }
   .detail-table thead th.col-price { width: 130px; }
-  .detail-table thead th.col-currency { width: 65px; }
-  .detail-table thead th.col-tax { width: 65px; }
+  .detail-table thead th.col-currency { width: 55px; }
+  .detail-table thead th.col-tax { width: 55px; }
   .detail-table thead th.col-total { width: 130px; }
 
   .detail-table tbody tr {
@@ -687,7 +687,6 @@
     border: 1px solid transparent;
     outline: none;
     transition: all 0.2s ease;
-    text-align: right;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -699,6 +698,12 @@
     color: var(--input-direct);
     border-color: var(--input-direct-border);
     padding-right: 10px;
+  }
+  .table-input.direct.price {
+    text-align: right;
+  }
+  .table-input.direct.qty {
+    text-align: center;
   }
 
   .table-input.direct:focus {
@@ -713,6 +718,7 @@
     cursor: pointer;
     appearance: none;
     padding-right: 20px;
+    text-align: left;
   }
 
   .table-select-wrapper {
@@ -739,9 +745,10 @@
     border-color: var(--input-auto-fill-border);
     cursor: default;
     font-weight: 500;
-    padding-right: 10px;
-    padding-left: 10px;
+    padding: 6px 2px;
     text-align: center;
+    font-size: 12px;
+    overflow: hidden;
   }
 
   .table-input.calc {
@@ -751,6 +758,8 @@
     cursor: default;
     font-weight: 600;
     user-select: none;
+    text-align: right;
+    padding-right: 10px;
   }
 
   .table-input.price {
@@ -1289,8 +1298,8 @@
                   </td>
                   <td style="text-align: center;"><input type="text" class="table-input direct qty" value="1"></td>
                   <td><input class="table-input direct price" value="200,000,000"></td>
-                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
-                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
+                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
+                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
                   <td><span class="table-input calc price">200,000,000</span></td>
                   <td style="text-align: center;">
                     <button class="btn-delete" title="削除">
@@ -1309,8 +1318,8 @@
                   </td>
                   <td style="text-align: center;"><input type="text" class="table-input direct qty" value="2"></td>
                   <td><input class="table-input direct price" value="150,000,000"></td>
-                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
-                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
+                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
+                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
                   <td><span class="table-input calc price">300,000,000</span></td>
                   <td style="text-align: center;">
                     <button class="btn-delete" title="削除">
@@ -1329,8 +1338,8 @@
                   </td>
                   <td style="text-align: center;"><input type="text" class="table-input direct qty" value="1"></td>
                   <td><input class="table-input direct price" value="300,000,000"></td>
-                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
-                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
+                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
+                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
                   <td><span class="table-input calc price">300,000,000</span></td>
                   <td style="text-align: center;">
                     <button class="btn-delete" title="削除">
