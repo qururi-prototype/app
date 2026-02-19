@@ -61,6 +61,7 @@
   .app-shell {
     display: flex;
     min-height: 100vh;
+    padding-left: 240px;
   }
 
   /* Sidebar - Dark Theme */
@@ -72,6 +73,12 @@
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
   }
 
   .sidebar-logo {
