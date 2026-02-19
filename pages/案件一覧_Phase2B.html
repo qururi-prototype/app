@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QURURi – 案件一覧</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #f5f6f8;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f0f1f4;
+    --bg-card: #ffffff;
+    --border-subtle: #e8eaed;
+    --border-default: #d4d7dd;
+    --border-focus: rgba(55,110,230,0.45);
+    --text-primary: #1a1d26;
+    --text-secondary: #5f6577;
+    --text-tertiary: #9198a8;
+    --text-label: #6e7585;
+    --accent-blue: #376ee6;
+    --accent-blue-glow: #eef3fc;
+    --danger: #d9503f;
+    --danger-bg: #fdf0ee;
+    --success: #1a8f5c;
+    --success-bg: #edf8f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app-shell {
+    display: flex;
+    min-height: 100vh;
+    padding-left: 240px;
+  }
+
+  /* ─── Sidebar ─── */
+  .sidebar {
+    width: 240px;
+    background: #1a1d26;
+    padding: 24px 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    padding: 0 20px;
+    margin-bottom: 32px;
+  }
+
+  .sidebar-logo-main {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #ffffff;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-logo-sub {
+    font-size: 11px;
+    font-weight: 500;
+    color: #9ca3af;
+    letter-spacing: 0.5px;
+  }
+
+  .sidebar-nav { flex: 1; padding: 0; }
+
+  .nav-section-label {
+    padding: 0 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 8px;
+    margin-top: 20px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    color: #9ca3af;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 400;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+  }
+
+  .nav-item:hover { color: #e5e7eb; background: rgba(255,255,255,0.05); }
+
+  .nav-item.active {
+    color: #60a5fa;
+    background: #1e3a8a;
+    border-left-color: #3b82f6;
+    font-weight: 500;
+  }
+
+  .nav-item svg { width: 18px; height: 18px; opacity: 0.8; }
+  .nav-item.active svg { opacity: 1; }
+
+  .sidebar-divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin: 12px 20px;
+  }
+
+  /* ─── Main ─── */
+  main {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .content-wrapper {
+    padding: 32px 40px 60px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  /* ─── Page Header ─── */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .page-title-group h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  /* ─── Buttons ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  .btn-primary {
+    background: var(--accent-blue);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #2858c4; }
+
+  .btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+  }
+  .btn-secondary:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+  .btn-success {
+    background: var(--success);
+    color: #fff;
+  }
+  .btn-success:hover { background: #157549; }
+
+  .btn-danger {
+    background: var(--danger);
+    color: #fff;
+  }
+  .btn-danger:hover { background: #b8422e; }
+
+  /* ─── Summary Bar ─── */
+  .summary-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .summary-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .summary-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .summary-value {
+    font-family: 'Inter', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+
+  .summary-sub {
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  .summary-card.highlight { border-color: #c7d7f5; background: var(--accent-blue-glow); }
+  .summary-card.highlight .summary-value { color: var(--accent-blue); }
+
+  /* ─── Filter / Search Area ─── */
+  .filter-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    color: var(--text-tertiary);
+    pointer-events: none;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 8px 10px 8px 34px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  .search-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px var(--accent-blue-glow); }
+
+  .filter-select {
+    padding: 8px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+    min-width: 120px;
+  }
+
+  .filter-select:focus { border-color: var(--accent-blue); }
+
+  .filter-date-range {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .filter-date-range input[type="date"] {
+    padding: 8px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    outline: none;
+  }
+
+  .filter-date-range input[type="date"]:focus { border-color: var(--accent-blue); }
+
+  .filter-label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+
+  .active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--accent-blue-glow);
+    border: 1px solid #c7d7f5;
+    color: var(--accent-blue);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-chip:hover { background: #dde8fb; }
+  .filter-chip svg { width: 10px; height: 10px; }
+
+  /* ─── Table Card ─── */
+  .table-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .table-count {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .table-count strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .table-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    background: #f8f9fb;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    user-select: none;
+    cursor: pointer;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  thead th:hover { color: var(--text-primary); background: #f0f1f4; }
+
+  thead th.sorted { color: var(--accent-blue); }
+
+  .sort-icon {
+    display: inline-flex;
+    vertical-align: middle;
+    margin-left: 4px;
+    opacity: 0.4;
+    font-size: 10px;
+  }
+
+  thead th.sorted .sort-icon { opacity: 1; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background 0.1s;
+    cursor: pointer;
+  }
+
+  tbody tr:hover { background: #f8faff; }
+  tbody tr:last-child { border-bottom: none; }
+
+  tbody td {
+    padding: 12px 14px;
+    color: var(--text-primary);
+    vertical-align: middle;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .td-no {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-blue);
+  }
+
+  .td-name {
+    font-weight: 500;
+  }
+
+  .td-amount {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .td-prob {
+    font-family: 'Inter', sans-serif;
+    text-align: center;
+  }
+
+  .prob-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ─── Status Badges ─── */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .status-badge::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .status-draft    { background: #f0f1f4; color: #6e7585; }
+  .status-quoted   { background: #fffbeb; color: #d97706; }
+  .status-ordered  { background: #edf8f2; color: #1a8f5c; }
+  .status-delivered { background: var(--accent-blue-glow); color: var(--accent-blue); }
+  .status-invoiced { background: #f3f0ff; color: #7c3aed; }
+  .status-paid     { background: #f0f9f0; color: #15803d; }
+
+  /* ─── Empty State ─── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-tertiary);
+  }
+
+  .empty-state svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  .empty-state p { font-size: 14px; margin-bottom: 8px; }
+  .empty-state small { font-size: 12px; }
+
+  /* ─── Pagination ─── */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-subtle);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .pagination-info {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .pagination-controls {
+    display: flex;
+    gap: 4px;
+  }
+
+  .page-btn {
+    padding: 5px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+
+  .page-btn:hover { background: var(--bg-tertiary); }
+  .page-btn.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .per-page-select {
+    padding: 5px 8px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    cursor: pointer;
+    outline: none;
+  }
+
+  /* ─── Modal ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,29,38,0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(2px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    overflow: hidden;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .close-btn:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+  .close-btn svg { width: 18px; height: 18px; }
+
+  /* ─── Import Drop Zone ─── */
+  .drop-zone {
+    border: 2px dashed var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+  }
+
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent-blue);
+    background: var(--accent-blue-glow);
+  }
+
+  .drop-zone svg {
+    width: 32px;
+    height: 32px;
+    color: var(--text-tertiary);
+    margin-bottom: 10px;
+  }
+
+  .drop-zone p { font-size: 14px; color: var(--text-secondary); }
+  .drop-zone small { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; display: block; }
+
+  /* ─── Import Preview ─── */
+  .import-preview {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .import-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .import-stat {
+    text-align: center;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .import-stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .import-stat-label { font-size: 11px; color: var(--text-tertiary); }
+  .import-stat.new .import-stat-value { color: var(--success); }
+  .import-stat.update .import-stat-value { color: var(--warning); }
+  .import-stat.error .import-stat-value { color: var(--danger); }
+
+  .import-error-list {
+    background: var(--danger-bg);
+    border: 1px solid #f2cbc5;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--danger);
+    max-height: 160px;
+    overflow-y: auto;
+  }
+
+  .import-error-list li { margin-bottom: 4px; margin-left: 16px; }
+
+  /* ─── Toast ─── */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    min-width: 240px;
+    animation: slideInRight 0.3s ease;
+  }
+
+  .toast svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .toast-success { background: var(--success); color: #fff; }
+  .toast-error   { background: var(--danger); color: #fff; }
+  .toast-info    { background: var(--accent-blue); color: #fff; }
+
+  @keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* ─── Misc ─── */
+  .row-checkbox {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--accent-blue);
+    cursor: pointer;
+  }
+
+  .selected-row { background: #f0f5ff !important; }
+
+  .bulk-bar {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--accent-blue);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+  }
+
+  .bulk-bar.visible { display: flex; }
+  .bulk-bar svg { width: 14px; height: 14px; }
+
+  .currency-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    padding: 1px 4px;
+    margin-right: 4px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .td-date {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+  }
+
+  .date-overdue { color: var(--danger); font-weight: 600; }
+  .date-soon { color: var(--warning); }
+
+  .skeleton {
+    background: linear-gradient(90deg, #f0f1f4 25%, #e8eaed 50%, #f0f1f4 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 4px;
+    height: 14px;
+  }
+
+  @keyframes skeleton-loading {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .summary-bar { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 640px) {
+    .app-shell { padding-left: 0; }
+    .sidebar { display: none; }
+    .content-wrapper { padding: 20px; }
+    .summary-bar { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <!-- ─── Sidebar ─── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-main">QURURi</div>
+      <div class="sidebar-logo-sub">SALES INTELLIGENCE</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">案件管理</div>
+      <div class="nav-item" onclick="navigateTo('input')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        案件入力
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+        案件一覧
+      </div>
+      <hr class="sidebar-divider">
+      <div class="nav-section-label">マスター</div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        製品マスタ
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        単価マスタ
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        為替マスタ
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        取引先マスタ
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        担当者マスタ
+      </div>
+    </nav>
+  </aside>
+
+  <!-- ─── Main ─── -->
+  <main>
+    <div class="content-wrapper">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-group">
+          <h1>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px;color:var(--accent-blue)"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+            案件一覧
+          </h1>
+          <p class="page-subtitle">全案件の検索・集計・CSV入出力。案件Noをクリックして編集。</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="openImportModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            CSVインポート
+          </button>
+          <button class="btn btn-secondary" onclick="exportCSV()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            CSVエクスポート
+          </button>
+          <button class="btn btn-primary" onclick="navigateTo('input')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新規案件
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Bar -->
+      <div class="summary-bar" id="summaryBar">
+        <div class="summary-card highlight">
+          <div class="summary-label">表示件数</div>
+          <div class="summary-value" id="sumCount">–</div>
+          <div class="summary-sub">件</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">合計金額（税抜）</div>
+          <div class="summary-value" id="sumTotal">–</div>
+          <div class="summary-sub">円</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">受注確度加重平均</div>
+          <div class="summary-value" id="sumProb">–</div>
+          <div class="summary-sub">期待値</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ステータス別</div>
+          <div class="summary-value" id="sumStatusTop">–</div>
+          <div class="summary-sub" id="sumStatusSub">–</div>
+        </div>
+      </div>
+
+      <!-- Filter Area -->
+      <div class="filter-card">
+        <div class="filter-row">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="search-input" id="searchInput" placeholder="案件名・取引先・案件Noで検索..." oninput="applyFilters()">
+          </div>
+          <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+            <option value="">ステータス: 全て</option>
+            <option value="draft">下書き</option>
+            <option value="quoted">見積済</option>
+            <option value="ordered">受注</option>
+            <option value="delivered">納品済</option>
+            <option value="invoiced">請求済</option>
+            <option value="paid">入金済</option>
+          </select>
+          <select class="filter-select" id="filterRegion" onchange="applyFilters()">
+            <option value="">地域: 全て</option>
+          </select>
+          <select class="filter-select" id="filterSales" onchange="applyFilters()">
+            <option value="">担当者: 全て</option>
+          </select>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">納品予定日：</span>
+          <div class="filter-date-range">
+            <input type="date" id="filterDateFrom" onchange="applyFilters()">
+            <span class="filter-label">〜</span>
+            <input type="date" id="filterDateTo" onchange="applyFilters()">
+          </div>
+          <select class="filter-select" id="filterProb" onchange="applyFilters()" style="min-width:140px;">
+            <option value="">確度: 全て</option>
+            <option value="high">高（70%以上）</option>
+            <option value="mid">中（40-69%）</option>
+            <option value="low">低（39%以下）</option>
+          </select>
+          <button class="btn btn-secondary" onclick="clearFilters()" style="margin-left:auto;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            絞り込みリセット
+          </button>
+        </div>
+        <div class="active-filters" id="activeFilters" style="display:none;"></div>
+      </div>
+
+      <!-- Table Card -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="table-count">
+              <span id="resultCount">0</span>件中 <strong id="showingCount">0</strong>件表示
+            </span>
+            <div class="bulk-bar" id="bulkBar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span id="bulkCount">0</span>件選択中
+              <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;" onclick="exportSelectedCSV()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                選択分をエクスポート
+              </button>
+            </div>
+          </div>
+          <div class="table-actions">
+            <select class="per-page-select" id="perPageSelect" onchange="changePerPage()">
+              <option value="20">20件表示</option>
+              <option value="50">50件表示</option>
+              <option value="100">100件表示</option>
+              <option value="0">全件表示</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="projectTable">
+            <thead>
+              <tr>
+                <th style="width:36px;padding:10px 12px;">
+                  <input type="checkbox" class="row-checkbox" id="checkAll" onchange="toggleCheckAll()">
+                </th>
+                <th onclick="sortBy('projectNo')">案件No <span class="sort-icon" id="sort_projectNo">↕</span></th>
+                <th onclick="sortBy('projectName')">案件名 <span class="sort-icon" id="sort_projectName">↕</span></th>
+                <th onclick="sortBy('customer')">取引先 <span class="sort-icon" id="sort_customer">↕</span></th>
+                <th onclick="sortBy('status')">ステータス <span class="sort-icon" id="sort_status">↕</span></th>
+                <th onclick="sortBy('subtotal')" style="text-align:right;">合計（税抜） <span class="sort-icon" id="sort_subtotal">↕</span></th>
+                <th onclick="sortBy('probability')" style="text-align:center;">確度 <span class="sort-icon" id="sort_probability">↕</span></th>
+                <th onclick="sortBy('deliveryDate')">納品予定日 <span class="sort-icon" id="sort_deliveryDate">↕</span></th>
+                <th onclick="sortBy('salesPerson')">担当者 <span class="sort-icon" id="sort_salesPerson">↕</span></th>
+                <th onclick="sortBy('salesRegion')">地域 <span class="sort-icon" id="sort_salesRegion">↕</span></th>
+                <th onclick="sortBy('updatedAt')">更新日時 <span class="sort-icon" id="sort_updatedAt">↕</span></th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="11"><div class="empty-state"><p>データを読み込み中...</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ─── CSVインポート モーダル ─── -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent-blue)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        CSVインポート（案件一括登録）
+      </div>
+      <button class="close-btn" onclick="closeImportModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div id="importStep1">
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
+             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p>クリックまたはCSVファイルをドロップ</p>
+          <small>UTF-8（BOM付き）対応 · 最大10,000件</small>
+        </div>
+        <input type="file" id="fileInput" accept=".csv" style="display:none;" onchange="handleFileSelect(event)">
+
+        <div style="margin-top:12px;font-size:12px;color:var(--text-tertiary);">
+          <strong style="color:var(--text-secondary);">CSVフォーマット（必須列）</strong><br>
+          案件名, 取引先名, 担当者名, 納品予定日(YYYY-MM-DD), 受注確度(0-100), 地域, ステータス, 合計金額(税抜), 備考
+          <br><br>
+          <span style="color:var(--accent-blue);cursor:pointer;text-decoration:underline;" onclick="downloadTemplate()">ひな形CSVをダウンロード</span>
+        </div>
+      </div>
+
+      <div id="importStep2" style="display:none;">
+        <div class="import-stats">
+          <div class="import-stat new">
+            <div class="import-stat-value" id="importNew">0</div>
+            <div class="import-stat-label">新規登録</div>
+          </div>
+          <div class="import-stat update">
+            <div class="import-stat-value" id="importUpdate">0</div>
+            <div class="import-stat-label">更新（案件No一致）</div>
+          </div>
+          <div class="import-stat error">
+            <div class="import-stat-value" id="importError">0</div>
+            <div class="import-stat-label">エラー行</div>
+          </div>
+        </div>
+
+        <div class="import-preview" id="importPreview"></div>
+
+        <div id="importErrorList" style="display:none;">
+          <p style="font-size:12px;font-weight:600;color:var(--danger);margin-bottom:6px;">エラー詳細：</p>
+          <ul class="import-error-list" id="importErrorDetail"></ul>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeImportModal()">キャンセル</button>
+      <button class="btn btn-secondary" id="btnImportBack" style="display:none;" onclick="resetImport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><polyline points="15 18 9 12 15 6"/></svg>
+        ファイル選び直し
+      </button>
+      <button class="btn btn-success" id="btnImportConfirm" style="display:none;" onclick="commitImport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><polyline points="20 6 9 17 4 12"/></svg>
+        <span id="btnImportConfirmLabel">この内容で登録する</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ================================================================
+// QURURi 案件一覧 Phase 2B
+// ================================================================
+
+// ─── State ───
+let allProjects = [];
+let filteredProjects = [];
+let currentPage = 1;
+let perPage = 20;
+let sortKey = 'updatedAt';
+let sortDir = 'desc';
+let selectedIds = new Set();
+let importData = { valid: [], errors: [], updates: [], fileName: '' };
+
+// ─── Storage Keys (dataManager.js と完全統一) ───
+// qururi_projectIndex : string[]        案件Noの配列
+// qururi_project_${No}: object          案件データ本体
+// ※ DataAPI が定義されていれば優先使用、未定義時はローカル実装を使用
+const LocalDB = {
+  _getIndex() {
+    try { return JSON.parse(localStorage.getItem('qururi_projectIndex') || '[]'); } catch { return []; }
+  },
+  _updateIndex(no) {
+    const idx = this._getIndex();
+    if (!idx.includes(no)) { idx.push(no); localStorage.setItem('qururi_projectIndex', JSON.stringify(idx)); }
+  },
+  _removeFromIndex(no) {
+    const idx = this._getIndex().filter(n => n !== no);
+    localStorage.setItem('qururi_projectIndex', JSON.stringify(idx));
+  },
+  _generateProjectNo() {
+    const year = new Date().getFullYear();
+    const projects = this.getAllProjects();
+    const maxNo = projects.filter(p => p.projectNo?.startsWith(`PJ-${year}`))
+      .reduce((m, p) => Math.max(m, parseInt(p.projectNo?.slice(7)) || 0), 0);
+    return `PJ-${year}${String(maxNo + 1).padStart(4, '0')}`;
+  },
+  getAllProjects() {
+    return this._getIndex()
+      .map(no => { try { return JSON.parse(localStorage.getItem(`qururi_project_${no}`)); } catch { return null; } })
+      .filter(Boolean)
+      .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+  },
+  saveProject(data) {
+    if (!data.projectNo) {
+      data.projectNo = this._generateProjectNo();
+      data.createdAt = new Date().toISOString();
+    }
+    data.updatedAt = new Date().toISOString();
+    localStorage.setItem(`qururi_project_${data.projectNo}`, JSON.stringify(data));
+    this._updateIndex(data.projectNo);
+    return data;
+  },
+  deleteProject(no) {
+    localStorage.removeItem(`qururi_project_${no}`);
+    this._removeFromIndex(no);
+  },
+};
+
+// ─── Status Config ───
+const STATUS_MAP = {
+  draft:     { label: '下書き',  class: 'status-draft' },
+  quoted:    { label: '見積済',  class: 'status-quoted' },
+  ordered:   { label: '受注',    class: 'status-ordered' },
+  delivered: { label: '納品済',  class: 'status-delivered' },
+  invoiced:  { label: '請求済',  class: 'status-invoiced' },
+  paid:      { label: '入金済',  class: 'status-paid' },
+};
+
+// ─── Init ───
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadProjects();
+  await setupDemoData();  // ストレージ空の時のみデモデータ投入
+  buildFilterOptions();
+  applyFilters();
+});
+
+// ─── Load / Save ───
+// DataAPI (dataManager.js) が同ドメインでロード済みなら自動で使用
+// 未ロード時は LocalDB (同一ストレージキー互換の組み込み実装) を使用
+function getDB() {
+  return (typeof DataAPI !== 'undefined') ? DataAPI : LocalDB;
+}
+
+async function loadProjects() {
+  try {
+    allProjects = await getDB().getAllProjects();
+  } catch (e) {
+    console.warn('[QURURi] loadProjects failed:', e);
+    allProjects = [];
+  }
+}
+
+async function saveProjectRecord(data) {
+  return await getDB().saveProject(data);
+}
+
+// ─── Demo Data (ストレージが空の時のみ投入) ───
+async function setupDemoData() {
+  if (allProjects.length > 0) return;
+  const today = new Date();
+  const fmtDate = (d) => d.toISOString().slice(0, 10);
+  const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+
+  const demos = [
+    { projectNo:'PJ-20260001', projectName:'山田製作所 検査装置 #1', customer:'山田製作所', salesPerson:'田中 健一', salesRegion:'JP', probability:90, deliveryDate: fmtDate(addDays(today, 30)), status:'ordered', subtotal:12000000, total:13200000, createdAt: fmtDate(addDays(today,-20)), updatedAt: fmtDate(addDays(today,-2)) },
+    { projectNo:'PJ-20260002', projectName:'ABC Electronics 計測システム', customer:'ABC Electronics', salesPerson:'鈴木 恵子', salesRegion:'NA', probability:70, deliveryDate: fmtDate(addDays(today, 60)), status:'quoted', subtotal:45000000, total:49500000, createdAt: fmtDate(addDays(today,-15)), updatedAt: fmtDate(addDays(today,-5)) },
+    { projectNo:'PJ-20260003', projectName:'東芝エネルギー 制御盤一式', customer:'東芝エネルギー', salesPerson:'田中 健一', salesRegion:'JP', probability:60, deliveryDate: fmtDate(addDays(today, 90)), status:'draft', subtotal:8500000, total:9350000, createdAt: fmtDate(addDays(today,-10)), updatedAt: fmtDate(addDays(today,-1)) },
+    { projectNo:'PJ-20260004', projectName:'GmbH Berlin 精密測定器', customer:'GmbH Berlin', salesPerson:'渡辺 武', salesRegion:'EU', probability:40, deliveryDate: fmtDate(addDays(today, 45)), status:'quoted', subtotal:22000000, total:24200000, createdAt: fmtDate(addDays(today,-8)), updatedAt: fmtDate(addDays(today,-3)) },
+    { projectNo:'PJ-20260005', projectName:'富士フイルム 画像処理ユニット', customer:'富士フイルム', salesPerson:'鈴木 恵子', salesRegion:'JP', probability:85, deliveryDate: fmtDate(addDays(today, -5)), status:'delivered', subtotal:6800000, total:7480000, createdAt: fmtDate(addDays(today,-30)), updatedAt: fmtDate(today) },
+    { projectNo:'PJ-20260006', projectName:'上海光電 センサーモジュール', customer:'上海光電', salesPerson:'渡辺 武', salesRegion:'CN', probability:30, deliveryDate: fmtDate(addDays(today, 120)), status:'draft', subtotal:3200000, total:3520000, createdAt: fmtDate(addDays(today,-5)), updatedAt: fmtDate(addDays(today,-1)) },
+    { projectNo:'PJ-20260007', projectName:'パナソニック 組込みシステム', customer:'パナソニック', salesPerson:'田中 健一', salesRegion:'JP', probability:100, deliveryDate: fmtDate(addDays(today, -15)), status:'invoiced', subtotal:18500000, total:20350000, createdAt: fmtDate(addDays(today,-45)), updatedAt: fmtDate(addDays(today,-7)) },
+    { projectNo:'PJ-20260008', projectName:'Seoul Motors 品質管理装置', customer:'Seoul Motors', salesPerson:'鈴木 恵子', salesRegion:'AP', probability:55, deliveryDate: fmtDate(addDays(today, 75)), status:'quoted', subtotal:31000000, total:34100000, createdAt: fmtDate(addDays(today,-12)), updatedAt: fmtDate(addDays(today,-4)) },
+  ];
+
+  // LocalDB / DataAPI 両方のストレージへ永続化
+  for (const d of demos) {
+    LocalDB.saveProject(d);  // DataAPI経由だと採番が変わるため直接書き込み
+  }
+  allProjects = demos;
+  applyFilters();
+}
+
+// ─── Build Filter Dropdowns ───
+function buildFilterOptions() {
+  const regions = [...new Set(allProjects.map(p => p.salesRegion).filter(Boolean))].sort();
+  const sales   = [...new Set(allProjects.map(p => p.salesPerson).filter(Boolean))].sort();
+
+  const regionSel = document.getElementById('filterRegion');
+  const salesSel  = document.getElementById('filterSales');
+
+  regions.forEach(r => {
+    const o = document.createElement('option');
+    o.value = r; o.textContent = r;
+    regionSel.appendChild(o);
+  });
+
+  sales.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    salesSel.appendChild(o);
+  });
+}
+
+// ─── Filters ───
+function applyFilters() {
+  const q      = document.getElementById('searchInput').value.trim().toLowerCase();
+  const status = document.getElementById('filterStatus').value;
+  const region = document.getElementById('filterRegion').value;
+  const sales  = document.getElementById('filterSales').value;
+  const from   = document.getElementById('filterDateFrom').value;
+  const to     = document.getElementById('filterDateTo').value;
+  const prob   = document.getElementById('filterProb').value;
+
+  filteredProjects = allProjects.filter(p => {
+    if (q) {
+      const haystack = [p.projectNo, p.projectName, p.customer, p.salesPerson].join(' ').toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    if (status && p.status !== status) return false;
+    if (region && p.salesRegion !== region) return false;
+    if (sales  && p.salesPerson !== sales)  return false;
+    if (from   && p.deliveryDate < from)    return false;
+    if (to     && p.deliveryDate > to)      return false;
+    if (prob === 'high' && p.probability < 70)    return false;
+    if (prob === 'mid'  && (p.probability < 40 || p.probability >= 70)) return false;
+    if (prob === 'low'  && p.probability >= 40)   return false;
+    return true;
+  });
+
+  sortData();
+  currentPage = 1;
+  renderSummary();
+  renderTable();
+  renderPagination();
+  renderActiveFilters();
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filterStatus').value = '';
+  document.getElementById('filterRegion').value = '';
+  document.getElementById('filterSales').value = '';
+  document.getElementById('filterDateFrom').value = '';
+  document.getElementById('filterDateTo').value = '';
+  document.getElementById('filterProb').value = '';
+  applyFilters();
+}
+
+function renderActiveFilters() {
+  const container = document.getElementById('activeFilters');
+  const chips = [];
+  const q      = document.getElementById('searchInput').value.trim();
+  const status = document.getElementById('filterStatus').value;
+  const region = document.getElementById('filterRegion').value;
+  const sales  = document.getElementById('filterSales').value;
+  const prob   = document.getElementById('filterProb').value;
+  const from   = document.getElementById('filterDateFrom').value;
+  const to     = document.getElementById('filterDateTo').value;
+
+  if (status) chips.push({ label: `ステータス: ${STATUS_MAP[status]?.label || status}`, key: 'filterStatus' });
+  if (region) chips.push({ label: `地域: ${region}`, key: 'filterRegion' });
+  if (sales)  chips.push({ label: `担当者: ${sales}`, key: 'filterSales' });
+  if (prob === 'high') chips.push({ label: '確度: 高（70%+）', key: 'filterProb' });
+  if (prob === 'mid')  chips.push({ label: '確度: 中（40-69%）', key: 'filterProb' });
+  if (prob === 'low')  chips.push({ label: '確度: 低（～39%）', key: 'filterProb' });
+  if (from || to) chips.push({ label: `納品予定日: ${from||'–'} 〜 ${to||'–'}`, key: '_date' });
+
+  if (chips.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = 'flex';
+  container.innerHTML = chips.map(c => `
+    <span class="filter-chip" onclick="clearChip('${c.key}')">
+      ${c.label}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </span>
+  `).join('');
+}
+
+function clearChip(key) {
+  if (key === '_date') {
+    document.getElementById('filterDateFrom').value = '';
+    document.getElementById('filterDateTo').value = '';
+  } else {
+    document.getElementById(key).value = '';
+  }
+  applyFilters();
+}
+
+// ─── Sort ───
+function sortBy(key) {
+  if (sortKey === key) {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortKey = key;
+    sortDir = key === 'updatedAt' ? 'desc' : 'asc';
+  }
+  // Reset sort icons
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
+  const sortEl = document.getElementById('sort_' + key);
+  if (sortEl) {
+    sortEl.closest('th').classList.add('sorted');
+    sortEl.textContent = sortDir === 'asc' ? '↑' : '↓';
+  }
+  sortData();
+  renderTable();
+  renderPagination();
+}
+
+function sortData() {
+  filteredProjects.sort((a, b) => {
+    let va = a[sortKey] ?? '';
+    let vb = b[sortKey] ?? '';
+    if (typeof va === 'number' && typeof vb === 'number') {
+      return sortDir === 'asc' ? va - vb : vb - va;
+    }
+    va = String(va).toLowerCase();
+    vb = String(vb).toLowerCase();
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+// ─── Summary ───
+function renderSummary() {
+  const count = filteredProjects.length;
+  const total = filteredProjects.reduce((s, p) => s + (p.subtotal || 0), 0);
+  const weightedSum = filteredProjects.reduce((s, p) => s + (p.subtotal || 0) * (p.probability || 0) / 100, 0);
+  const probAvg = count > 0 ? Math.round(filteredProjects.reduce((s, p) => s + (p.probability || 0), 0) / count) : 0;
+
+  document.getElementById('sumCount').textContent = count.toLocaleString();
+  document.getElementById('sumTotal').textContent = formatMoney(total);
+  document.getElementById('sumProb').textContent = formatMoney(weightedSum);
+  document.getElementById('sumStatusTop').textContent = probAvg + '%';
+
+  // Status breakdown
+  const statusCounts = {};
+  filteredProjects.forEach(p => {
+    const s = STATUS_MAP[p.status]?.label || p.status || '不明';
+    statusCounts[s] = (statusCounts[s] || 0) + 1;
+  });
+  const top = Object.entries(statusCounts).sort((a,b) => b[1]-a[1]).slice(0,2);
+  document.getElementById('sumStatusSub').textContent = top.map(([k,v]) => `${k}:${v}件`).join('・') || '–';
+}
+
+// ─── Render Table ───
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  const total = filteredProjects.length;
+  const start = perPage > 0 ? (currentPage - 1) * perPage : 0;
+  const end   = perPage > 0 ? Math.min(start + perPage, total) : total;
+  const page  = filteredProjects.slice(start, end);
+
+  document.getElementById('resultCount').textContent  = total.toLocaleString();
+  document.getElementById('showingCount').textContent = page.length.toLocaleString();
+
+  if (page.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+      <p>案件が見つかりません</p>
+      <small>検索条件を変えるか、新規案件を登録してください</small>
+    </div></td></tr>`;
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const soonDate = new Date(); soonDate.setDate(soonDate.getDate() + 14);
+  const soonStr = soonDate.toISOString().slice(0, 10);
+
+  tbody.innerHTML = page.map(p => {
+    const statusCfg = STATUS_MAP[p.status] || { label: p.status, class: 'status-draft' };
+    const checked   = selectedIds.has(p.projectNo) ? 'checked' : '';
+    const rowClass  = selectedIds.has(p.projectNo) ? 'selected-row' : '';
+    const prob      = p.probability ?? 0;
+    const probColor = prob >= 70 ? '#1a8f5c' : prob >= 40 ? '#d97706' : '#d9503f';
+    const probBg    = prob >= 70 ? '#edf8f2' : prob >= 40 ? '#fffbeb' : '#fdf0ee';
+
+    let dateClass = 'td-date';
+    let dateLabel = p.deliveryDate ? formatDate(p.deliveryDate) : '–';
+    if (p.deliveryDate && p.deliveryDate < today && !['invoiced','paid'].includes(p.status)) {
+      dateClass += ' date-overdue'; dateLabel += ' ⚠';
+    } else if (p.deliveryDate && p.deliveryDate <= soonStr) {
+      dateClass += ' date-soon';
+    }
+
+    return `<tr class="${rowClass}" onclick="handleRowClick('${p.projectNo}', event)">
+      <td onclick="event.stopPropagation()" style="padding:12px;">
+        <input type="checkbox" class="row-checkbox" ${checked}
+               onchange="toggleCheck('${p.projectNo}', this.checked)">
+      </td>
+      <td class="td-no">${p.projectNo || '–'}</td>
+      <td class="td-name" style="max-width:220px;" title="${p.projectName || ''}">${p.projectName || '–'}</td>
+      <td style="max-width:140px;" title="${p.customer || ''}">${p.customer || '–'}</td>
+      <td><span class="status-badge ${statusCfg.class}">${statusCfg.label}</span></td>
+      <td class="td-amount" style="text-align:right;">
+        <span class="currency-badge">JPY</span>¥${(p.subtotal || 0).toLocaleString()}
+      </td>
+      <td class="td-prob">
+        <span class="prob-badge" style="background:${probBg};color:${probColor};">${prob}%</span>
+      </td>
+      <td class="${dateClass}">${dateLabel}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.salesPerson || '–'}</td>
+      <td>${p.salesRegion || '–'}</td>
+      <td class="td-date">${p.updatedAt ? formatDate(p.updatedAt) : '–'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── Pagination ───
+function renderPagination() {
+  const container = document.getElementById('pagination');
+  const total = filteredProjects.length;
+  if (perPage === 0 || total <= perPage) { container.innerHTML = ''; return; }
+
+  const totalPages = Math.ceil(total / perPage);
+  const start = (currentPage - 1) * perPage + 1;
+  const end   = Math.min(currentPage * perPage, total);
+
+  let pagesHTML = '';
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+      pagesHTML += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+    } else if (Math.abs(i - currentPage) === 3) {
+      pagesHTML += `<span style="padding:5px 4px;color:var(--text-tertiary);">…</span>`;
+    }
+  }
+
+  container.innerHTML = `
+    <span class="pagination-info">${start.toLocaleString()}–${end.toLocaleString()} / ${total.toLocaleString()}件</span>
+    <div class="pagination-controls">
+      <button class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage === 1 ? 'disabled' : ''}>←</button>
+      ${pagesHTML}
+      <button class="page-btn" onclick="goToPage(${currentPage+1})" ${currentPage === totalPages ? 'disabled' : ''}>→</button>
+    </div>
+  `;
+}
+
+function goToPage(p) {
+  const total = filteredProjects.length;
+  const totalPages = perPage > 0 ? Math.ceil(total / perPage) : 1;
+  currentPage = Math.max(1, Math.min(p, totalPages));
+  renderTable();
+  renderPagination();
+}
+
+function changePerPage() {
+  perPage = parseInt(document.getElementById('perPageSelect').value);
+  currentPage = 1;
+  renderTable();
+  renderPagination();
+}
+
+// ─── Checkbox / Bulk ───
+function handleRowClick(projectNo, event) {
+  if (event.target.type === 'checkbox') return;
+  // In real app: navigate to input page
+  navigateTo('input', projectNo);
+}
+
+function toggleCheck(projectNo, checked) {
+  if (checked) selectedIds.add(projectNo);
+  else selectedIds.delete(projectNo);
+  updateBulkBar();
+  updateCheckAll();
+}
+
+function toggleCheckAll() {
+  const allChecked = document.getElementById('checkAll').checked;
+  const total = filteredProjects.length;
+  const start = perPage > 0 ? (currentPage - 1) * perPage : 0;
+  const end   = perPage > 0 ? Math.min(start + perPage, total) : total;
+  const page  = filteredProjects.slice(start, end);
+
+  page.forEach(p => {
+    if (allChecked) selectedIds.add(p.projectNo);
+    else selectedIds.delete(p.projectNo);
+  });
+  updateBulkBar();
+  renderTable();
+}
+
+function updateCheckAll() {
+  const total = filteredProjects.length;
+  const start = perPage > 0 ? (currentPage - 1) * perPage : 0;
+  const end   = perPage > 0 ? Math.min(start + perPage, total) : total;
+  const page  = filteredProjects.slice(start, end);
+  const allChecked = page.length > 0 && page.every(p => selectedIds.has(p.projectNo));
+  document.getElementById('checkAll').checked = allChecked;
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulkBar');
+  const count = selectedIds.size;
+  if (count > 0) {
+    bar.classList.add('visible');
+    document.getElementById('bulkCount').textContent = count;
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+// ─── CSV Export ───
+function exportCSV() {
+  const rows = filteredProjects;
+  if (rows.length === 0) { showToast('エクスポートするデータがありません', 'error'); return; }
+  const csv = buildCSV(rows);
+  downloadCSV(csv, `QURURi_案件一覧_${todayStr()}.csv`);
+  showToast(`${rows.length}件をエクスポートしました`, 'success');
+}
+
+function exportSelectedCSV() {
+  const rows = filteredProjects.filter(p => selectedIds.has(p.projectNo));
+  if (rows.length === 0) { showToast('選択された案件がありません', 'error'); return; }
+  const csv = buildCSV(rows);
+  downloadCSV(csv, `QURURi_案件選択_${todayStr()}.csv`);
+  showToast(`${rows.length}件をエクスポートしました`, 'success');
+}
+
+function buildCSV(rows) {
+  const headers = ['案件No', '案件名', '取引先', '担当者', '地域', 'ステータス', '合計金額（税抜）', '合計金額（税込）', '受注確度(%)', '納品予定日', '備考', '登録日時', '更新日時'];
+  const data = rows.map(p => [
+    p.projectNo, p.projectName, p.customer, p.salesPerson, p.salesRegion,
+    STATUS_MAP[p.status]?.label || p.status,
+    p.subtotal || 0, p.total || 0, p.probability || 0,
+    p.deliveryDate || '', p.memo || '',
+    p.createdAt || '', p.updatedAt || ''
+  ]);
+  const lines = [headers, ...data].map(row =>
+    row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
+  );
+  return '\uFEFF' + lines.join('\r\n');
+}
+
+function downloadCSV(content, filename) {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadTemplate() {
+  const csv = '\uFEFF案件名,取引先名,担当者名,納品予定日,受注確度,地域,ステータス,合計金額（税抜）,備考\n"サンプル案件 A","山田製作所","田中 健一","2026-06-30","70","JP","draft","5000000","サンプルデータ"';
+  downloadCSV(csv, 'QURURi_案件インポートひな形.csv');
+}
+
+// ─── CSV Import ───
+function openImportModal() {
+  document.getElementById('importModal').classList.add('open');
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').classList.remove('open');
+  resetImport();
+}
+
+function resetImport() {
+  document.getElementById('importStep1').style.display = 'block';
+  document.getElementById('importStep2').style.display = 'none';
+  document.getElementById('btnImportBack').style.display    = 'none';
+  document.getElementById('btnImportConfirm').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  importData = { valid: [], errors: [], updates: [], fileName: '' };
+}
+
+function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
+function handleDragLeave()  { document.getElementById('dropZone').classList.remove('drag-over'); }
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+}
+
+function processFile(file) {
+  if (!file.name.endsWith('.csv')) {
+    showToast('CSVファイルを選択してください', 'error');
+    return;
+  }
+  importData.fileName = file.name;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let text = e.target.result;
+    // BOM除去
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    parseImportCSV(text);
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseImportCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) {
+    showToast('CSVにデータ行がありません', 'error');
+    return;
+  }
+
+  const headers = parseCSVLine(lines[0]);
+  const COL = {
+    projectNo:   findCol(headers, ['案件No', 'project_no', 'projectNo']),
+    projectName: findCol(headers, ['案件名', 'project_name', 'projectName']),
+    customer:    findCol(headers, ['取引先名', '取引先', 'customer']),
+    salesPerson: findCol(headers, ['担当者名', '担当者', 'sales_person', 'salesPerson']),
+    deliveryDate:findCol(headers, ['納品予定日', 'delivery_date', 'deliveryDate']),
+    probability: findCol(headers, ['受注確度', 'probability']),
+    salesRegion: findCol(headers, ['地域', '販売地域', 'region', 'salesRegion']),
+    status:      findCol(headers, ['ステータス', 'status']),
+    subtotal:    findCol(headers, ['合計金額（税抜）', '合計金額', 'subtotal']),
+    memo:        findCol(headers, ['備考', 'memo']),
+  };
+
+  const existingNos = new Set(allProjects.map(p => p.projectNo));
+  importData.valid   = [];
+  importData.errors  = [];
+  importData.updates = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCSVLine(lines[i]);
+    if (cols.every(c => !c.trim())) continue;
+
+    const row = {};
+    Object.entries(COL).forEach(([k, idx]) => {
+      if (idx >= 0) row[k] = cols[idx]?.trim() ?? '';
+    });
+
+    // Validation
+    const errs = [];
+    if (!row.projectName) errs.push(`${i+1}行目: 案件名は必須です`);
+    if (!row.customer)    errs.push(`${i+1}行目: 取引先名は必須です`);
+    if (row.probability !== undefined && row.probability !== '' &&
+        (isNaN(Number(row.probability)) || Number(row.probability) < 0 || Number(row.probability) > 100))
+      errs.push(`${i+1}行目: 受注確度は0〜100の数値で入力してください`);
+    if (row.deliveryDate && !/^\d{4}-\d{2}-\d{2}$/.test(row.deliveryDate))
+      errs.push(`${i+1}行目: 納品予定日はYYYY-MM-DD形式で入力してください`);
+
+    if (errs.length > 0) {
+      importData.errors.push(...errs);
+      continue;
+    }
+
+    const record = {
+      projectName:  row.projectName,
+      customer:     row.customer,
+      salesPerson:  row.salesPerson || '',
+      deliveryDate: row.deliveryDate || null,
+      probability:  row.probability !== '' ? Number(row.probability) : 50,
+      salesRegion:  row.salesRegion || 'JP',
+      status:       row.status || 'draft',
+      subtotal:     row.subtotal ? Number(String(row.subtotal).replace(/[,¥\s]/g, '')) : 0,
+      memo:         row.memo || '',
+      updatedAt:    new Date().toISOString().slice(0, 10),
+    };
+    record.total = Math.round(record.subtotal * 1.1);
+
+    if (row.projectNo && existingNos.has(row.projectNo)) {
+      record.projectNo = row.projectNo;
+      importData.updates.push(record);
+    } else {
+      record.createdAt = new Date().toISOString().slice(0, 10);
+      importData.valid.push(record);
+    }
+  }
+
+  showImportPreview();
+}
+
+function findCol(headers, candidates) {
+  for (const c of candidates) {
+    const idx = headers.findIndex(h => h.trim() === c);
+    if (idx >= 0) return idx;
+  }
+  return -1;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === ',' && !inQ) {
+      result.push(cur); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
+function showImportPreview() {
+  const newCount    = importData.valid.length;
+  const updateCount = importData.updates.length;
+  const errCount    = importData.errors.length;
+
+  document.getElementById('importStep1').style.display = 'none';
+  document.getElementById('importStep2').style.display = 'block';
+  document.getElementById('btnImportBack').style.display    = 'inline-flex';
+
+  document.getElementById('importNew').textContent    = newCount;
+  document.getElementById('importUpdate').textContent = updateCount;
+  document.getElementById('importError').textContent  = errCount;
+
+  const total = newCount + updateCount;
+  document.getElementById('importPreview').innerHTML = `
+    <strong>ファイル：</strong>${importData.fileName}<br>
+    <strong>処理件数：</strong>${total}件（新規 ${newCount}件 + 更新 ${updateCount}件）
+    ${errCount > 0 ? `<br><span style="color:var(--warning);">⚠ ${errCount}件はスキップされます</span>` : ''}
+  `;
+
+  if (errCount > 0) {
+    document.getElementById('importErrorList').style.display = 'block';
+    document.getElementById('importErrorDetail').innerHTML = importData.errors.map(e => `<li>${e}</li>`).join('');
+  } else {
+    document.getElementById('importErrorList').style.display = 'none';
+  }
+
+  if (total > 0) {
+    document.getElementById('btnImportConfirm').style.display = 'inline-flex';
+    document.getElementById('btnImportConfirmLabel').textContent = `この内容で登録する（${total}件）`;
+  }
+}
+
+async function commitImport() {
+  const btn = document.getElementById('btnImportConfirm');
+  btn.disabled = true;
+  btn.textContent = '登録中...';
+
+  try {
+    // DataAPI / LocalDB を通じて1件ずつ保存（採番・インデックス更新も自動）
+    for (const r of importData.valid) {
+      await saveProjectRecord(r);  // projectNo未設定 → 自動採番
+    }
+    for (const r of importData.updates) {
+      await saveProjectRecord(r);  // projectNo設定済み → 上書き保存
+    }
+
+    // メモリ上の allProjects を再取得して表示を最新化
+    await loadProjects();
+
+    const total = importData.valid.length + importData.updates.length;
+    showToast(`${total}件を登録しました（新規${importData.valid.length}件・更新${importData.updates.length}件）`, 'success');
+    closeImportModal();
+    buildFilterOptions();
+    applyFilters();
+
+  } catch (e) {
+    showToast('登録に失敗しました: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '再試行';
+  }
+}
+
+// ─── Navigation ───
+function navigateTo(page, projectNo) {
+  if (page === 'input') {
+    const url = projectNo
+      ? `案件入力画面_Phase2A_連携版.html?projectNo=${projectNo}`
+      : `案件入力画面_Phase2A_連携版.html`;
+    // 同ディレクトリに案件入力画面が存在すれば遷移、なければトースト表示
+    const a = document.createElement('a');
+    a.href = url;
+    // 開発環境では遷移先がない場合もあるため確認
+    showToast(projectNo ? `${projectNo} を開きます` : '新規案件入力へ移動', 'info', 1500);
+    setTimeout(() => { window.location.href = url; }, 500);
+  }
+}
+
+// ─── Helpers ───
+function formatMoney(n) {
+  if (n === undefined || n === null) return '–';
+  if (n >= 100000000) return (n / 100000000).toFixed(1) + '億';
+  if (n >= 10000)     return Math.round(n / 10000).toLocaleString() + '万';
+  return n.toLocaleString();
+}
+
+function formatDate(d) {
+  if (!d) return '–';
+  return d.slice(0, 10).replace(/-/g, '/');
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10).replace(/-/g, '');
+}
+
+function showToast(message, type = 'info', duration = 3000) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  const icons = {
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+    error:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    info:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  };
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `${icons[type] || icons.info} <span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; toast.style.transition = '0.3s'; setTimeout(() => toast.remove(), 300); }, duration);
+}
+</script>
+</body>
+</html>
