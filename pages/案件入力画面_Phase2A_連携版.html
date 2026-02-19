@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QURURi — 案件入力(合計欄パターンD統合版)</title>
+<title>QURURi – 案件入力</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -1087,7 +1087,7 @@
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-main">QURURi</div>
-      <div class="sidebar-logo-sub">予算編成システム</div>
+      <div class="sidebar-logo-sub">SALES INTELLIGENCE</div>
     </div>
     
     <nav class="sidebar-nav">
@@ -1102,7 +1102,7 @@
       </div>
       <div class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-        案件集計DB
+        案件一覧
       </div>
       
       <div class="nav-section-label">マスター管理</div>
@@ -1758,7 +1758,7 @@ document.getElementById('btnSaveDraft').addEventListener('click', async function
     const saved = await DataAPI.saveProject(data);
     document.getElementById('projectNoDisplay').textContent = saved.projectNo;
     showToast('下書きとして保存しました（' + saved.projectNo + '）', 'success');
-    setTimeout(() => { window.location.href = 'https://qururi-prototype.github.io/app/pages/project-list.html'; }, 1500);
+    setTimeout(() => { window.location.href = '案件一覧_Phase2B.html'; }, 1500);
   } catch (err) {
     console.error('保存エラー:', err);
     showToast('保存に失敗しました: ' + err.message, 'error');
@@ -1789,7 +1789,7 @@ document.getElementById('btnRegister').addEventListener('click', async function(
     const saved = await DataAPI.saveProject(data);
     document.getElementById('projectNoDisplay').textContent = saved.projectNo;
     showToast('案件を申請しました（' + saved.projectNo + '）', 'success');
-    setTimeout(() => { window.location.href = 'https://qururi-prototype.github.io/app/pages/project-list.html'; }, 1500);
+    setTimeout(() => { window.location.href = '案件一覧_Phase2B.html'; }, 1500);
   } catch (err) {
     console.error('申請エラー:', err);
     showToast('申請に失敗しました: ' + err.message, 'error');
@@ -1803,7 +1803,7 @@ document.getElementById('btnRegister').addEventListener('click', async function(
 // ===================================================
 document.getElementById('btnCancel').addEventListener('click', function() {
   if (confirm('入力内容を破棄して案件一覧に戻りますか？')) {
-    window.location.href = 'https://qururi-prototype.github.io/app/pages/project-list.html';
+    window.location.href = '案件一覧_Phase2B.html';
   }
 });
 
