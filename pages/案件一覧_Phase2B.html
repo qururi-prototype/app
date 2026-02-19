@@ -1838,12 +1838,7 @@ function navigateTo(page, projectNo) {
     const url = projectNo
       ? `案件入力画面_Phase2A_連携版.html?projectNo=${projectNo}`
       : `案件入力画面_Phase2A_連携版.html`;
-    // 同ディレクトリに案件入力画面が存在すれば遷移、なければトースト表示
-    const a = document.createElement('a');
-    a.href = url;
-    // 開発環境では遷移先がない場合もあるため確認
-    showToast(projectNo ? `${projectNo} を開きます` : '新規案件入力へ移動', 'info', 1500);
-    setTimeout(() => { window.location.href = url; }, 500);
+    window.location.href = url;
   }
 }
 
