@@ -960,9 +960,9 @@
           </div>
           <select class="filter-select" id="filterStatus" onchange="applyFilters()">
             <option value="">ステータス: 全て</option>
-            <option value="draft">下書き</option>
+            <option value="draft">見積前</option>
             <option value="quoted">見積済</option>
-            <option value="ordered">受注</option>
+            <option value="ordered">受注済</option>
             <option value="delivered">納品済</option>
             <option value="invoiced">請求済</option>
             <option value="paid">入金済</option>
@@ -1078,7 +1078,7 @@
 
         <div style="margin-top:12px;font-size:12px;color:var(--text-tertiary);">
           <strong style="color:var(--text-secondary);">CSVフォーマット（必須列）</strong><br>
-          案件名, 取引先名, 担当者名, 納品予定日(YYYY-MM-DD), 受注確度(0-100), 地域, ステータス, 合計金額(税抜), 備考
+          案件名, 取引先名, 担当者名, 納品予定日(YYYY-MM-DD), 受注確度(0-100), 地域, ステータス(draft/quoted/ordered/delivered/invoiced/paid), 合計金額(税抜), 備考
           <br><br>
           <span style="color:var(--accent-blue);cursor:pointer;text-decoration:underline;" onclick="downloadTemplate()">ひな形CSVをダウンロード</span>
         </div>
@@ -1188,9 +1188,9 @@ const LocalDB = {
 
 // ─── Status Config ───
 const STATUS_MAP = {
-  draft:     { label: '下書き',  class: 'status-draft' },
+  draft:     { label: '見積前',  class: 'status-draft' },
   quoted:    { label: '見積済',  class: 'status-quoted' },
-  ordered:   { label: '受注',    class: 'status-ordered' },
+  ordered:   { label: '受注済',  class: 'status-ordered' },
   delivered: { label: '納品済',  class: 'status-delivered' },
   invoiced:  { label: '請求済',  class: 'status-invoiced' },
   paid:      { label: '入金済',  class: 'status-paid' },
@@ -1736,6 +1736,9 @@ function parseImportCSV(text) {
     if (row.deliveryDate) row.deliveryDate = normalizeDate(row.deliveryDate);
     if (row.deliveryDate && !/^\d{4}-\d{2}-\d{2}$/.test(row.deliveryDate))
       errs.push(`${i+1}行目: 納品予定日の形式が認識できません（例: 2026-06-30）`);
+    const validStatuses = ['draft','quoted','ordered','delivered','invoiced','paid'];
+    if (row.status && !validStatuses.includes(row.status))
+      errs.push(`${i+1}行目: ステータス「${row.status}」は無効です（draft/quoted/ordered/delivered/invoiced/paid）`);
 
     if (errs.length > 0) {
       importData.errors.push(...errs);
