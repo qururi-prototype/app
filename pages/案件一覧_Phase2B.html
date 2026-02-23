@@ -1611,6 +1611,30 @@ function downloadCSV(content, filename) {
   URL.revokeObjectURL(url);
 }
 
+// 日付正規化：Excelが変換した様々な形式をYYYY-MM-DDに統一
+function normalizeDate(str) {
+  if (!str) return '';
+  str = str.trim();
+
+  // 既にYYYY-MM-DD形式
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+
+  // YYYY/MM/DD または YYYY/M/D（Excelのスラッシュ変換）
+  let m = str.match(/^(\d{4})[\/](\d{1,2})[\/](\d{1,2})$/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+
+  // MM/DD/YYYY（英語Excel）
+  m = str.match(/^(\d{1,2})[\/](\d{1,2})[\/](\d{4})$/);
+  if (m) return `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+
+  // YYYY年M月D日（日本語Excel）
+  m = str.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日?$/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+
+  // 変換できない場合はそのまま返す（バリデーションでエラーにする）
+  return str;
+}
+
 function downloadTemplate() {
   const csv = '\uFEFF案件名,取引先名,担当者名,納品予定日,受注確度,地域,ステータス,合計金額（税抜）,備考\n"サンプル案件 A","山田製作所","田中 健一","2026-06-30","70","JP","draft","5000000","サンプルデータ"';
   downloadCSV(csv, 'QURURi_案件インポートひな形.csv');
@@ -1709,8 +1733,9 @@ function parseImportCSV(text) {
     if (row.probability !== undefined && row.probability !== '' &&
         (isNaN(Number(row.probability)) || Number(row.probability) < 0 || Number(row.probability) > 100))
       errs.push(`${i+1}行目: 受注確度は0〜100の数値で入力してください`);
+    if (row.deliveryDate) row.deliveryDate = normalizeDate(row.deliveryDate);
     if (row.deliveryDate && !/^\d{4}-\d{2}-\d{2}$/.test(row.deliveryDate))
-      errs.push(`${i+1}行目: 納品予定日はYYYY-MM-DD形式で入力してください`);
+      errs.push(`${i+1}行目: 納品予定日の形式が認識できません（例: 2026-06-30）`);
 
     if (errs.length > 0) {
       importData.errors.push(...errs);
