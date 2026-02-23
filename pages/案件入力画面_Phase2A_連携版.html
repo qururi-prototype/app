@@ -1381,7 +1381,7 @@
             </div>
           </div>
 
-          <div class="product-autofill-section">
+          <div class="product-autofill-section" id="productAutofillSection">
             <div class="product-autofill-grid">
               <div class="product-autofill-item">
                 <div class="product-autofill-label">大区分</div>
@@ -1558,11 +1558,58 @@ function setupQtyInput(input) {
   input.addEventListener('blur', updateTotals);
   input.addEventListener('input', updateTotals);
 }
+function addProductRow() {
+  const tbody = document.getElementById('productTableBody');
+  if (!tbody) return;
+  const rowNo = tbody.querySelectorAll('tr').length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${rowNo}</td>
+    <td>
+      <div class="table-select-wrapper">
+        <select class="table-input dropdown">
+          <option value="" selected>製品を選択</option>
+        </select>
+      </div>
+    </td>
+    <td style="text-align:center;"><input type="text" class="table-input direct qty" value="1"></td>
+    <td><input class="table-input direct price" value="0"></td>
+    <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
+    <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
+    <td><span class="table-input calc price">0</span></td>
+    <td style="text-align:center;">
+      <button class="btn-delete" title="削除">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </td>`;
+  tbody.appendChild(tr);
+  setupRowEvents(tr);
+  updateTotals();
+}
+
+// btn-add-rowのクリックイベント
+document.addEventListener('DOMContentLoaded', function() {
+  const addBtn = document.querySelector('.btn-add-row');
+  if (addBtn) addBtn.addEventListener('click', addProductRow);
+});
+
 function setupRowEvents(row) {
   const priceInput = row.querySelector('input.table-input.direct.price');
   const qtyInput   = row.querySelector('input.table-input.direct.qty');
   if (priceInput) setupPriceInput(priceInput);
   if (qtyInput)   setupQtyInput(qtyInput);
+
+  // 削除ボタン
+  const delBtn = row.querySelector('.btn-delete');
+  if (delBtn) delBtn.addEventListener('click', function() {
+    row.remove();
+    // 行番号を振り直す
+    document.querySelectorAll('#productTableBody tr').forEach((r, i) => {
+      const firstTd = r.querySelector('td:first-child');
+      if (firstTd) firstTd.textContent = i + 1;
+    });
+    updateTotals();
+  });
 }
 
 // ----- 受注確度バー -----
@@ -1832,6 +1879,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.querySelectorAll('.autofill-item .autofill-value').forEach(el => el.textContent = '');
     const tbody = document.getElementById('productTableBody');
     if (tbody) tbody.innerHTML = '';
+    const autofillSection = document.getElementById('productAutofillSection');
+    if (autofillSection) autofillSection.style.display = 'none';
     updateTotals();
     return;
   }
@@ -1905,6 +1954,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     console.log('[QURURi] 案件データを読み込みました:', data.projectNo);
+    const autofillSection = document.getElementById('productAutofillSection');
+    if (autofillSection) autofillSection.style.display = '';
   } catch (err) {
     console.error('読み込みエラー:', err);
     showToast('案件の読み込みに失敗しました', 'error');
