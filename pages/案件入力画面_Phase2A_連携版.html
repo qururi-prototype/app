@@ -1740,7 +1740,7 @@ function validateForSubmit(data) {
 // ===================================================
 function getCurrentProjectNo() {
   const text = document.getElementById('projectNoDisplay')?.textContent?.trim() || '';
-  return text.startsWith('PJ-') ? text : null;
+  return (text.startsWith('PJ-') && !text.includes('新規')) ? text : null;
 }
 
 // ===================================================
@@ -1758,7 +1758,7 @@ document.getElementById('btnSaveDraft').addEventListener('click', async function
     const saved = await DataAPI.saveProject(data);
     document.getElementById('projectNoDisplay').textContent = saved.projectNo;
     showToast('下書きとして保存しました（' + saved.projectNo + '）', 'success');
-    setTimeout(() => { window.location.href = '案件一覧_Phase2B.html'; }, 1500);
+    setTimeout(() => { window.location.href = '案件一覧_Phase2B.html'; }, 800);
   } catch (err) {
     console.error('保存エラー:', err);
     showToast('保存に失敗しました: ' + err.message, 'error');
@@ -1789,7 +1789,7 @@ document.getElementById('btnRegister').addEventListener('click', async function(
     const saved = await DataAPI.saveProject(data);
     document.getElementById('projectNoDisplay').textContent = saved.projectNo;
     showToast('案件を申請しました（' + saved.projectNo + '）', 'success');
-    setTimeout(() => { window.location.href = '案件一覧_Phase2B.html'; }, 1500);
+    setTimeout(() => { window.location.href = '案件一覧_Phase2B.html'; }, 800);
   } catch (err) {
     console.error('申請エラー:', err);
     showToast('申請に失敗しました: ' + err.message, 'error');
