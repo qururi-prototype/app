@@ -1816,7 +1816,25 @@ document.addEventListener('DOMContentLoaded', async function() {
   updateTotals();
   const params = new URLSearchParams(window.location.search);
   const projectNo = params.get('projectNo');
-  if (!projectNo) return;
+
+  // 新規案件：全フィールドをクリア
+  if (!projectNo) {
+    document.getElementById('projectNoDisplay').textContent = '新規案件';
+    if (document.getElementById('projectName'))    document.getElementById('projectName').value = '';
+    if (document.getElementById('deliveryDate'))   document.getElementById('deliveryDate').value = '';
+    if (document.getElementById('memo'))           document.getElementById('memo').value = '';
+    if (document.getElementById('salesPerson'))    document.getElementById('salesPerson').value = '';
+    if (document.getElementById('customer'))       document.getElementById('customer').value = '';
+    const fill  = document.getElementById('probFill');
+    const label = document.getElementById('probValue');
+    if (fill)  fill.style.width  = '50%';
+    if (label) label.textContent = '50%';
+    document.querySelectorAll('.autofill-item .autofill-value').forEach(el => el.textContent = '');
+    const tbody = document.getElementById('productTableBody');
+    if (tbody) tbody.innerHTML = '';
+    updateTotals();
+    return;
+  }
 
   try {
     const data = await DataAPI.loadProject(projectNo);
