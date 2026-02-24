@@ -1082,11 +1082,31 @@
   .ss-wrapper { position: relative; }
   .ss-input {
     width: 100%;
-    cursor: text !important;
+    cursor: pointer !important;
+    padding-right: 32px !important; /* 矢印アイコン分の余白 */
+  }
+  .ss-input:hover {
+    border-color: var(--input-dropdown) !important;
   }
   .ss-input.is-open {
     border-color: var(--input-dropdown) !important;
     border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  }
+  /* 担当者・取引先用の▼矢印 */
+  .ss-wrapper:not(.table-ss)::after {
+    content: '';
+    position: absolute;
+    right: 10px; top: 50%;
+    transform: translateY(-50%);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--text-tertiary, #999);
+    pointer-events: none;
+    transition: transform 0.15s, border-top-color 0.15s;
+  }
+  .ss-wrapper.is-open:not(.table-ss)::after {
+    transform: translateY(-50%) rotate(180deg);
+    border-top-color: var(--input-dropdown, #2563eb);
   }
   .ss-dropdown {
     display: none;
@@ -1104,16 +1124,17 @@
   }
   .ss-wrapper.is-open .ss-dropdown { display: block; }
   .ss-item {
-    padding: 8px 12px;
+    padding: 9px 12px;
     font-size: 13px;
     color: var(--text-primary);
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: background 0.1s;
   }
   .ss-item:hover, .ss-item.focused { background: var(--input-dropdown-bg); color: var(--input-dropdown); }
-  .ss-item.selected { font-weight: 600; color: var(--input-dropdown); }
+  .ss-item.selected { font-weight: 600; color: var(--input-dropdown); background: color-mix(in srgb, var(--input-dropdown-bg) 60%, white); }
   .ss-empty { padding: 10px 12px; font-size: 12px; color: var(--text-tertiary); text-align: center; }
   /* テーブル行内 */
   .ss-wrapper.table-ss .ss-input {
@@ -1134,6 +1155,10 @@
     border-right: 3px solid transparent;
     border-top: 4px solid var(--input-dropdown);
     pointer-events: none;
+    transition: transform 0.15s;
+  }
+  .ss-wrapper.table-ss.is-open::after {
+    transform: translateY(-50%) rotate(180deg);
   }
   .ss-wrapper.table-ss .ss-dropdown { font-size: 12px; min-width: 220px; }
 </style>
@@ -2037,19 +2062,26 @@ function SearchableSelect(wrapperId, inputId, listId, options, onSelect, placeho
   function open() {
     wrapper.classList.add('is-open');
     input.classList.add('is-open');
-    renderList(input.value);
+    // 現在の入力テキストが選択済みラベルと一致する場合は全候補を表示
+    const currentLabel = selectedValue ? (allOptions.find(o => o.value === selectedValue)?.label || '') : '';
+    if (input.value === currentLabel) {
+      renderList('');
+    } else {
+      renderList(input.value);
+    }
   }
   function close() {
     wrapper.classList.remove('is-open');
     input.classList.remove('is-open');
     focusedIndex = -1;
-    // 未確定テキストをリセット（選択済みなら選択値を戻す）
+    // blur時：未選択のまま閉じたら選択済み値に戻す
     if (selectedValue) {
       const found = allOptions.find(o => o.value === selectedValue);
       if (found) input.value = found.label;
     } else {
       input.value = '';
     }
+    updateClearBtn();
   }
   function renderList(query) {
     const q = (query || '').toLowerCase();
@@ -2082,7 +2114,14 @@ function SearchableSelect(wrapperId, inputId, listId, options, onSelect, placeho
     selectedValue = value;
     input.value = label || value;
     close();
+    updateClearBtn();
     if (onSelect) onSelect(value, label);
+  }
+  function clearSelection() {
+    selectedValue = '';
+    input.value = '';
+    updateClearBtn();
+    input.focus();
   }
   function setFocus(idx) {
     const items = list.querySelectorAll('.ss-item');
@@ -2094,20 +2133,67 @@ function SearchableSelect(wrapperId, inputId, listId, options, onSelect, placeho
     focusedIndex = idx;
   }
 
+  // クリアボタンを生成してwrapperに追加
+  const clearBtn = document.createElement('button');
+  clearBtn.type = 'button';
+  clearBtn.className = 'ss-clear-btn';
+  clearBtn.innerHTML = '×';
+  clearBtn.title = 'クリア';
+  clearBtn.style.cssText = 'display:none;position:absolute;right:28px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:#aaa;padding:0 6px;z-index:2;line-height:1;border-radius:50%;transition:color 0.15s;';
+  clearBtn.addEventListener('mouseover', function() { this.style.color = '#e05'; });
+  clearBtn.addEventListener('mouseout',  function() { this.style.color = '#aaa'; });
+  clearBtn.addEventListener('mousedown', function(e) { e.preventDefault(); clearSelection(); });
+  wrapper.appendChild(clearBtn);
+  function updateClearBtn() {
+    clearBtn.style.display = selectedValue ? 'block' : 'none';
+  }
+
   // イベント
-  input.addEventListener('focus', function() { open(); });
+  let isMouseDownOnList = false; // リスト上のmousedownフラグ
+
+  input.addEventListener('click', function() {
+    if (wrapper.classList.contains('is-open')) {
+      close();
+    } else {
+      this.select();
+      open();
+      setTimeout(function() {
+        const selected = list.querySelector('.ss-item.selected');
+        if (selected) selected.scrollIntoView({ block: 'nearest' });
+      }, 0);
+    }
+  });
+  input.addEventListener('focus', function() {
+    if (!wrapper.classList.contains('is-open')) {
+      this.select();
+      open();
+      setTimeout(function() {
+        const selected = list.querySelector('.ss-item.selected');
+        if (selected) selected.scrollIntoView({ block: 'nearest' });
+      }, 0);
+    }
+  });
+  list.addEventListener('mousedown', function() { isMouseDownOnList = true; });
+  list.addEventListener('mouseup',   function() { isMouseDownOnList = false; });
   input.addEventListener('input', function() {
-    open();
+    if (!wrapper.classList.contains('is-open')) open();
     renderList(this.value);
   });
   input.addEventListener('blur', function() {
+    if (isMouseDownOnList) return; // リストクリック中はblurを無視
     setTimeout(close, 150);
   });
   input.addEventListener('keydown', function(e) {
     const items = list.querySelectorAll('.ss-item');
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setFocus(Math.min(focusedIndex + 1, items.length - 1));
+      // 未フォーカス状態から↓を押したとき選択中項目から開始
+      if (focusedIndex < 0) {
+        const selIdx = [...items].findIndex(el => el.classList.contains('selected'));
+        setFocus(selIdx >= 0 ? selIdx : 0);
+      } else {
+        setFocus(Math.min(focusedIndex + 1, items.length - 1));
+      }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setFocus(Math.max(focusedIndex - 1, 0));
@@ -2223,9 +2309,28 @@ function createTableSS(row, restoreValue) {
     focusedIndex = idx;
   }
 
-  input.addEventListener('focus', function() { open(); });
-  input.addEventListener('input', function() { open(); renderList(this.value); });
-  input.addEventListener('blur',  function() { setTimeout(close, 150); });
+  let isMouseDownOnList = false;
+  list.addEventListener('mousedown', function() { isMouseDownOnList = true; });
+  list.addEventListener('mouseup',   function() { isMouseDownOnList = false; });
+
+  input.addEventListener('click', function() {
+    if (wrapper.classList.contains('is-open')) {
+      close();
+    } else {
+      open();
+    }
+  });
+  input.addEventListener('focus', function() {
+    if (!wrapper.classList.contains('is-open')) open();
+  });
+  input.addEventListener('input', function() {
+    if (!wrapper.classList.contains('is-open')) open();
+    renderList(this.value);
+  });
+  input.addEventListener('blur', function() {
+    if (isMouseDownOnList) return;
+    setTimeout(close, 150);
+  });
   input.addEventListener('keydown', function(e) {
     const items = list.querySelectorAll('.ss-item');
     if (e.key === 'ArrowDown') { e.preventDefault(); setFocus(Math.min(focusedIndex+1, items.length-1)); }
