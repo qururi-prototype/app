@@ -1217,9 +1217,7 @@
                 <div class="field-value">
                   <div class="select-wrapper">
                     <select id="salesPerson" class="input-field input-dropdown-type">
-                      <option selected>佐藤 健一(営業第一部)</option>
-                      <option>田中 美咲(営業第二部)</option>
-                      <option>鈴木 大輔(営業第三部)</option>
+                      <option value="">-- 選択してください --</option>
                     </select>
                   </div>
                 </div>
@@ -1230,10 +1228,8 @@
                 <div class="field-label">取引先</div>
                 <div class="field-value">
                   <div class="select-wrapper">
-                    <select id="customer" class="input-field input-dropdown-type">
-                      <option selected>トヨタ自動車</option>
-                      <option>デンソー</option>
-                      <option>本田技研工業</option>
+                    <select id="customer" class="input-field input-dropdown-type" onchange="onCustomerChange()">
+                      <option value="">-- 選択してください --</option>
                     </select>
                   </div>
                 </div>
@@ -1247,19 +1243,19 @@
               <div class="autofill-grid">
                 <div class="autofill-item">
                   <span class="autofill-label">販売地域</span>
-                  <span class="autofill-value">JP</span>
+                  <span class="autofill-value" id="af-region">--</span>
                 </div>
                 <div class="autofill-item">
                   <span class="autofill-label">業界</span>
-                  <span class="autofill-value">自動車</span>
+                  <span class="autofill-value" id="af-industry">--</span>
                 </div>
                 <div class="autofill-item">
                   <span class="autofill-label">商流</span>
-                  <span class="autofill-value">直販</span>
+                  <span class="autofill-value" id="af-channel">--</span>
                 </div>
                 <div class="autofill-item">
                   <span class="autofill-label">自社セグ</span>
-                  <span class="autofill-value">検査装置</span>
+                  <span class="autofill-value" id="af-segment">--</span>
                 </div>
               </div>
             </div>
@@ -1297,66 +1293,6 @@
                 </tr>
               </thead>
               <tbody id="productTableBody">
-                <tr>
-                  <td>1</td>
-                  <td>
-                    <div class="table-select-wrapper">
-                      <select class="table-input dropdown">
-                        <option selected>CVD装置</option>
-                      </select>
-                    </div>
-                  </td>
-                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="1"></td>
-                  <td><input class="table-input direct price" value="200,000,000"></td>
-                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
-                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
-                  <td><span class="table-input calc price">200,000,000</span></td>
-                  <td style="text-align: center;">
-                    <button class="btn-delete" title="削除">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>
-                    <div class="table-select-wrapper">
-                      <select class="table-input dropdown">
-                        <option selected>マスクアライナー</option>
-                      </select>
-                    </div>
-                  </td>
-                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="2"></td>
-                  <td><input class="table-input direct price" value="150,000,000"></td>
-                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
-                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
-                  <td><span class="table-input calc price">300,000,000</span></td>
-                  <td style="text-align: center;">
-                    <button class="btn-delete" title="削除">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>
-                    <div class="table-select-wrapper">
-                      <select class="table-input dropdown">
-                        <option selected>ウェットエッチング装置</option>
-                      </select>
-                    </div>
-                  </td>
-                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="1"></td>
-                  <td><input class="table-input direct price" value="300,000,000"></td>
-                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
-                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
-                  <td><span class="table-input calc price">300,000,000</span></td>
-                  <td style="text-align: center;">
-                    <button class="btn-delete" title="削除">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                  </td>
-                </tr>
               </tbody>
             </table>
           </div>
@@ -1567,14 +1503,14 @@ function addProductRow() {
     <td>${rowNo}</td>
     <td>
       <div class="table-select-wrapper">
-        <select class="table-input dropdown">
-          <option value="" selected>製品を選択</option>
+        <select class="table-input dropdown" onchange="onProductChange(this)">
+          <option value="">製品を選択</option>
         </select>
       </div>
     </td>
     <td style="text-align:center;"><input type="text" class="table-input direct qty" value="1"></td>
     <td><input class="table-input direct price" value="0"></td>
-    <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;"></td>
+    <td><input class="table-input autofill" value="${currentBillingCurrency}" readonly style="text-align:center;"></td>
     <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
     <td><span class="table-input calc price">0</span></td>
     <td style="text-align:center;">
@@ -1583,6 +1519,9 @@ function addProductRow() {
       </button>
     </td>`;
   tbody.appendChild(tr);
+  // 製品プルダウンをマスタで動的生成
+  const productSel = tr.querySelector('select.table-input.dropdown');
+  populateProductSelect(productSel, null);
   setupRowEvents(tr);
   updateTotals();
 }
@@ -1899,10 +1838,10 @@ document.addEventListener('DOMContentLoaded', async function() {
       document.getElementById('deliveryDate').value = data.deliveryDate || '';
     if (document.getElementById('memo'))
       document.getElementById('memo').value = data.memo || '';
-    if (document.getElementById('salesPerson'))
-      document.getElementById('salesPerson').value = data.salesPerson || '';
-    if (document.getElementById('customer'))
-      document.getElementById('customer').value = data.customer || '';
+
+    // 担当者・取引先（マスタ再生成してから値を復元）
+    populateStaffSelect(data.salesPerson || '');
+    populateCustomerSelect(data.customer || '');
 
     // 受注確度
     const pct = data.probability || 50;
@@ -1932,14 +1871,14 @@ document.addEventListener('DOMContentLoaded', async function() {
           <td>${i + 1}</td>
           <td>
             <div class="table-select-wrapper">
-              <select class="table-input dropdown">
-                <option selected>${p.productName || ''}</option>
+              <select class="table-input dropdown" onchange="onProductChange(this)">
+                <option value="">製品を選択</option>
               </select>
             </div>
           </td>
           <td style="text-align:center;"><input type="text" class="table-input direct qty" value="${p.qty || 1}"></td>
           <td><input class="table-input direct price" value="${(p.unitPrice || 0).toLocaleString()}"></td>
-          <td><input class="table-input autofill" value="${p.currency || 'JPY'}" readonly style="text-align:center;"></td>
+          <td><input class="table-input autofill" value="${p.currency || currentBillingCurrency}" readonly style="text-align:center;"></td>
           <td><input class="table-input autofill" value="${p.taxRate || 10}%" readonly style="text-align:center;"></td>
           <td><span class="table-input calc price">${(p.lineTotal || 0).toLocaleString()}</span></td>
           <td style="text-align:center;">
@@ -1948,6 +1887,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             </button>
           </td>`;
         tbody.appendChild(tr);
+        // マスタから製品プルダウンを生成して保存値を復元
+        const productSel = tr.querySelector('select.table-input.dropdown');
+        populateProductSelect(productSel, p.productName || '');
         setupRowEvents(tr);
       });
       updateTotals();
@@ -1959,6 +1901,154 @@ document.addEventListener('DOMContentLoaded', async function() {
   } catch (err) {
     console.error('読み込みエラー:', err);
     showToast('案件の読み込みに失敗しました', 'error');
+  }
+});
+
+// ===================================================
+// マスター連携（Phase 2C）
+// ===================================================
+
+const MC = { staff: [], customers: [], products: [], prices: [] };
+let currentBillingCurrency = 'JPY';
+
+function lsGetMaster(key) {
+  try {
+    const v = localStorage.getItem('qururi:' + key);
+    return v ? JSON.parse(v) : [];
+  } catch { return []; }
+}
+
+function initMasterData() {
+  MC.staff     = lsGetMaster('staff');
+  MC.customers = lsGetMaster('customers');
+  MC.products  = lsGetMaster('products');
+  MC.prices    = lsGetMaster('prices');
+}
+
+// --- 担当者プルダウン生成 ---
+function populateStaffSelect(restoreValue) {
+  const sel = document.getElementById('salesPerson');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- 選択してください --</option>';
+  if (MC.staff.length === 0) {
+    sel.innerHTML = '<option value="">（担当者マスタ未登録）</option>';
+    return;
+  }
+  MC.staff.forEach(s => {
+    const label = s.display_name || `${s.staff_name}（${s.department || ''}）`;
+    const opt = document.createElement('option');
+    opt.value = label;
+    opt.textContent = label;
+    sel.appendChild(opt);
+  });
+  if (restoreValue) sel.value = restoreValue;
+}
+
+// --- 取引先プルダウン生成 ---
+function populateCustomerSelect(restoreValue) {
+  const sel = document.getElementById('customer');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- 選択してください --</option>';
+  if (MC.customers.length === 0) {
+    sel.innerHTML = '<option value="">（取引先マスタ未登録）</option>';
+    return;
+  }
+  MC.customers.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.customer_name;
+    opt.textContent = c.customer_name;
+    opt.dataset.code = c.customer_code;
+    sel.appendChild(opt);
+  });
+  if (restoreValue) {
+    sel.value = restoreValue;
+    onCustomerChange(false); // 自動転記のみ（単価再計算なし）
+  }
+}
+
+// --- 取引先変更 → 自動転記 + 通貨更新 ---
+function onCustomerChange(repriceRows) {
+  if (repriceRows === undefined) repriceRows = true;
+  const sel  = document.getElementById('customer');
+  const name = sel ? sel.value : '';
+  const cust = MC.customers.find(c => c.customer_name === name);
+
+  const set = function(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || '--';
+  };
+  set('af-region',   cust ? cust.region   : '');
+  set('af-industry', cust ? cust.industry : '');
+  set('af-channel',  cust ? cust.channel  : '');
+  set('af-segment',  cust ? cust.segment  : '');
+
+  currentBillingCurrency = (cust && cust.billing_currency) ? cust.billing_currency : 'JPY';
+
+  document.querySelectorAll('#productTableBody tr').forEach(function(row) {
+    const currencyInput = row.querySelectorAll('input.table-input.autofill')[0];
+    if (currencyInput) currencyInput.value = currentBillingCurrency;
+    if (repriceRows) {
+      const productSel = row.querySelector('select.table-input.dropdown');
+      if (productSel) {
+        const opt = productSel.options[productSel.selectedIndex];
+        if (opt && opt.dataset && opt.dataset.code) setProductPrice(row, opt.dataset.code);
+      }
+    }
+  });
+  updateTotals();
+}
+
+// --- 製品プルダウン生成（行単位）---
+function populateProductSelect(sel, restoreValue) {
+  if (!sel) return;
+  sel.innerHTML = '<option value="">製品を選択</option>';
+  MC.products.forEach(function(p) {
+    const opt = document.createElement('option');
+    opt.value = p.product_name;
+    opt.textContent = p.product_name;
+    opt.dataset.code = p.product_code;
+    sel.appendChild(opt);
+  });
+  if (restoreValue) sel.value = restoreValue;
+}
+
+// --- 製品選択 → 単価セット ---
+function setProductPrice(row, productCode) {
+  if (!productCode) return;
+  const priceRec = MC.prices.find(function(p) { return Number(p.product_code) === Number(productCode); });
+  if (!priceRec) return;
+  const key = 'price_' + currentBillingCurrency.toLowerCase();
+  const price = priceRec[key];
+  if (price != null && price !== '') {
+    const priceInput = row.querySelector('input.table-input.direct.price');
+    if (priceInput) {
+      priceInput.value = Number(price).toLocaleString();
+      updateTotals();
+    }
+  }
+}
+
+// --- 製品変更イベント ---
+function onProductChange(sel) {
+  const row = sel.closest('tr');
+  const opt = sel.options[sel.selectedIndex];
+  const currencyInput = row.querySelectorAll('input.table-input.autofill')[0];
+  if (currencyInput) currencyInput.value = currentBillingCurrency;
+  if (opt && opt.dataset && opt.dataset.code) setProductPrice(row, opt.dataset.code);
+}
+
+// ===================================================
+// マスター連携初期化
+// ===================================================
+document.addEventListener('DOMContentLoaded', function() {
+  initMasterData();
+  populateStaffSelect();
+  populateCustomerSelect();
+  // 新規案件時：空の1行を追加
+  const tbody = document.getElementById('productTableBody');
+  const params = new URLSearchParams(window.location.search);
+  if (!params.get('projectNo') && tbody && tbody.children.length === 0) {
+    addProductRow();
   }
 });
 </script>
