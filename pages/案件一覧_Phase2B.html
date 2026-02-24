@@ -489,26 +489,6 @@
     text-align: center;
   }
 
-  /* 製品展開行 */
-  .tr-product-first td { border-bottom: none !important; }
-  .tr-product-mid td   { border-top: none !important; border-bottom: none !important; }
-  .tr-product-last td  { border-top: none !important; }
-  .tr-project-only td  { border-bottom: 1px solid var(--border-subtle); }
-  .td-product-name {
-    font-size: 12px;
-    color: var(--text-secondary, #555);
-    padding-left: 16px !important;
-  }
-  .td-product-qty {
-    font-size: 12px;
-    font-family: 'Inter', sans-serif;
-    text-align: right;
-    color: var(--text-secondary, #555);
-  }
-  .td-rowspan {
-    vertical-align: middle;
-  }
-
   .prob-badge {
     display: inline-flex;
     align-items: center;
@@ -759,11 +739,20 @@
     padding: 12px 16px;
     font-size: 12px;
     color: var(--danger);
-    max-height: 160px;
+    max-height: 200px;
     overflow-y: auto;
   }
 
-  .import-error-list li { margin-bottom: 4px; margin-left: 16px; }
+  .import-error-list li {
+    margin-bottom: 8px;
+    margin-left: 0;
+    list-style: none;
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    flex-wrap: wrap;
+    line-height: 1.6;
+  }
 
   /* ─── Toast ─── */
   .toast-container {
@@ -895,23 +884,23 @@
       </div>
       <hr class="sidebar-divider">
       <div class="nav-section-label">マスター</div>
-      <div class="nav-item" onclick="window.location.href='マスター管理画面_Phase2C.html#products'" style="cursor:pointer">
+      <div class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         製品マスタ
       </div>
-      <div class="nav-item" onclick="window.location.href='マスター管理画面_Phase2C.html#prices'" style="cursor:pointer">
+      <div class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         単価マスタ
       </div>
-      <div class="nav-item" onclick="window.location.href='マスター管理画面_Phase2C.html#exchange_rates'" style="cursor:pointer">
+      <div class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         為替マスタ
       </div>
-      <div class="nav-item" onclick="window.location.href='マスター管理画面_Phase2C.html#customers'" style="cursor:pointer">
+      <div class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         取引先マスタ
       </div>
-      <div class="nav-item" onclick="window.location.href='マスター管理画面_Phase2C.html#staff'" style="cursor:pointer">
+      <div class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         担当者マスタ
       </div>
@@ -957,7 +946,7 @@
         <div class="summary-card">
           <div class="summary-label">合計金額（税抜）</div>
           <div class="summary-value" id="sumTotal">–</div>
-          <div class="summary-sub" id="sumCurrencyNote">円</div>
+          <div class="summary-sub">円</div>
         </div>
         <div class="summary-card">
           <div class="summary-label">受注確度加重平均</div>
@@ -1055,7 +1044,6 @@
                 <th onclick="sortBy('projectNo')">案件No <span class="sort-icon" id="sort_projectNo">↕</span></th>
                 <th onclick="sortBy('projectName')">案件名 <span class="sort-icon" id="sort_projectName">↕</span></th>
                 <th onclick="sortBy('customer')">取引先 <span class="sort-icon" id="sort_customer">↕</span></th>
-                <th>製品名</th>
                 <th onclick="sortBy('status')">ステータス <span class="sort-icon" id="sort_status">↕</span></th>
                 <th onclick="sortBy('subtotal')" style="text-align:right;">合計（税抜） <span class="sort-icon" id="sort_subtotal">↕</span></th>
                 <th onclick="sortBy('probability')" style="text-align:center;">確度 <span class="sort-icon" id="sort_probability">↕</span></th>
@@ -1066,7 +1054,7 @@
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="12"><div class="empty-state"><p>データを読み込み中...</p></div></td></tr>
+              <tr><td colspan="11"><div class="empty-state"><p>データを読み込み中...</p></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -1103,9 +1091,7 @@
 
         <div style="margin-top:12px;font-size:12px;color:var(--text-tertiary);">
           <strong style="color:var(--text-secondary);">CSVフォーマット（必須列）</strong><br>
-          案件名, 取引先名, 担当者名, 製品名, 数量, 税抜単価, 納品予定日(YYYY-MM-DD), 受注確度(0-100), ステータス, 備考<br>
-          <span style="color:#d97706;">※ 地域は取引先マスタから自動引き当て（マスタ未登録の取引先はエラー）</span><br>
-          <span style="color:#555;">※ 製品が複数ある場合は同じ案件名・取引先名で複数行に分けて入力</span>
+          案件名, 取引先名, 担当者名, 納品予定日(YYYY-MM-DD), 受注確度(0-100), 地域, ステータス(draft/quoted/ordered/delivered/invoiced/paid), 合計金額(税抜), 備考
           <br><br>
           <span style="color:var(--accent-blue);cursor:pointer;text-decoration:underline;" onclick="downloadTemplate()">ひな形CSVをダウンロード</span>
         </div>
@@ -1166,7 +1152,7 @@ let perPage = 20;
 let sortKey = 'updatedAt';
 let sortDir = 'desc';
 let selectedIds = new Set();
-let importData = { valid: [], errors: [], updates: [], fileName: '' };
+let importData = { valid: [], errors: [], updates: [], fileName: '', masterWarn: false };
 
 // ─── Storage Keys (dataManager.js と完全統一) ───
 // qururi_projectIndex : string[]        案件Noの配列
@@ -1225,9 +1211,8 @@ const STATUS_MAP = {
 
 // ─── Init ───
 document.addEventListener('DOMContentLoaded', async () => {
-  cleanupDemoData();       // 既存のデモデータをLocalStorageから削除
   await loadProjects();
-  await setupDemoData();   // 無効化済み（念のため残す）
+  await setupDemoData();  // ストレージ空の時のみデモデータ投入
   buildFilterOptions();
   applyFilters();
 });
@@ -1252,40 +1237,30 @@ async function saveProjectRecord(data) {
   return await getDB().saveProject(data);
 }
 
-// ─── Demo Data ─── (無効化済み)
+// ─── Demo Data (ストレージが空の時のみ投入) ───
 async function setupDemoData() {
-  // デモデータ投入は無効化しました
-}
+  if (allProjects.length > 0) return;
+  const today = new Date();
+  const fmtDate = (d) => d.toISOString().slice(0, 10);
+  const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
 
-// ─── デモデータ自動クリーンアップ ───
-// PJ-20260001〜PJ-20260008 はデモデータとして削除
-function cleanupDemoData() {
-  const demoNos = ['PJ-20260001','PJ-20260002','PJ-20260003','PJ-20260004',
-                   'PJ-20260005','PJ-20260006','PJ-20260007','PJ-20260008'];
-  let cleaned = 0;
-  demoNos.forEach(no => {
-    // LocalStorageから直接削除
-    try {
-      const key = 'qururi:project:' + no;
-      if (localStorage.getItem(key)) {
-        localStorage.removeItem(key);
-        cleaned++;
-      }
-    } catch(e) {}
-    // LocalDB経由でも削除
-    try { LocalDB.deleteProject(no); } catch(e) {}
-  });
-  // indexも更新
-  try {
-    const idxKey = 'qururi:projects:index';
-    const idx = JSON.parse(localStorage.getItem(idxKey) || '[]');
-    const filtered = idx.filter(no => !demoNos.includes(no));
-    if (filtered.length !== idx.length) {
-      localStorage.setItem(idxKey, JSON.stringify(filtered));
-      cleaned += (idx.length - filtered.length);
-    }
-  } catch(e) {}
-  if (cleaned > 0) console.log(`[QURURi] デモデータ ${cleaned} 件をクリーンアップしました`);
+  const demos = [
+    { projectNo:'PJ-20260001', projectName:'山田製作所 検査装置 #1', customer:'山田製作所', salesPerson:'田中 健一', salesRegion:'JP', probability:90, deliveryDate: fmtDate(addDays(today, 30)), status:'ordered', subtotal:12000000, total:13200000, createdAt: fmtDate(addDays(today,-20)), updatedAt: fmtDate(addDays(today,-2)) },
+    { projectNo:'PJ-20260002', projectName:'ABC Electronics 計測システム', customer:'ABC Electronics', salesPerson:'鈴木 恵子', salesRegion:'NA', probability:70, deliveryDate: fmtDate(addDays(today, 60)), status:'quoted', subtotal:45000000, total:49500000, createdAt: fmtDate(addDays(today,-15)), updatedAt: fmtDate(addDays(today,-5)) },
+    { projectNo:'PJ-20260003', projectName:'東芝エネルギー 制御盤一式', customer:'東芝エネルギー', salesPerson:'田中 健一', salesRegion:'JP', probability:60, deliveryDate: fmtDate(addDays(today, 90)), status:'draft', subtotal:8500000, total:9350000, createdAt: fmtDate(addDays(today,-10)), updatedAt: fmtDate(addDays(today,-1)) },
+    { projectNo:'PJ-20260004', projectName:'GmbH Berlin 精密測定器', customer:'GmbH Berlin', salesPerson:'渡辺 武', salesRegion:'EU', probability:40, deliveryDate: fmtDate(addDays(today, 45)), status:'quoted', subtotal:22000000, total:24200000, createdAt: fmtDate(addDays(today,-8)), updatedAt: fmtDate(addDays(today,-3)) },
+    { projectNo:'PJ-20260005', projectName:'富士フイルム 画像処理ユニット', customer:'富士フイルム', salesPerson:'鈴木 恵子', salesRegion:'JP', probability:85, deliveryDate: fmtDate(addDays(today, -5)), status:'delivered', subtotal:6800000, total:7480000, createdAt: fmtDate(addDays(today,-30)), updatedAt: fmtDate(today) },
+    { projectNo:'PJ-20260006', projectName:'上海光電 センサーモジュール', customer:'上海光電', salesPerson:'渡辺 武', salesRegion:'CN', probability:30, deliveryDate: fmtDate(addDays(today, 120)), status:'draft', subtotal:3200000, total:3520000, createdAt: fmtDate(addDays(today,-5)), updatedAt: fmtDate(addDays(today,-1)) },
+    { projectNo:'PJ-20260007', projectName:'パナソニック 組込みシステム', customer:'パナソニック', salesPerson:'田中 健一', salesRegion:'JP', probability:100, deliveryDate: fmtDate(addDays(today, -15)), status:'invoiced', subtotal:18500000, total:20350000, createdAt: fmtDate(addDays(today,-45)), updatedAt: fmtDate(addDays(today,-7)) },
+    { projectNo:'PJ-20260008', projectName:'Seoul Motors 品質管理装置', customer:'Seoul Motors', salesPerson:'鈴木 恵子', salesRegion:'AP', probability:55, deliveryDate: fmtDate(addDays(today, 75)), status:'quoted', subtotal:31000000, total:34100000, createdAt: fmtDate(addDays(today,-12)), updatedAt: fmtDate(addDays(today,-4)) },
+  ];
+
+  // LocalDB / DataAPI 両方のストレージへ永続化
+  for (const d of demos) {
+    LocalDB.saveProject(d);  // DataAPI経由だと採番が変わるため直接書き込み
+  }
+  allProjects = demos;
+  applyFilters();
 }
 
 // ─── Build Filter Dropdowns ───
@@ -1443,18 +1418,6 @@ function renderSummary() {
   document.getElementById('sumProb').textContent = formatMoney(weightedSum);
   document.getElementById('sumStatusTop').textContent = probAvg + '%';
 
-  // 通貨の注記：単一通貨なら通貨名、混在なら「複数通貨混在・円換算外」
-  const currencies = [...new Set(filteredProjects.map(p => p.billingCurrency || 'JPY'))];
-  const noteEl = document.getElementById('sumCurrencyNote');
-  if (noteEl) {
-    if (currencies.length === 1) {
-      noteEl.textContent = currencies[0] === 'JPY' ? '円' : currencies[0];
-    } else {
-      noteEl.textContent = '複数通貨混在（参考値）';
-      noteEl.style.color = '#f59e0b';
-    }
-  }
-
   // Status breakdown
   const statusCounts = {};
   filteredProjects.forEach(p => {
@@ -1477,7 +1440,7 @@ function renderTable() {
   document.getElementById('showingCount').textContent = page.length.toLocaleString();
 
   if (page.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state">
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
       <p>案件が見つかりません</p>
       <small>検索条件を変えるか、新規案件を登録してください</small>
@@ -1489,14 +1452,13 @@ function renderTable() {
   const soonDate = new Date(); soonDate.setDate(soonDate.getDate() + 14);
   const soonStr = soonDate.toISOString().slice(0, 10);
 
-  tbody.innerHTML = page.flatMap(p => {
+  tbody.innerHTML = page.map(p => {
     const statusCfg = STATUS_MAP[p.status] || { label: p.status, class: 'status-draft' };
     const checked   = selectedIds.has(p.projectNo) ? 'checked' : '';
     const rowClass  = selectedIds.has(p.projectNo) ? 'selected-row' : '';
     const prob      = p.probability ?? 0;
     const probColor = prob >= 70 ? '#1a8f5c' : prob >= 40 ? '#d97706' : '#d9503f';
     const probBg    = prob >= 70 ? '#edf8f2' : prob >= 40 ? '#fffbeb' : '#fdf0ee';
-    const sym       = getCurrencySymbol(p.billingCurrency || 'JPY');
 
     let dateClass = 'td-date';
     let dateLabel = p.deliveryDate ? formatDate(p.deliveryDate) : '–';
@@ -1506,53 +1468,26 @@ function renderTable() {
       dateClass += ' date-soon';
     }
 
-    const products = (p.products || []).filter(x => x.productName);
-    const rows     = products.length > 0 ? products : [null]; // 製品なし案件も1行出す
-
-    return rows.map((prod, idx) => {
-      const isFirst = idx === 0;
-      const isLast  = idx === rows.length - 1;
-      // 複数行案件の中間行は上下ボーダーを消してグループ感を出す
-      const borderStyle = rows.length > 1
-        ? isFirst  ? 'border-bottom:none;'
-        : isLast   ? 'border-top:none;'
-        :             'border-top:none;border-bottom:none;'
-        : '';
-
-      const tdBorder = `style="${borderStyle}"`;
-
-      // 案件情報セル（全行に出力）
-      const noCell     = `<td class="td-no" ${tdBorder}>${p.projectNo || '–'}</td>`;
-      const nameCell   = `<td class="td-name" style="max-width:200px;${borderStyle}" title="${p.projectName || ''}">${p.projectName || '–'}</td>`;
-      const custCell   = `<td style="max-width:140px;${borderStyle}" title="${p.customer || ''}">${p.customer || '–'}</td>`;
-      const productCell= prod
-        ? `<td class="td-product-name" ${tdBorder} title="${prod.productName}">${prod.productName}</td>`
-        : `<td class="td-product-name" ${tdBorder}>–</td>`;
-      const statusCell = `<td ${tdBorder}><span class="status-badge ${statusCfg.class}">${statusCfg.label}</span></td>`;
-
-      // 明細単価（製品があれば製品単価・通貨、なければ合計）
-      const linePrice  = prod
-        ? `<span class="currency-badge">${p.billingCurrency || 'JPY'}</span>${sym}${(prod.unitPrice || 0).toLocaleString()}`
-        : `<span class="currency-badge">${p.billingCurrency || 'JPY'}</span>${sym}${(p.subtotal || 0).toLocaleString()}`;
-      const amountCell = `<td class="td-amount" style="text-align:right;${borderStyle}">${linePrice}</td>`;
-
-      const probCell   = `<td class="td-prob" ${tdBorder}><span class="prob-badge" style="background:${probBg};color:${probColor};">${prob}%</span></td>`;
-      const dateCell   = `<td class="${dateClass}" ${tdBorder.replace('style="','style="')}>${dateLabel}</td>`;
-      const personCell = `<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${borderStyle}">${p.salesPerson || '–'}</td>`;
-      const regionCell = `<td ${tdBorder}>${p.salesRegion || '–'}</td>`;
-      const updatedCell= `<td class="td-date" ${tdBorder}>${p.updatedAt ? formatDate(p.updatedAt) : '–'}</td>`;
-
-      const checkCell  = isFirst
-        ? `<td onclick="event.stopPropagation()" style="padding:12px;${borderStyle}">
-            <input type="checkbox" class="row-checkbox" ${checked}
-                   onchange="toggleCheck('${p.projectNo}', this.checked)">
-           </td>`
-        : `<td style="${borderStyle}"></td>`;
-
-      return `<tr class="${rowClass}" onclick="handleRowClick('${p.projectNo}', event)">
-        ${checkCell}${noCell}${nameCell}${custCell}${productCell}${statusCell}${amountCell}${probCell}${dateCell}${personCell}${regionCell}${updatedCell}
-      </tr>`;
-    });
+    return `<tr class="${rowClass}" onclick="handleRowClick('${p.projectNo}', event)">
+      <td onclick="event.stopPropagation()" style="padding:12px;">
+        <input type="checkbox" class="row-checkbox" ${checked}
+               onchange="toggleCheck('${p.projectNo}', this.checked)">
+      </td>
+      <td class="td-no">${p.projectNo || '–'}</td>
+      <td class="td-name" style="max-width:220px;" title="${p.projectName || ''}">${p.projectName || '–'}</td>
+      <td style="max-width:140px;" title="${p.customer || ''}">${p.customer || '–'}</td>
+      <td><span class="status-badge ${statusCfg.class}">${statusCfg.label}</span></td>
+      <td class="td-amount" style="text-align:right;">
+        <span class="currency-badge">JPY</span>¥${(p.subtotal || 0).toLocaleString()}
+      </td>
+      <td class="td-prob">
+        <span class="prob-badge" style="background:${probBg};color:${probColor};">${prob}%</span>
+      </td>
+      <td class="${dateClass}">${dateLabel}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.salesPerson || '–'}</td>
+      <td>${p.salesRegion || '–'}</td>
+      <td class="td-date">${p.updatedAt ? formatDate(p.updatedAt) : '–'}</td>
+    </tr>`;
   }).join('');
 }
 
@@ -1682,34 +1617,14 @@ function exportSelectedCSV() {
 }
 
 function buildCSV(rows) {
-  const headers = [
-    '案件No', '案件名', '取引先', '製品名', '数量', '税抜単価', '通貨',
-    'ステータス', '受注確度(%)', '納品予定日', '担当者', '地域', '備考', '更新日時'
-  ];
-  const data = rows.flatMap(p => {
-    const products = (p.products || []).filter(x => x.productName);
-    const baseRow  = [
-      p.customer, STATUS_MAP[p.status]?.label || p.status,
-      p.probability || 0, p.deliveryDate || '',
-      p.salesPerson || '', p.salesRegion || '',
-      p.memo || '', p.updatedAt || ''
-    ];
-    if (products.length === 0) {
-      return [[p.projectNo, p.projectName, p.customer, '–', '', '', p.billingCurrency || 'JPY',
-               STATUS_MAP[p.status]?.label || p.status, p.probability || 0,
-               p.deliveryDate || '', p.salesPerson || '', p.salesRegion || '',
-               p.memo || '', p.updatedAt || '']];
-    }
-    return products.map(prod => [
-      p.projectNo, p.projectName, p.customer,
-      prod.productName || '', prod.qty || '', prod.unitPrice || '',
-      p.billingCurrency || 'JPY',
-      STATUS_MAP[p.status]?.label || p.status,
-      p.probability || 0, p.deliveryDate || '',
-      p.salesPerson || '', p.salesRegion || '',
-      p.memo || '', p.updatedAt || ''
-    ]);
-  });
+  const headers = ['案件No', '案件名', '取引先', '担当者', '地域', 'ステータス', '合計金額（税抜）', '合計金額（税込）', '受注確度(%)', '納品予定日', '備考', '登録日時', '更新日時'];
+  const data = rows.map(p => [
+    p.projectNo, p.projectName, p.customer, p.salesPerson, p.salesRegion,
+    STATUS_MAP[p.status]?.label || p.status,
+    p.subtotal || 0, p.total || 0, p.probability || 0,
+    p.deliveryDate || '', p.memo || '',
+    p.createdAt || '', p.updatedAt || ''
+  ]);
   const lines = [headers, ...data].map(row =>
     row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
   );
@@ -1753,13 +1668,10 @@ function downloadTemplate() {
     '\uFEFF# 【ステータスの入力値】',
     '# 見積前=draft  見積済=quoted  受注済=ordered  納品済=delivered  請求済=invoiced  入金済=paid',
     '# 【納品予定日の形式】YYYY-MM-DD（例: 2026-06-30）またはYYYY/MM/DD形式も可',
-    '# 【製品が複数ある場合】同じ案件名・取引先名で複数行に分けて入力してください',
-    '# 【地域】取引先マスタから自動引き当てされます（手入力不要・マスタ未登録はエラー）',
     '# ※「#」で始まる行は読み込み時に自動的に無視されます',
-    '案件名,取引先名,担当者名,製品名,数量,税抜単価,納品予定日,受注確度,ステータス,備考',
-    '"Nokia案件","Nokia","渡辺 武","EUV露光装置","1","50000000","2026-09-30","90","quoted","1行目：製品1つ目"',
-    '"Nokia案件","Nokia","渡辺 武","ALD装置","2","30000000","2026-09-30","90","quoted","2行目：同じ案件の製品2つ目"',
-    '"山田製作所 検査装置","山田製作所","田中 健一","","","","2026-06-30","70","draft","製品なしの場合は空欄可"',
+    '# ※ 6行目（下のヘッダー行の次）からデータを入力してください',
+    '案件名,取引先名,担当者名,納品予定日,受注確度,地域,ステータス,合計金額（税抜）,備考',
+    '"サンプル案件 A","山田製作所","田中 健一","2026-06-30","70","JP","draft","5000000","サンプルデータ"',
   ];
   downloadCSV(lines.join('\n'), 'QURURi_案件インポートひな形.csv');
 }
@@ -1780,7 +1692,7 @@ function resetImport() {
   document.getElementById('btnImportBack').style.display    = 'none';
   document.getElementById('btnImportConfirm').style.display = 'none';
   document.getElementById('fileInput').value = '';
-  importData = { valid: [], errors: [], updates: [], fileName: '' };
+  importData = { valid: [], errors: [], updates: [], fileName: '', masterWarn: false };
 }
 
 function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
@@ -1815,6 +1727,20 @@ function processFile(file) {
   reader.readAsText(file, 'UTF-8');
 }
 
+// ─── マスタセットをLocalStorageから読み込む（照合用） ───
+function loadMasterSets() {
+  const load = (key, nameField) => {
+    try {
+      const data = JSON.parse(localStorage.getItem('qururi:' + key) || '[]');
+      return new Set(data.map(r => (r[nameField] || '').trim()).filter(Boolean));
+    } catch { return new Set(); }
+  };
+  return {
+    customers: load('customers', 'customer_name'),
+    staff:     load('staff',     'staff_name'),
+  };
+}
+
 function parseImportCSV(text) {
   const lines = text.split(/\r?\n/).filter(l => l.trim() && !l.trim().startsWith('#'));
   if (lines.length < 2) {
@@ -1822,152 +1748,99 @@ function parseImportCSV(text) {
     return;
   }
 
-  // ─── 取引先マスタをLocalStorageから読み込み ───
-  let customerMaster = [];
-  try {
-    customerMaster = JSON.parse(localStorage.getItem('qururi:customers') || '[]');
-  } catch(e) {}
-  // 取引先名→地域・業種などのマップを作成（customer_nameをキーに）
-  const customerMap = {};
-  customerMaster.forEach(c => {
-    if (c.customer_name) customerMap[c.customer_name] = c;
-  });
-
   const headers = parseCSVLine(lines[0]);
   const COL = {
-    projectNo:    findCol(headers, ['案件No', 'project_no', 'projectNo']),
-    projectName:  findCol(headers, ['案件名', 'project_name', 'projectName']),
-    customer:     findCol(headers, ['取引先名', '取引先', 'customer']),
-    salesPerson:  findCol(headers, ['担当者名', '担当者', 'sales_person', 'salesPerson']),
-    productName:  findCol(headers, ['製品名', 'product_name', 'productName']),
-    qty:          findCol(headers, ['数量', 'qty', 'quantity']),
-    unitPrice:    findCol(headers, ['税抜単価', '単価', 'unit_price', 'unitPrice']),
-    deliveryDate: findCol(headers, ['納品予定日', 'delivery_date', 'deliveryDate']),
-    probability:  findCol(headers, ['受注確度', 'probability']),
-    status:       findCol(headers, ['ステータス', 'status']),
-    memo:         findCol(headers, ['備考', 'memo']),
-    // 後方互換：古いCSVに地域・合計金額列があれば読む
-    salesRegion:  findCol(headers, ['地域', '販売地域', 'region', 'salesRegion']),
-    subtotal:     findCol(headers, ['合計金額（税抜）', '合計金額', 'subtotal']),
+    projectNo:   findCol(headers, ['案件No', 'project_no', 'projectNo']),
+    projectName: findCol(headers, ['案件名', 'project_name', 'projectName']),
+    customer:    findCol(headers, ['取引先名', '取引先', 'customer']),
+    salesPerson: findCol(headers, ['担当者名', '担当者', 'sales_person', 'salesPerson']),
+    deliveryDate:findCol(headers, ['納品予定日', 'delivery_date', 'deliveryDate']),
+    probability: findCol(headers, ['受注確度', 'probability']),
+    salesRegion: findCol(headers, ['地域', '販売地域', 'region', 'salesRegion']),
+    status:      findCol(headers, ['ステータス', 'status']),
+    subtotal:    findCol(headers, ['合計金額（税抜）', '合計金額', 'subtotal']),
+    memo:        findCol(headers, ['備考', 'memo']),
   };
 
+  // ─── マスタ照合セットを取得 ───
+  const masters = loadMasterSets();
+  const hasMasterCustomers = masters.customers.size > 0;
+  const hasMasterStaff     = masters.staff.size > 0;
+
   const existingNos = new Set(allProjects.map(p => p.projectNo));
-  importData.valid   = [];
-  importData.errors  = [];
-  importData.updates = [];
-
-  // ─── 1パス目：行パース＆バリデーション ───
-  // 案件キー（案件名＋取引先）ごとにグルーピング
-  const projectMap = new Map(); // key: "案件名\t取引先名" → record
-  const projectOrder = [];      // 挿入順を保持
-
-  const validStatuses = ['draft','quoted','ordered','delivered','invoiced','paid'];
+  importData.valid      = [];
+  importData.errors     = [];   // [{ row, col, value, message }]
+  importData.updates    = [];
+  importData.masterWarn = !hasMasterCustomers; // マスタ未登録の警告フラグ
 
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCSVLine(lines[i]);
     if (cols.every(c => !c.trim())) continue;
 
-    const get = (key) => (COL[key] >= 0 ? cols[COL[key]]?.trim() : '') ?? '';
+    const rowNum = i + 1; // ヘッダ行を1行目と数える場合の表示用
+    const row = {};
+    Object.entries(COL).forEach(([k, idx]) => {
+      if (idx >= 0) row[k] = cols[idx]?.trim() ?? '';
+    });
 
-    const projectName = get('projectName');
-    const customer    = get('customer');
-    const lineNo      = i + 1;
+    // ─── バリデーション（エラーは { row, col, value, message } 形式で統一） ───
+    const errs = [];
 
-    // 必須バリデーション
-    if (!projectName) { importData.errors.push(`${lineNo}行目: 案件名は必須です`); continue; }
-    if (!customer)    { importData.errors.push(`${lineNo}行目: 取引先名は必須です`); continue; }
+    const addErr = (col, value, message) => errs.push({ row: rowNum, col, value, message });
 
-    // ─── 取引先マスタ引き当て ───
-    const custRecord = customerMap[customer];
-    if (!custRecord) {
-      importData.errors.push(`${lineNo}行目: 取引先「${customer}」は取引先マスタに登録されていません。先にマスタへ登録してください。`);
+    // 必須チェック
+    if (!row.projectName)
+      addErr('案件名', '', '必須項目です');
+    if (!row.customer)
+      addErr('取引先名', '', '必須項目です');
+
+    // 受注確度
+    if (row.probability !== undefined && row.probability !== '') {
+      const p = Number(row.probability);
+      if (isNaN(p) || p < 0 || p > 100)
+        addErr('受注確度', row.probability, '0〜100 の数値を入力してください');
+    }
+
+    // 納品予定日
+    if (row.deliveryDate) {
+      row.deliveryDate = normalizeDate(row.deliveryDate);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(row.deliveryDate))
+        addErr('納品予定日', row.deliveryDate, '日付形式が認識できません（例: 2026-06-30）');
+    }
+
+    // ステータス
+    const validStatuses = ['draft','quoted','ordered','delivered','invoiced','paid'];
+    if (row.status && !validStatuses.includes(row.status))
+      addErr('ステータス', row.status, '有効値: draft / quoted / ordered / delivered / invoiced / paid');
+
+    // マスタ照合（マスタに1件もデータがない場合はスキップ＝初期投入を妨げない）
+    if (hasMasterCustomers && row.customer && !masters.customers.has(row.customer))
+      addErr('取引先名', row.customer, '取引先マスタに未登録です（先にマスタへ登録してください）');
+
+    if (hasMasterStaff && row.salesPerson && !masters.staff.has(row.salesPerson))
+      addErr('担当者名', row.salesPerson, '担当者マスタに未登録です（先にマスタへ登録してください）');
+
+    if (errs.length > 0) {
+      importData.errors.push(...errs);
       continue;
     }
-    const salesRegion = custRecord.sales_region || custRecord.salesRegion || get('salesRegion') || 'JP';
 
-    // 確度バリデーション
-    const probStr = get('probability');
-    if (probStr !== '' && (isNaN(Number(probStr)) || Number(probStr) < 0 || Number(probStr) > 100)) {
-      importData.errors.push(`${lineNo}行目: 受注確度は0〜100の数値で入力してください`);
-      continue;
-    }
+    const record = {
+      projectName:  row.projectName,
+      customer:     row.customer,
+      salesPerson:  row.salesPerson || '',
+      deliveryDate: row.deliveryDate || null,
+      probability:  row.probability !== '' ? Number(row.probability) : 50,
+      salesRegion:  row.salesRegion || 'JP',
+      status:       row.status || 'draft',
+      subtotal:     row.subtotal ? Number(String(row.subtotal).replace(/[,¥\s]/g, '')) : 0,
+      memo:         row.memo || '',
+      updatedAt:    new Date().toISOString().slice(0, 10),
+    };
+    record.total = Math.round(record.subtotal * 1.1);
 
-    // 納品予定日バリデーション
-    let deliveryDate = get('deliveryDate');
-    if (deliveryDate) deliveryDate = normalizeDate(deliveryDate);
-    if (deliveryDate && !/^\d{4}-\d{2}-\d{2}$/.test(deliveryDate)) {
-      importData.errors.push(`${lineNo}行目: 納品予定日の形式が認識できません（例: 2026-06-30）`);
-      continue;
-    }
-
-    // ステータスバリデーション
-    const status = get('status') || 'draft';
-    if (!validStatuses.includes(status)) {
-      importData.errors.push(`${lineNo}行目: ステータス「${status}」は無効です（draft/quoted/ordered/delivered/invoiced/paid）`);
-      continue;
-    }
-
-    // ─── グルーピングキー ───
-    const groupKey = `${projectName}\t${customer}`;
-
-    if (!projectMap.has(groupKey)) {
-      // 案件の基本情報（最初の行から取得）
-      const record = {
-        projectName,
-        customer,
-        salesPerson:  get('salesPerson') || '',
-        deliveryDate: deliveryDate || null,
-        probability:  probStr !== '' ? Number(probStr) : 50,
-        salesRegion,
-        billingCurrency: custRecord.billing_currency || custRecord.billingCurrency || 'JPY',
-        status,
-        memo:         get('memo') || '',
-        products:     [],
-        updatedAt:    new Date().toISOString().slice(0, 10),
-      };
-      const projectNo = get('projectNo');
-      if (projectNo) record.projectNo = projectNo;
-      projectMap.set(groupKey, record);
-      projectOrder.push(groupKey);
-    }
-
-    // 製品明細を追加
-    const productName = get('productName');
-    const qty         = get('qty');
-    const unitPrice   = get('unitPrice');
-    if (productName) {
-      const qtyNum       = qty       ? Number(String(qty).replace(/[,\s]/g, ''))       : 1;
-      const unitPriceNum = unitPrice ? Number(String(unitPrice).replace(/[,¥\s]/g, '')) : 0;
-      projectMap.get(groupKey).products.push({
-        productName,
-        qty:       qtyNum,
-        unitPrice: unitPriceNum,
-        lineTotal: qtyNum * unitPriceNum,
-      });
-    }
-
-    // 後方互換：合計金額列がある場合は上書き保存
-    const subtotalStr = get('subtotal');
-    if (subtotalStr) {
-      projectMap.get(groupKey)._subtotalOverride = Number(String(subtotalStr).replace(/[,¥\s]/g, ''));
-    }
-  }
-
-  // ─── 2パス目：案件レコード確定 ───
-  for (const key of projectOrder) {
-    const record = projectMap.get(key);
-
-    // 小計の計算（製品明細から積み上げ、なければ override 値 or 0）
-    const productSubtotal = record.products.reduce((s, p) => s + (p.lineTotal || 0), 0);
-    record.subtotal = productSubtotal > 0
-      ? productSubtotal
-      : (record._subtotalOverride || 0);
-    delete record._subtotalOverride;
-
-    const taxRate   = record.salesRegion === 'JP' ? 0.1 : 0;
-    record.total    = Math.round(record.subtotal * (1 + taxRate));
-
-    if (record.projectNo && existingNos.has(record.projectNo)) {
+    if (row.projectNo && existingNos.has(row.projectNo)) {
+      record.projectNo = row.projectNo;
       importData.updates.push(record);
     } else {
       record.createdAt = new Date().toISOString().slice(0, 10);
@@ -2007,7 +1880,7 @@ function parseCSVLine(line) {
 function showImportPreview() {
   const newCount    = importData.valid.length;
   const updateCount = importData.updates.length;
-  const errCount    = importData.errors.length;
+  const errCount    = importData.errors.length;   // errorsは { row, col, value, message }[] の配列
 
   document.getElementById('importStep1').style.display = 'none';
   document.getElementById('importStep2').style.display = 'block';
@@ -2018,15 +1891,36 @@ function showImportPreview() {
   document.getElementById('importError').textContent  = errCount;
 
   const total = newCount + updateCount;
+
+  // ─── マスタ未登録データが0件の場合の注意書き ───
+  const masterWarnHtml = importData.masterWarn
+    ? `<div style="margin-top:10px;padding:8px 12px;background:var(--warning-bg);border:1px solid #f0c040;border-radius:6px;font-size:12px;color:var(--warning);">
+        ⚠ 取引先マスタにデータがないため、取引先の照合をスキップしました。<br>
+        先に<strong>マスター管理画面</strong>で取引先を登録することを推奨します。
+       </div>`
+    : '';
+
   document.getElementById('importPreview').innerHTML = `
-    <strong>ファイル：</strong>${importData.fileName}<br>
-    <strong>処理件数：</strong>${total}件（新規 ${newCount}件 + 更新 ${updateCount}件）
-    ${errCount > 0 ? `<br><span style="color:var(--warning);">⚠ ${errCount}件はスキップされます</span>` : ''}
+    <div style="font-size:13px;line-height:1.8;">
+      <strong>ファイル：</strong>${importData.fileName}<br>
+      <strong>取り込み対象：</strong>${total}件（新規 ${newCount}件・更新 ${updateCount}件）
+      ${errCount > 0 ? `<br><span style="color:var(--danger);">✗ ${errCount}件はエラーのためスキップします</span>` : '<br><span style="color:var(--success);">✓ エラーなし</span>'}
+    </div>
+    ${masterWarnHtml}
   `;
 
+  // ─── エラー詳細（行・列・値・理由を明示） ───
   if (errCount > 0) {
     document.getElementById('importErrorList').style.display = 'block';
-    document.getElementById('importErrorDetail').innerHTML = importData.errors.map(e => `<li>${e}</li>`).join('');
+    const html = importData.errors.map(e => {
+      const valueHtml = e.value ? `「<strong>${e.value}</strong>」` : '';
+      return `<li>
+        <span style="color:var(--text-tertiary);font-size:11px;margin-right:6px;">${e.row}行目</span>
+        <span style="background:var(--bg-tertiary);border-radius:3px;padding:1px 5px;font-size:11px;margin-right:6px;">${e.col}</span>
+        ${valueHtml} ${e.message}
+      </li>`;
+    }).join('');
+    document.getElementById('importErrorDetail').innerHTML = html;
   } else {
     document.getElementById('importErrorList').style.display = 'none';
   }
@@ -2078,11 +1972,6 @@ function navigateTo(page, projectNo) {
 }
 
 // ─── Helpers ───
-function getCurrencySymbol(currency) {
-  const map = { JPY: '¥', USD: 'USD ', EUR: 'EUR ', RMB: 'RMB ', CNY: 'CNY ' };
-  return map[currency] || (currency + ' ');
-}
-
 function formatMoney(n) {
   if (n === undefined || n === null) return '–';
   if (n >= 100000000) return (n / 100000000).toFixed(1) + '億';
