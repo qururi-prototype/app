@@ -1171,8 +1171,8 @@ let allProjects = [];
 let filteredProjects = [];
 let currentPage = 1;
 let perPage = 20;
-let sortKey = 'updatedAt';
-let sortDir = 'desc';
+let sortKey = 'projectNo';
+let sortDir = 'asc';
 let selectedIds = new Set();
 let importData = { valid: [], errors: [], updates: [], fileName: '', masterWarn: false };
 
@@ -1635,8 +1635,9 @@ function exportCSV() {
   const rows = filteredProjects;
   if (rows.length === 0) { showToast('エクスポートするデータがありません', 'error'); return; }
   const csv = buildCSV(rows);
-  downloadCSV(csv, `QURURi_案件一覧_${todayStr()}.csv`);
-  showToast(`${rows.length}件をエクスポートしました`, 'success');
+  downloadCSV(csv, 'QURURi_案件一覧_' + todayStr() + '.csv');
+  const lineCount = rows.reduce((s, p) => s + (p.products?.length || 1), 0);
+  showToast(rows.length + '案件（' + lineCount + '明細行）をエクスポートしました', 'success');
 }
 
 function deleteSelected() {
@@ -1663,20 +1664,55 @@ function exportSelectedCSV() {
 }
 
 function buildCSV(rows) {
-  const headers = ['案件No', '案件名', '取引先', '担当者', '地域', 'ステータス', '合計金額（税抜）', '合計金額（税込）', '受注確度(%)', '納品予定日', '備考', '登録日時', '更新日時'];
-  const data = rows.map(p => [
-    p.projectNo, p.projectName, p.customer, p.salesPerson, p.salesRegion,
-    STATUS_MAP[p.status]?.label || p.status,
-    p.subtotal || 0, p.total || 0, p.probability || 0,
-    p.deliveryDate || '', p.memo || '',
-    p.createdAt || '', p.updatedAt || ''
-  ]);
-  const lines = [headers, ...data].map(row =>
-    row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
-  );
+  // エクスポート時は案件No昇順に強制ソート
+  const sorted = [...rows].sort((a, b) => {
+    const na = String(a.projectNo || '');
+    const nb = String(b.projectNo || '');
+    return na < nb ? -1 : na > nb ? 1 : 0;
+  });
+
+  // ヘッダー（製品明細列を追加）
+  const headers = [
+    '案件No', '案件名', '取引先', '担当者', '地域', 'ステータス',
+    '製品コード', '製品名', '数量', '税抜単価', '通貨', '税率',
+    '明細金額', '合計金額（税抜）', '合計金額（税込）',
+    '受注確度(%)', '納品予定日', '備考', '登録日時', '更新日時'
+  ];
+
+  const dataRows = [];
+  sorted.forEach(p => {
+    const status   = STATUS_MAP[p.status]?.label || p.status || '';
+    const products = (p.products && p.products.length > 0) ? p.products : [null];
+    products.forEach(prod => {
+      dataRows.push([
+        p.projectNo     || '',
+        p.projectName   || '',
+        p.customer      || '',
+        p.salesPerson   || '',
+        p.salesRegion   || '',
+        status,
+        prod ? (prod.productCode || '') : '',
+        prod ? (prod.productName || '') : '',
+        prod ? (prod.qty         != null ? prod.qty       : 1) : '',
+        prod ? (prod.unitPrice   != null ? prod.unitPrice : 0) : '',
+        prod ? (prod.currency    || 'JPY') : '',
+        prod ? (prod.taxRate     != null ? prod.taxRate   : '') : '',
+        prod ? (prod.lineTotal   != null ? prod.lineTotal : 0)  : '',
+        p.subtotal || 0,
+        p.total    || 0,
+        p.probability || 0,
+        p.deliveryDate || '',
+        p.memo         || '',
+        p.createdAt    || '',
+        p.updatedAt    || '',
+      ]);
+    });
+  });
+
+  const csvEscape = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const lines = [headers, ...dataRows].map(row => row.map(csvEscape).join(','));
   return '\uFEFF' + lines.join('\r\n');
 }
-
 function downloadCSV(content, filename) {
   const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
