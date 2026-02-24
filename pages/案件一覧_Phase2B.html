@@ -754,6 +754,31 @@
     line-height: 1.6;
   }
 
+  /* ─── Import Preview Table ─── */
+  .import-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .import-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border-default);
+    text-align: left;
+  }
+  .import-table tbody tr { border-bottom: 1px solid var(--border-subtle); }
+  .import-table tbody tr:last-child { border-bottom: none; }
+  .import-table tbody tr.row-new td:first-child { border-left: 3px solid var(--success); }
+  .import-table tbody tr.row-update td:first-child { border-left: 3px solid var(--warning); }
+  .import-table tbody td { padding: 5px 10px; color: var(--text-primary); }
+  .import-table .badge-new    { background: var(--success-bg); color: var(--success); border-radius:3px; padding:1px 6px; font-size:10px; font-weight:600; }
+  .import-table .badge-update { background: var(--warning-bg); color: var(--warning); border-radius:3px; padding:1px 6px; font-size:10px; font-weight:600; }
+
   /* ─── Toast ─── */
   .toast-container {
     position: fixed;
@@ -1115,7 +1140,18 @@
 
         <div class="import-preview" id="importPreview"></div>
 
-        <div id="importErrorList" style="display:none;">
+        <!-- プレビューテーブル（取り込み対象行） -->
+        <div id="importPreviewTable" style="display:none;margin-top:14px;">
+          <p style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">
+            取り込み内容プレビュー
+            <span id="importPreviewBadge" style="font-weight:400;color:var(--text-tertiary);margin-left:6px;"></span>
+          </p>
+          <div style="overflow-x:auto;max-height:220px;overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-sm);">
+            <table class="import-table" id="importTableBody"></table>
+          </div>
+        </div>
+
+        <div id="importErrorList" style="display:none;margin-top:14px;">
           <p style="font-size:12px;font-weight:600;color:var(--danger);margin-bottom:6px;">エラー詳細：</p>
           <ul class="import-error-list" id="importErrorDetail"></ul>
         </div>
@@ -1212,7 +1248,6 @@ const STATUS_MAP = {
 // ─── Init ───
 document.addEventListener('DOMContentLoaded', async () => {
   await loadProjects();
-  await setupDemoData();  // ストレージ空の時のみデモデータ投入
   buildFilterOptions();
   applyFilters();
 });
@@ -1693,6 +1728,7 @@ function resetImport() {
   document.getElementById('btnImportConfirm').style.display = 'none';
   document.getElementById('fileInput').value = '';
   importData = { valid: [], errors: [], updates: [], fileName: '', masterWarn: false };
+  document.getElementById('importPreviewTable').style.display = 'none';
 }
 
 function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
@@ -1929,6 +1965,61 @@ function showImportPreview() {
     document.getElementById('btnImportConfirm').style.display = 'inline-flex';
     document.getElementById('btnImportConfirmLabel').textContent = `この内容で登録する（${total}件）`;
   }
+
+  // ─── プレビューテーブル描画 ───
+  renderImportPreviewTable();
+}
+
+function renderImportPreviewTable() {
+  const allRows = [
+    ...importData.valid.map(r   => ({ ...r, _type: 'new' })),
+    ...importData.updates.map(r => ({ ...r, _type: 'update' })),
+  ];
+
+  const wrap = document.getElementById('importPreviewTable');
+  if (allRows.length === 0) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  const badge = document.getElementById('importPreviewBadge');
+  badge.textContent = `（${allRows.length}件）`;
+
+  const STATUS_LABEL = {
+    draft:'見積前', quoted:'見積済', ordered:'受注済',
+    delivered:'納品済', invoiced:'請求済', paid:'入金済'
+  };
+  const fmt = n => n ? Number(n).toLocaleString() : '–';
+
+  const thead = `<thead><tr>
+    <th></th>
+    <th>案件名</th>
+    <th>取引先名</th>
+    <th>担当者</th>
+    <th>ステータス</th>
+    <th style="text-align:right;">合計（税抜）</th>
+    <th style="text-align:center;">確度</th>
+    <th>納品予定日</th>
+    <th>地域</th>
+  </tr></thead>`;
+
+  const tbody = allRows.map(r => {
+    const isNew = r._type === 'new';
+    const badge = isNew
+      ? '<span class="badge-new">新規</span>'
+      : '<span class="badge-update">更新</span>';
+    return `<tr class="row-${r._type}">
+      <td>${badge}</td>
+      <td>${r.projectName || ''}</td>
+      <td>${r.customer || ''}</td>
+      <td>${r.salesPerson || '–'}</td>
+      <td>${STATUS_LABEL[r.status] || r.status || 'draft'}</td>
+      <td style="text-align:right;">¥${fmt(r.subtotal)}</td>
+      <td style="text-align:center;">${r.probability ?? 50}%</td>
+      <td>${r.deliveryDate || '–'}</td>
+      <td>${r.salesRegion || 'JP'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('importTableBody').innerHTML = thead + `<tbody>${tbody}</tbody>`;
 }
 
 async function commitImport() {
