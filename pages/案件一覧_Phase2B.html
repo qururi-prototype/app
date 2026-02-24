@@ -1045,6 +1045,7 @@
                 <th onclick="sortBy('projectName')">案件名 <span class="sort-icon" id="sort_projectName">↕</span></th>
                 <th onclick="sortBy('customer')">取引先 <span class="sort-icon" id="sort_customer">↕</span></th>
                 <th onclick="sortBy('status')">ステータス <span class="sort-icon" id="sort_status">↕</span></th>
+                <th>製品名</th>
                 <th onclick="sortBy('subtotal')" style="text-align:right;">合計（税抜） <span class="sort-icon" id="sort_subtotal">↕</span></th>
                 <th onclick="sortBy('probability')" style="text-align:center;">確度 <span class="sort-icon" id="sort_probability">↕</span></th>
                 <th onclick="sortBy('deliveryDate')">納品予定日 <span class="sort-icon" id="sort_deliveryDate">↕</span></th>
@@ -1054,7 +1055,7 @@
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="11"><div class="empty-state"><p>データを読み込み中...</p></div></td></tr>
+              <tr><td colspan="12"><div class="empty-state"><p>データを読み込み中...</p></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -1455,7 +1456,7 @@ function renderTable() {
   document.getElementById('showingCount').textContent = page.length.toLocaleString();
 
   if (page.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state">
+    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
       <p>案件が見つかりません</p>
       <small>検索条件を変えるか、新規案件を登録してください</small>
@@ -1467,7 +1468,19 @@ function renderTable() {
   const soonDate = new Date(); soonDate.setDate(soonDate.getDate() + 14);
   const soonStr = soonDate.toISOString().slice(0, 10);
 
-  tbody.innerHTML = page.map(p => {
+  // 通貨ごとの記号
+  const CURRENCY_SYMBOL = { JPY: '¥', USD: '$', EUR: '€', RMB: '¥', CNY: '¥' };
+
+  // 製品行を展開（1案件 = products数分の行。製品なし = 1行）
+  const displayRows = [];
+  for (const p of page) {
+    const prodLines = (p.products && p.products.length > 0) ? p.products : [null];
+    prodLines.forEach((prod, idx) => {
+      displayRows.push({ proj: p, prod, isFirst: idx === 0, rowSpan: prodLines.length });
+    });
+  }
+
+  tbody.innerHTML = displayRows.map(({ proj: p, prod, isFirst }) => {
     const statusCfg = STATUS_MAP[p.status] || { label: p.status, class: 'status-draft' };
     const checked   = selectedIds.has(p.projectNo) ? 'checked' : '';
     const rowClass  = selectedIds.has(p.projectNo) ? 'selected-row' : '';
@@ -1483,26 +1496,56 @@ function renderTable() {
       dateClass += ' date-soon';
     }
 
-    return `<tr class="${rowClass}" onclick="handleRowClick('${p.projectNo}', event)">
-      <td onclick="event.stopPropagation()" style="padding:12px;">
-        <input type="checkbox" class="row-checkbox" ${checked}
-               onchange="toggleCheck('${p.projectNo}', this.checked)">
-      </td>
-      <td class="td-no">${p.projectNo || '–'}</td>
-      <td class="td-name" style="max-width:220px;" title="${p.projectName || ''}">${p.projectName || '–'}</td>
-      <td style="max-width:140px;" title="${p.customer || ''}">${p.customer || '–'}</td>
-      <td><span class="status-badge ${statusCfg.class}">${statusCfg.label}</span></td>
-      <td class="td-amount" style="text-align:right;">
-        <span class="currency-badge">JPY</span>¥${(p.subtotal || 0).toLocaleString()}
-      </td>
-      <td class="td-prob">
-        <span class="prob-badge" style="background:${probBg};color:${probColor};">${prob}%</span>
-      </td>
-      <td class="${dateClass}">${dateLabel}</td>
-      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.salesPerson || '–'}</td>
-      <td>${p.salesRegion || '–'}</td>
-      <td class="td-date">${p.updatedAt ? formatDate(p.updatedAt) : '–'}</td>
-    </tr>`;
+    // 通貨：製品行の currency → 案件の currency → JPY の優先順
+    const currency = prod?.currency || p.currency || 'JPY';
+    const sym      = CURRENCY_SYMBOL[currency] || currency + ' ';
+
+    // 金額表示：JPYは¥+数値、外貨は通貨コード+数値（subtotalはJPY換算済み）
+    const amountDisplay = currency === 'JPY'
+      ? `<span class="currency-badge">${currency}</span>${sym}${(p.subtotal || 0).toLocaleString()}`
+      : `<span class="currency-badge" style="background:#e8f0fe;color:#376ee6;">${currency}</span>${sym}${(p.subtotal || 0).toLocaleString()}`;
+
+    // 製品名セル（照合済みの製品名を表示）
+    const prodName = prod
+      ? (prod.productCode ? `${prod.productName || '–'}` : (prod.productName || '–'))
+      : '–';
+    const prodCell = `<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                          title="${(prod?.productName || '')} ${prod?.productCode ? '（' + prod.productCode + '）' : ''}"
+                      >${prodName}</td>`;
+
+    // 1案件の最初の行のみ案件情報セルを表示（2行目以降は製品名のみ）
+    if (isFirst) {
+      return \`<tr class="\${rowClass}" onclick="handleRowClick('\${p.projectNo}', event)">
+        <td onclick="event.stopPropagation()" style="padding:12px;">
+          <input type="checkbox" class="row-checkbox" \${checked}
+                 onchange="toggleCheck('\${p.projectNo}', this.checked)">
+        </td>
+        <td class="td-no">\${p.projectNo || '–'}</td>
+        <td class="td-name" style="max-width:220px;" title="\${p.projectName || ''}">\${p.projectName || '–'}</td>
+        <td style="max-width:140px;" title="\${p.customer || ''}">\${p.customer || '–'}</td>
+        <td><span class="status-badge \${statusCfg.class}">\${statusCfg.label}</span></td>
+        \${prodCell}
+        <td class="td-amount" style="text-align:right;">\${amountDisplay}</td>
+        <td class="td-prob">
+          <span class="prob-badge" style="background:\${probBg};color:\${probColor};">\${prob}%</span>
+        </td>
+        <td class="\${dateClass}">\${dateLabel}</td>
+        <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">\${p.salesPerson || '–'}</td>
+        <td>\${p.salesRegion || '–'}</td>
+        <td class="td-date">\${p.updatedAt ? formatDate(p.updatedAt) : '–'}</td>
+      </tr>\`;
+    } else {
+      // 2行目以降：案件No・案件名・取引先・ステータス・金額・確度・日付・担当者・地域・更新日は空セル
+      // 視覚的に同一案件とわかるよう薄いborder-topで区切る
+      return \`<tr class="\${rowClass} prod-subrow" onclick="handleRowClick('\${p.projectNo}', event)"
+               style="border-top:1px dashed var(--border-subtle);">
+        <td></td>
+        <td class="td-no" style="color:var(--text-tertiary);font-size:11px;">\${p.projectNo || ''}</td>
+        <td></td><td></td><td></td>
+        \${prodCell}
+        <td></td><td></td><td></td><td></td><td></td><td></td>
+      </tr>\`;
+    }
   }).join('');
 }
 
