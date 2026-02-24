@@ -2107,7 +2107,6 @@ function SearchableSelect(wrapperId, inputId, listId, options, onSelect, placeho
 // テーブル行内のSearchableSelect（製品名）
 // ===================================================
 function createTableSS(row, restoreValue) {
-  // wrapperをdivで作成
   const wrapper = row.querySelector('.table-ss-wrapper');
   if (!wrapper) return null;
   wrapper.classList.add('ss-wrapper', 'table-ss');
@@ -2117,17 +2116,32 @@ function createTableSS(row, restoreValue) {
   const list  = wrapper.querySelector('.ss-dropdown-product');
   if (!input || !list) return null;
 
+  // ドロップダウンをbodyに移動してoverflow:autoのクリップを回避
+  list.style.position = 'fixed';
+  list.style.zIndex   = '99999';
+  document.body.appendChild(list);
+
   let selectedValue = '';
   let focusedIndex  = -1;
+
+  function reposition() {
+    const rect = input.getBoundingClientRect();
+    list.style.top   = rect.bottom + 'px';
+    list.style.left  = rect.left   + 'px';
+    list.style.width = rect.width  + 'px';
+  }
 
   function open() {
     wrapper.classList.add('is-open');
     input.classList.add('is-open');
+    reposition();
+    list.style.display = 'block';
     renderList(input.value);
   }
   function close() {
     wrapper.classList.remove('is-open');
     input.classList.remove('is-open');
+    list.style.display = 'none';
     focusedIndex = -1;
     if (selectedValue) {
       const found = MC.products.find(p => p.product_name === selectedValue);
@@ -2188,8 +2202,9 @@ function createTableSS(row, restoreValue) {
       if (item) selectProduct(item.dataset.code, item.dataset.name);
     } else if (e.key === 'Escape') { close(); input.blur(); }
   });
+  // スクロール時にドロップダウン位置を追従
+  window.addEventListener('scroll', function() { if (list.style.display === 'block') reposition(); }, true);
 
-  // 復元
   if (restoreValue) { selectedValue = restoreValue; input.value = restoreValue; }
 
   return {
@@ -2278,148 +2293,6 @@ document.addEventListener('DOMContentLoaded', function() {
   populateStaffSelect();
   populateCustomerSelect();
   const tbody  = document.getElementById('productTableBody');
-  const params = new URLSearchParams(window.location.search);
-  if (!params.get('projectNo') && tbody && tbody.children.length === 0) {
-    addProductRow();
-  }
-});
-</script>
-
-function lsGetMaster(key) {
-  try {
-    const v = localStorage.getItem('qururi:' + key);
-    return v ? JSON.parse(v) : [];
-  } catch { return []; }
-}
-
-function initMasterData() {
-  MC.staff     = lsGetMaster('staff');
-  MC.customers = lsGetMaster('customers');
-  MC.products  = lsGetMaster('products');
-  MC.prices    = lsGetMaster('prices');
-}
-
-// --- 担当者プルダウン生成 ---
-function populateStaffSelect(restoreValue) {
-  const sel = document.getElementById('salesPerson');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">-- 選択してください --</option>';
-  if (MC.staff.length === 0) {
-    sel.innerHTML = '<option value="">（担当者マスタ未登録）</option>';
-    return;
-  }
-  MC.staff.forEach(s => {
-    const label = s.display_name || `${s.staff_name}（${s.department || ''}）`;
-    const opt = document.createElement('option');
-    opt.value = label;
-    opt.textContent = label;
-    sel.appendChild(opt);
-  });
-  if (restoreValue) sel.value = restoreValue;
-}
-
-// --- 取引先プルダウン生成 ---
-function populateCustomerSelect(restoreValue) {
-  const sel = document.getElementById('customer');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">-- 選択してください --</option>';
-  if (MC.customers.length === 0) {
-    sel.innerHTML = '<option value="">（取引先マスタ未登録）</option>';
-    return;
-  }
-  MC.customers.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.customer_name;
-    opt.textContent = c.customer_name;
-    opt.dataset.code = c.customer_code;
-    sel.appendChild(opt);
-  });
-  if (restoreValue) {
-    sel.value = restoreValue;
-    onCustomerChange(false); // 自動転記のみ（単価再計算なし）
-  }
-}
-
-// --- 取引先変更 → 自動転記 + 通貨更新 ---
-function onCustomerChange(repriceRows) {
-  if (repriceRows === undefined) repriceRows = true;
-  const sel  = document.getElementById('customer');
-  const name = sel ? sel.value : '';
-  const cust = MC.customers.find(c => c.customer_name === name);
-
-  const set = function(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val || '--';
-  };
-  set('af-region',   cust ? cust.region   : '');
-  set('af-industry', cust ? cust.industry : '');
-  set('af-channel',  cust ? cust.channel  : '');
-  set('af-segment',  cust ? cust.segment  : '');
-
-  currentBillingCurrency = (cust && cust.billing_currency) ? cust.billing_currency : 'JPY';
-
-  document.querySelectorAll('#productTableBody tr').forEach(function(row) {
-    const currencyInput = row.querySelectorAll('input.table-input.autofill')[0];
-    if (currencyInput) currencyInput.value = currentBillingCurrency;
-    if (repriceRows) {
-      const productSel = row.querySelector('select.table-input.dropdown');
-      if (productSel) {
-        const opt = productSel.options[productSel.selectedIndex];
-        if (opt && opt.dataset && opt.dataset.code) setProductPrice(row, opt.dataset.code);
-      }
-    }
-  });
-  updateTotals();
-}
-
-// --- 製品プルダウン生成（行単位）---
-function populateProductSelect(sel, restoreValue) {
-  if (!sel) return;
-  sel.innerHTML = '<option value="">製品を選択</option>';
-  MC.products.forEach(function(p) {
-    const opt = document.createElement('option');
-    opt.value = p.product_name;
-    opt.textContent = p.product_name;
-    opt.dataset.code = p.product_code;
-    sel.appendChild(opt);
-  });
-  if (restoreValue) sel.value = restoreValue;
-}
-
-// --- 製品選択 → 単価セット ---
-function setProductPrice(row, productCode) {
-  if (!productCode) return;
-  const priceRec = MC.prices.find(function(p) { return Number(p.product_code) === Number(productCode); });
-  if (!priceRec) return;
-  const key = 'price_' + currentBillingCurrency.toLowerCase();
-  const price = priceRec[key];
-  if (price != null && price !== '') {
-    const priceInput = row.querySelector('input.table-input.direct.price');
-    if (priceInput) {
-      priceInput.value = Number(price).toLocaleString();
-      updateTotals();
-    }
-  }
-}
-
-// --- 製品変更イベント ---
-function onProductChange(sel) {
-  const row = sel.closest('tr');
-  const opt = sel.options[sel.selectedIndex];
-  const currencyInput = row.querySelectorAll('input.table-input.autofill')[0];
-  if (currencyInput) currencyInput.value = currentBillingCurrency;
-  if (opt && opt.dataset && opt.dataset.code) setProductPrice(row, opt.dataset.code);
-}
-
-// ===================================================
-// マスター連携初期化
-// ===================================================
-document.addEventListener('DOMContentLoaded', function() {
-  initMasterData();
-  populateStaffSelect();
-  populateCustomerSelect();
-  // 新規案件時：空の1行を追加
-  const tbody = document.getElementById('productTableBody');
   const params = new URLSearchParams(window.location.search);
   if (!params.get('projectNo') && tbody && tbody.children.length === 0) {
     addProductRow();
