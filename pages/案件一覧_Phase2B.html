@@ -1507,34 +1507,28 @@ function renderTable() {
     const prodTitle = prod ? ((prod.productName || '') + (prod.productCode ? ' (' + prod.productCode + ')' : '')) : '';
     const prodCell = '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + prodTitle + '">' + prodName + '</td>';
 
-    if (isFirst) {
-      return '<tr class="' + rowClass + '" onclick="handleRowClick(\'' + p.projectNo + '\', event)">'
-        + '<td onclick="event.stopPropagation()" style="padding:12px;">'
-        +   '<input type="checkbox" class="row-checkbox" ' + checked
-        +   ' onchange="toggleCheck(\'' + p.projectNo + '\', this.checked)">'
-        + '</td>'
-        + '<td class="td-no">' + (p.projectNo || '\u2013') + '</td>'
-        + '<td class="td-name" style="max-width:220px;" title="' + (p.projectName || '') + '">' + (p.projectName || '\u2013') + '</td>'
-        + '<td style="max-width:140px;" title="' + (p.customer || '') + '">' + (p.customer || '\u2013') + '</td>'
-        + '<td><span class="status-badge ' + statusCfg.class + '">' + statusCfg.label + '</span></td>'
-        + prodCell
-        + '<td class="td-amount" style="text-align:right;">' + amountDisplay + '</td>'
-        + '<td class="td-prob"><span class="prob-badge" style="background:' + probBg + ';color:' + probColor + ';">' + prob + '%</span></td>'
-        + '<td class="' + dateClass + '">' + dateLabel + '</td>'
-        + '<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.salesPerson || '\u2013') + '</td>'
-        + '<td>' + (p.salesRegion || '\u2013') + '</td>'
-        + '<td class="td-date">' + (p.updatedAt ? formatDate(p.updatedAt) : '\u2013') + '</td>'
-        + '</tr>';
-    } else {
-      return '<tr class="' + rowClass + ' prod-subrow" onclick="handleRowClick(\'' + p.projectNo + '\', event)"'
-        + ' style="border-top:1px dashed var(--border-subtle);">'
-        + '<td></td>'
-        + '<td class="td-no" style="color:var(--text-tertiary);font-size:11px;">' + (p.projectNo || '') + '</td>'
-        + '<td></td><td></td><td></td>'
-        + prodCell
-        + '<td></td><td></td><td></td><td></td><td></td><td></td>'
-        + '</tr>';
-    }
+    // 全行フル表示（製品ごとに全列を繰り返す）
+    // 2行目以降：案件Noと案件名・取引先をグレーで表示してグルーピングを視覚的に表現
+    const noStyle  = isFirst ? '' : ' style="color:var(--text-tertiary);font-size:11px;"';
+    const rowStyle = isFirst ? '' : ' style="border-top:1px dashed var(--border-subtle);"';
+    const cbCell   = isFirst
+      ? '<td onclick="event.stopPropagation()" style="padding:12px;"><input type="checkbox" class="row-checkbox" ' + checked + ' onchange="toggleCheck(\'' + p.projectNo + '\', this.checked)"></td>'
+      : '<td></td>';
+
+    return '<tr class="' + rowClass + (isFirst ? '' : ' prod-subrow') + '" onclick="handleRowClick(\'' + p.projectNo + '\', event)"' + rowStyle + '>'
+      + cbCell
+      + '<td class="td-no"' + noStyle + '>' + (p.projectNo || '\u2013') + '</td>'
+      + '<td class="td-name" style="max-width:220px;" title="' + (p.projectName || '') + '">' + (p.projectName || '\u2013') + '</td>'
+      + '<td style="max-width:140px;" title="' + (p.customer || '') + '">' + (p.customer || '\u2013') + '</td>'
+      + '<td><span class="status-badge ' + statusCfg.class + '">' + statusCfg.label + '</span></td>'
+      + prodCell
+      + '<td class="td-amount" style="text-align:right;">' + amountDisplay + '</td>'
+      + '<td class="td-prob"><span class="prob-badge" style="background:' + probBg + ';color:' + probColor + ';">' + prob + '%</span></td>'
+      + '<td class="' + dateClass + '">' + dateLabel + '</td>'
+      + '<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.salesPerson || '\u2013') + '</td>'
+      + '<td>' + (p.salesRegion || '\u2013') + '</td>'
+      + '<td class="td-date">' + (p.updatedAt ? formatDate(p.updatedAt) : '\u2013') + '</td>'
+      + '</tr>';
   }).join('');
 }
 
