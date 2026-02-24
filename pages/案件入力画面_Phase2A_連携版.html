@@ -2166,16 +2166,17 @@ function SearchableSelect(wrapperId, inputId, listId, options, onSelect, placeho
   let isMouseDownOnList = false; // リスト上のmousedownフラグ
 
   input.addEventListener('click', function() {
-    if (wrapper.classList.contains('is-open')) {
-      close();
-    } else {
+    if (!wrapper.classList.contains('is-open')) {
       this.select();
       open();
-      setTimeout(function() {
-        const selected = list.querySelector('.ss-item.selected');
-        if (selected) selected.scrollIntoView({ block: 'nearest' });
-      }, 0);
+    } else {
+      // 開いている状態でクリック → テキスト全選択してすぐ検索できる状態に
+      this.select();
     }
+    setTimeout(function() {
+      const selected = list.querySelector('.ss-item.selected');
+      if (selected) selected.scrollIntoView({ block: 'nearest' });
+    }, 0);
   });
   input.addEventListener('focus', function() {
     if (!wrapper.classList.contains('is-open')) {
@@ -2270,7 +2271,17 @@ function createTableSS(row, restoreValue) {
     input.classList.add('is-open');
     reposition();
     list.style.display = 'block';
-    renderList(input.value);
+    // 選択済みの値と入力テキストが一致している場合は全候補を表示（再選択しやすくする）
+    if (selectedValue && input.value === selectedValue) {
+      renderList('');
+    } else {
+      renderList(input.value);
+    }
+    // 選択中の項目までスクロール
+    setTimeout(function() {
+      const selected = list.querySelector('.ss-item.selected');
+      if (selected) selected.scrollIntoView({ block: 'nearest' });
+    }, 0);
   }
   function close() {
     wrapper.classList.remove('is-open');
@@ -2329,13 +2340,18 @@ function createTableSS(row, restoreValue) {
 
   input.addEventListener('click', function() {
     if (wrapper.classList.contains('is-open')) {
-      close();
+      // 開いている状態でクリック → テキスト全選択してすぐ検索できる状態に
+      this.select();
     } else {
+      this.select();
       open();
     }
   });
   input.addEventListener('focus', function() {
-    if (!wrapper.classList.contains('is-open')) open();
+    if (!wrapper.classList.contains('is-open')) {
+      this.select();
+      open();
+    }
   });
   input.addEventListener('input', function() {
     if (!wrapper.classList.contains('is-open')) open();
