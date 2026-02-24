@@ -1146,6 +1146,20 @@
     color: var(--input-dropdown);
     width: 100%;
   }
+  /* 製品名フィールド専用 */
+  input.ss-input-product {
+    cursor: pointer !important;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input.ss-input-product:hover {
+    border-color: var(--input-dropdown) !important;
+  }
+  input.ss-input-product:focus,
+  input.ss-input-product.is-open {
+    border-color: var(--input-dropdown) !important;
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+    outline: none;
+  }
   .ss-wrapper.table-ss::after {
     content: '';
     position: absolute;
@@ -1625,7 +1639,7 @@ function addProductRow() {
     <td>
       <div class="table-ss-wrapper">
         <input type="text" class="table-input ss-input-product" placeholder="製品を検索・選択" autocomplete="off"
-               style="padding-right:22px;background:var(--input-dropdown-bg);color:var(--input-dropdown);border-color:var(--input-dropdown-border);">
+               style="padding-right:22px;background:var(--input-dropdown-bg);color:var(--input-dropdown);border-color:var(--input-dropdown-border);cursor:pointer;">
         <div class="ss-dropdown ss-dropdown-product"></div>
       </div>
     </td>
@@ -1996,7 +2010,7 @@ document.addEventListener('DOMContentLoaded', async function() {
           <td>
             <div class="table-ss-wrapper">
               <input type="text" class="table-input ss-input-product" placeholder="製品を検索・選択" autocomplete="off"
-                     style="padding-right:22px;background:var(--input-dropdown-bg);color:var(--input-dropdown);border-color:var(--input-dropdown-border);">
+                     style="padding-right:22px;background:var(--input-dropdown-bg);color:var(--input-dropdown);border-color:var(--input-dropdown-border);cursor:pointer;">
               <div class="ss-dropdown ss-dropdown-product"></div>
             </div>
           </td>
