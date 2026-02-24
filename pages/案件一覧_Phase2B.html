@@ -754,31 +754,6 @@
     line-height: 1.6;
   }
 
-  /* ─── Import Preview Table ─── */
-  .import-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    white-space: nowrap;
-  }
-  .import-table thead th {
-    position: sticky;
-    top: 0;
-    background: var(--bg-tertiary);
-    color: var(--text-secondary);
-    font-weight: 600;
-    padding: 6px 10px;
-    border-bottom: 1px solid var(--border-default);
-    text-align: left;
-  }
-  .import-table tbody tr { border-bottom: 1px solid var(--border-subtle); }
-  .import-table tbody tr:last-child { border-bottom: none; }
-  .import-table tbody tr.row-new td:first-child { border-left: 3px solid var(--success); }
-  .import-table tbody tr.row-update td:first-child { border-left: 3px solid var(--warning); }
-  .import-table tbody td { padding: 5px 10px; color: var(--text-primary); }
-  .import-table .badge-new    { background: var(--success-bg); color: var(--success); border-radius:3px; padding:1px 6px; font-size:10px; font-weight:600; }
-  .import-table .badge-update { background: var(--warning-bg); color: var(--warning); border-radius:3px; padding:1px 6px; font-size:10px; font-weight:600; }
-
   /* ─── Toast ─── */
   .toast-container {
     position: fixed;
@@ -1114,11 +1089,16 @@
         </div>
         <input type="file" id="fileInput" accept=".csv" style="display:none;" onchange="handleFileSelect(event)">
 
-        <div style="margin-top:12px;font-size:12px;color:var(--text-tertiary);">
-          <strong style="color:var(--text-secondary);">CSVフォーマット（必須列）</strong><br>
-          案件名, 取引先名, 担当者名, 納品予定日(YYYY-MM-DD), 受注確度(0-100), 地域, ステータス(draft/quoted/ordered/delivered/invoiced/paid), 合計金額(税抜), 備考
-          <br><br>
-          <span style="color:var(--accent-blue);cursor:pointer;text-decoration:underline;" onclick="downloadTemplate()">ひな形CSVをダウンロード</span>
+        <div style="margin-top:12px;font-size:12px;color:var(--text-tertiary);line-height:1.8;">
+          <strong style="color:var(--text-secondary);">CSVフォーマット</strong><br>
+          <span style="color:var(--danger);">*</span> 案件名&nbsp;&nbsp;
+          <span style="color:var(--danger);">*</span> 取引先コード <em>または</em> 取引先名（どちらか必須）<br>
+          担当者コード / 担当者名&nbsp;&nbsp;
+          製品コード / 製品名&nbsp;&nbsp;
+          納品予定日 / 受注確度 / ステータス / 合計金額（税抜）/ 備考<br>
+          <span style="color:var(--text-tertiary);">※ 地域は取引先マスタから自動引き継ぎ。コードと名前は両方入れると精度が上がります。</span>
+          <br>
+          <span style="color:var(--accent-blue);cursor:pointer;text-decoration:underline;" onclick="downloadTemplate()">▼ ひな形CSV（サンプル付き）をダウンロード</span>
         </div>
       </div>
 
@@ -1700,13 +1680,23 @@ function normalizeDate(str) {
 
 function downloadTemplate() {
   const lines = [
-    '\uFEFF# 【ステータスの入力値】',
-    '# 見積前=draft  見積済=quoted  受注済=ordered  納品済=delivered  請求済=invoiced  入金済=paid',
+    '\uFEFF# 【QURURi 案件インポートひな形】',
+    '# ─────────────────────────────────────────────────────────',
+    '# 【コードと名前の使い分け】',
+    '#   取引先コード / 担当者コード / 製品コード が入力されている場合は優先して照合します',
+    '#   コードが空の場合は取引先名 / 担当者名 / 製品名 でフォールバック照合します',
+    '#   ※ 取引先コードと取引先名のどちらか一方は必須です',
+    '# 【地域】CSVへの入力不要。取引先マスタから自動引き継ぎされます',
+    '# ─────────────────────────────────────────────────────────',
+    '# 【ステータスの入力値】',
+    '#   見積前=draft  見積済=quoted  受注済=ordered  納品済=delivered  請求済=invoiced  入金済=paid',
     '# 【納品予定日の形式】YYYY-MM-DD（例: 2026-06-30）またはYYYY/MM/DD形式も可',
     '# ※「#」で始まる行は読み込み時に自動的に無視されます',
-    '# ※ 6行目（下のヘッダー行の次）からデータを入力してください',
-    '案件名,取引先名,担当者名,納品予定日,受注確度,地域,ステータス,合計金額（税抜）,備考',
-    '"サンプル案件 A","山田製作所","田中 健一","2026-06-30","70","JP","draft","5000000","サンプルデータ"',
+    '# ※ 次のヘッダー行の次の行からデータを入力してください',
+    '# ─────────────────────────────────────────────────────────',
+    '案件名,取引先コード,取引先名,担当者コード,担当者名,製品コード,製品名,納品予定日,受注確度,ステータス,合計金額（税抜）,備考',
+    '"サンプル案件 A","1001","山田製作所","E001","田中 健一","P101","検査装置 TypeA","2026-06-30","70","draft","5000000","サンプルデータ"',
+    '"サンプル案件 B（名前入力）","","ABC Electronics","","鈴木 恵子","","","2026-09-30","50","draft","3000000","コード不明な場合は名前欄に入力"',
   ];
   downloadCSV(lines.join('\n'), 'QURURi_案件インポートひな形.csv');
 }
@@ -1728,7 +1718,7 @@ function resetImport() {
   document.getElementById('btnImportConfirm').style.display = 'none';
   document.getElementById('fileInput').value = '';
   importData = { valid: [], errors: [], updates: [], fileName: '', masterWarn: false };
-  document.getElementById('importPreviewTable').style.display = 'none';
+  const t = document.getElementById('importPreviewTable'); if (t) t.style.display = 'none';
 }
 
 function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
@@ -1764,17 +1754,64 @@ function processFile(file) {
 }
 
 // ─── マスタセットをLocalStorageから読み込む（照合用） ───
+// 各マスタについて「コードMap」「名前Map」の両方を返す
+// Mapの値はマスタレコード全体（region等の自動引き継ぎに使用）
 function loadMasterSets() {
-  const load = (key, nameField) => {
+  const loadMaps = (key, codeField, nameField) => {
     try {
       const data = JSON.parse(localStorage.getItem('qururi:' + key) || '[]');
-      return new Set(data.map(r => (r[nameField] || '').trim()).filter(Boolean));
-    } catch { return new Set(); }
+      const byCode = new Map();
+      const byName = new Map();
+      for (const r of data) {
+        const code = String(r[codeField] || '').trim();
+        const name = (r[nameField] || '').trim();
+        if (code) byCode.set(code, r);
+        if (name) byName.set(name, r);
+      }
+      return { byCode, byName };
+    } catch { return { byCode: new Map(), byName: new Map() }; }
   };
+
+  const c = loadMaps('customers', 'customer_code', 'customer_name');
+  const s = loadMaps('staff',     'staff_code',    'staff_name');
+  const p = loadMaps('products',  'product_code',  'product_name');
   return {
-    customers: load('customers', 'customer_name'),
-    staff:     load('staff',     'staff_name'),
+    customerByCode: c.byCode,
+    customerByName: c.byName,
+    staffByCode:    s.byCode,
+    staffByName:    s.byName,
+    productByCode:  p.byCode,
+    productByName:  p.byName,
+    hasMasterCustomers: c.byCode.size > 0 || c.byName.size > 0,
+    hasMasterStaff:     s.byCode.size > 0 || s.byName.size > 0,
+    hasMasterProducts:  p.byCode.size > 0 || p.byName.size > 0,
   };
+}
+
+// ─── コード優先でマスタ照合するヘルパー ───
+// 戻り値: { record: マスタレコード|null, matchedBy: 'code'|'name'|null, error: string|null }
+function resolveMaster(code, name, byCode, byName, hasMaster, label) {
+  // マスタが空なら照合スキップ（初期一括投入を妨げない）
+  if (!hasMaster) return { record: null, matchedBy: null, error: null };
+
+  // コード優先照合
+  if (code) {
+    const rec = byCode.get(String(code).trim());
+    if (rec) return { record: rec, matchedBy: 'code', error: null };
+    // コード入力あり → マスタ未ヒットはエラー
+    return { record: null, matchedBy: null,
+      error: `${label}コード「${code}」はマスタに未登録です` };
+  }
+
+  // 名前フォールバック照合
+  if (name) {
+    const rec = byName.get(name.trim());
+    if (rec) return { record: rec, matchedBy: 'name', error: null };
+    return { record: null, matchedBy: null,
+      error: `${label}名「${name}」はマスタに未登録です` };
+  }
+
+  return { record: null, matchedBy: null, error: null }; // 両方空 = 任意項目なら問題なし
 }
 
 function parseImportCSV(text) {
@@ -1785,98 +1822,149 @@ function parseImportCSV(text) {
   }
 
   const headers = parseCSVLine(lines[0]);
+
+  // ─── 列マッピング（コード列・名前列を分離） ───
   const COL = {
-    projectNo:   findCol(headers, ['案件No', 'project_no', 'projectNo']),
-    projectName: findCol(headers, ['案件名', 'project_name', 'projectName']),
-    customer:    findCol(headers, ['取引先名', '取引先', 'customer']),
-    salesPerson: findCol(headers, ['担当者名', '担当者', 'sales_person', 'salesPerson']),
-    deliveryDate:findCol(headers, ['納品予定日', 'delivery_date', 'deliveryDate']),
-    probability: findCol(headers, ['受注確度', 'probability']),
-    salesRegion: findCol(headers, ['地域', '販売地域', 'region', 'salesRegion']),
-    status:      findCol(headers, ['ステータス', 'status']),
-    subtotal:    findCol(headers, ['合計金額（税抜）', '合計金額', 'subtotal']),
-    memo:        findCol(headers, ['備考', 'memo']),
+    projectNo:      findCol(headers, ['案件No', 'project_no', 'projectNo']),
+    projectName:    findCol(headers, ['案件名', 'project_name', 'projectName']),
+    // 取引先：コード優先 → 名前フォールバック
+    customerCode:   findCol(headers, ['取引先コード', 'customer_code', 'customerCode']),
+    customerName:   findCol(headers, ['取引先名', '取引先', 'customer_name', 'customer']),
+    // 担当者：コード優先 → 名前フォールバック（任意）
+    staffCode:      findCol(headers, ['担当者コード', '従業員ID', 'staff_code', 'staffCode']),
+    staffName:      findCol(headers, ['担当者名', '担当者', 'staff_name', 'salesPerson']),
+    // 製品：コード優先 → 名前フォールバック（任意）
+    productCode:    findCol(headers, ['製品コード', 'product_code', 'productCode']),
+    productName:    findCol(headers, ['製品名', 'product_name', 'productName']),
+    // その他
+    deliveryDate:   findCol(headers, ['納品予定日', 'delivery_date', 'deliveryDate']),
+    probability:    findCol(headers, ['受注確度', 'probability']),
+    status:         findCol(headers, ['ステータス', 'status']),
+    subtotal:       findCol(headers, ['合計金額（税抜）', '合計金額', 'subtotal']),
+    memo:           findCol(headers, ['備考', 'memo']),
+    // 地域：旧CSV互換のため列があれば読む（マスタ照合で上書きされる）
+    salesRegionRaw: findCol(headers, ['地域', '販売地域', 'region', 'salesRegion']),
   };
 
-  // ─── マスタ照合セットを取得 ───
+  // ─── マスタ照合Mapを取得 ───
   const masters = loadMasterSets();
-  const hasMasterCustomers = masters.customers.size > 0;
-  const hasMasterStaff     = masters.staff.size > 0;
 
   const existingNos = new Set(allProjects.map(p => p.projectNo));
   importData.valid      = [];
-  importData.errors     = [];   // [{ row, col, value, message }]
+  importData.errors     = [];
   importData.updates    = [];
-  importData.masterWarn = !hasMasterCustomers; // マスタ未登録の警告フラグ
+  importData.masterWarn = !masters.hasMasterCustomers;
 
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCSVLine(lines[i]);
     if (cols.every(c => !c.trim())) continue;
 
-    const rowNum = i + 1; // ヘッダ行を1行目と数える場合の表示用
-    const row = {};
-    Object.entries(COL).forEach(([k, idx]) => {
-      if (idx >= 0) row[k] = cols[idx]?.trim() ?? '';
-    });
+    const rowNum = i + 1;
+    const g = (k) => (COL[k] >= 0 ? cols[COL[k]]?.trim() ?? '' : '');
 
-    // ─── バリデーション（エラーは { row, col, value, message } 形式で統一） ───
     const errs = [];
-
     const addErr = (col, value, message) => errs.push({ row: rowNum, col, value, message });
 
-    // 必須チェック
-    if (!row.projectName)
-      addErr('案件名', '', '必須項目です');
-    if (!row.customer)
-      addErr('取引先名', '', '必須項目です');
+    // ─── 基本項目 ───
+    const projectName  = g('projectName');
+    const customerCode = g('customerCode');
+    const customerName = g('customerName');
+    const staffCode    = g('staffCode');
+    const staffName    = g('staffName');
+    const productCode  = g('productCode');
+    const productName  = g('productName');
+    const probability  = g('probability');
+    let   deliveryDate = g('deliveryDate');
+    const status       = g('status');
+    const subtotal     = g('subtotal');
+    const memo         = g('memo');
 
-    // 受注確度
-    if (row.probability !== undefined && row.probability !== '') {
-      const p = Number(row.probability);
+    // ─── 必須チェック ───
+    if (!projectName) addErr('案件名', '', '必須項目です');
+    if (!customerCode && !customerName) addErr('取引先', '', '取引先コードまたは取引先名のどちらかは必須です');
+
+    // ─── 受注確度 ───
+    if (probability !== '') {
+      const p = Number(probability);
       if (isNaN(p) || p < 0 || p > 100)
-        addErr('受注確度', row.probability, '0〜100 の数値を入力してください');
+        addErr('受注確度', probability, '0〜100 の数値を入力してください');
     }
 
-    // 納品予定日
-    if (row.deliveryDate) {
-      row.deliveryDate = normalizeDate(row.deliveryDate);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(row.deliveryDate))
-        addErr('納品予定日', row.deliveryDate, '日付形式が認識できません（例: 2026-06-30）');
+    // ─── 納品予定日 ───
+    if (deliveryDate) {
+      deliveryDate = normalizeDate(deliveryDate);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(deliveryDate))
+        addErr('納品予定日', deliveryDate, '日付形式が認識できません（例: 2026-06-30）');
     }
 
-    // ステータス
+    // ─── ステータス ───
     const validStatuses = ['draft','quoted','ordered','delivered','invoiced','paid'];
-    if (row.status && !validStatuses.includes(row.status))
-      addErr('ステータス', row.status, '有効値: draft / quoted / ordered / delivered / invoiced / paid');
+    if (status && !validStatuses.includes(status))
+      addErr('ステータス', status, '有効値: draft / quoted / ordered / delivered / invoiced / paid');
 
-    // マスタ照合（マスタに1件もデータがない場合はスキップ＝初期投入を妨げない）
-    if (hasMasterCustomers && row.customer && !masters.customers.has(row.customer))
-      addErr('取引先名', row.customer, '取引先マスタに未登録です（先にマスタへ登録してください）');
+    // ─── マスタ照合（コード優先 → 名前フォールバック） ───
+    const custResult = resolveMaster(
+      customerCode, customerName,
+      masters.customerByCode, masters.customerByName,
+      masters.hasMasterCustomers, '取引先'
+    );
+    if (custResult.error) addErr('取引先', customerCode || customerName, custResult.error);
 
-    if (hasMasterStaff && row.salesPerson && !masters.staff.has(row.salesPerson))
-      addErr('担当者名', row.salesPerson, '担当者マスタに未登録です（先にマスタへ登録してください）');
+    const staffResult = resolveMaster(
+      staffCode, staffName,
+      masters.staffByCode, masters.staffByName,
+      masters.hasMasterStaff, '担当者'
+    );
+    if (staffResult.error) addErr('担当者', staffCode || staffName, staffResult.error);
+
+    const prodResult = resolveMaster(
+      productCode, productName,
+      masters.productByCode, masters.productByName,
+      masters.hasMasterProducts, '製品'
+    );
+    if (prodResult.error) addErr('製品', productCode || productName, prodResult.error);
 
     if (errs.length > 0) {
       importData.errors.push(...errs);
       continue;
     }
 
+    // ─── レコード組み立て ───
+    // 取引先：照合成功時はマスタから名前・地域を自動引き継ぎ
+    const custRecord   = custResult.record;
+    const resolvedName = custRecord?.customer_name || customerName;
+    const resolvedRegion = custRecord?.region || g('salesRegionRaw') || 'JP';
+
+    // 担当者：照合成功時はマスタから名前を引き継ぎ
+    const staffRecord     = staffResult.record;
+    const resolvedStaff   = staffRecord?.staff_name || staffName;
+
+    // 製品：照合成功時はマスタから名前を引き継ぎ
+    const prodRecord      = prodResult.record;
+    const resolvedProduct = prodRecord?.product_name || productName;
+    const resolvedProductCode = prodRecord?.product_code || productCode || '';
+
     const record = {
-      projectName:  row.projectName,
-      customer:     row.customer,
-      salesPerson:  row.salesPerson || '',
-      deliveryDate: row.deliveryDate || null,
-      probability:  row.probability !== '' ? Number(row.probability) : 50,
-      salesRegion:  row.salesRegion || 'JP',
-      status:       row.status || 'draft',
-      subtotal:     row.subtotal ? Number(String(row.subtotal).replace(/[,¥\s]/g, '')) : 0,
-      memo:         row.memo || '',
-      updatedAt:    new Date().toISOString().slice(0, 10),
+      projectName:   projectName,
+      customer:      resolvedName,
+      customerCode:  custRecord?.customer_code || customerCode || '',
+      salesPerson:   resolvedStaff,
+      staffCode:     staffRecord?.staff_code || staffCode || '',
+      productName:   resolvedProduct,
+      productCode:   resolvedProductCode,
+      deliveryDate:  deliveryDate || null,
+      probability:   probability !== '' ? Number(probability) : 50,
+      salesRegion:   resolvedRegion,
+      status:        status || 'draft',
+      subtotal:      subtotal ? Number(String(subtotal).replace(/[,¥\s]/g, '')) : 0,
+      memo:          memo,
+      updatedAt:     new Date().toISOString().slice(0, 10),
     };
     record.total = Math.round(record.subtotal * 1.1);
 
-    if (row.projectNo && existingNos.has(row.projectNo)) {
-      record.projectNo = row.projectNo;
+    const pNo = g('projectNo');
+    if (pNo && existingNos.has(pNo)) {
+      record.projectNo = pNo;
       importData.updates.push(record);
     } else {
       record.createdAt = new Date().toISOString().slice(0, 10);
@@ -1966,7 +2054,6 @@ function showImportPreview() {
     document.getElementById('btnImportConfirmLabel').textContent = `この内容で登録する（${total}件）`;
   }
 
-  // ─── プレビューテーブル描画 ───
   renderImportPreviewTable();
 }
 
@@ -1992,8 +2079,9 @@ function renderImportPreviewTable() {
   const thead = `<thead><tr>
     <th></th>
     <th>案件名</th>
-    <th>取引先名</th>
+    <th>取引先</th>
     <th>担当者</th>
+    <th>製品</th>
     <th>ステータス</th>
     <th style="text-align:right;">合計（税抜）</th>
     <th style="text-align:center;">確度</th>
@@ -2006,11 +2094,15 @@ function renderImportPreviewTable() {
     const badge = isNew
       ? '<span class="badge-new">新規</span>'
       : '<span class="badge-update">更新</span>';
+    const custLabel = r.customerCode ? `${r.customer}（${r.customerCode}）` : (r.customer || '–');
+    const staffLabel = r.staffCode ? `${r.salesPerson}（${r.staffCode}）` : (r.salesPerson || '–');
+    const prodLabel = r.productCode ? `${r.productName}（${r.productCode}）` : (r.productName || '–');
     return `<tr class="row-${r._type}">
       <td>${badge}</td>
       <td>${r.projectName || ''}</td>
-      <td>${r.customer || ''}</td>
-      <td>${r.salesPerson || '–'}</td>
+      <td>${custLabel}</td>
+      <td>${staffLabel}</td>
+      <td>${prodLabel}</td>
       <td>${STATUS_LABEL[r.status] || r.status || 'draft'}</td>
       <td style="text-align:right;">¥${fmt(r.subtotal)}</td>
       <td style="text-align:center;">${r.probability ?? 50}%</td>
