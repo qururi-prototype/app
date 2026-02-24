@@ -1077,6 +1077,64 @@
     background: var(--danger-bg); border-radius: var(--radius-sm); margin-top: 6px;
   }
 
+  /* ===== SearchableSelect ===== */
+  .ss-wrapper { position: relative; }
+  .ss-input {
+    width: 100%;
+    cursor: text !important;
+  }
+  .ss-input.is-open {
+    border-color: var(--input-dropdown) !important;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  }
+  .ss-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0; right: 0;
+    background: #fff;
+    border: 1.5px solid var(--input-dropdown-border);
+    border-top: none;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 9999;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+  .ss-wrapper.is-open .ss-dropdown { display: block; }
+  .ss-item {
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--text-primary);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ss-item:hover, .ss-item.focused { background: var(--input-dropdown-bg); color: var(--input-dropdown); }
+  .ss-item.selected { font-weight: 600; color: var(--input-dropdown); }
+  .ss-empty { padding: 10px 12px; font-size: 12px; color: var(--text-tertiary); text-align: center; }
+  /* テーブル行内 */
+  .ss-wrapper.table-ss .ss-input {
+    font-size: 12px;
+    padding: 6px 24px 6px 8px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--input-dropdown-border);
+    background: var(--input-dropdown-bg);
+    color: var(--input-dropdown);
+    width: 100%;
+  }
+  .ss-wrapper.table-ss::after {
+    content: '';
+    position: absolute;
+    right: 6px; top: 50%;
+    transform: translateY(-50%);
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 4px solid var(--input-dropdown);
+    pointer-events: none;
+  }
+  .ss-wrapper.table-ss .ss-dropdown { font-size: 12px; min-width: 220px; }
 </style>
 <script src="https://qururi-prototype.github.io/database/dataManager.js"></script>
 </head>
@@ -1216,9 +1274,10 @@
                 <div class="field-label">営業担当</div>
                 <div class="field-value">
                   <div class="select-wrapper">
-                    <select id="salesPerson" class="input-field input-dropdown-type">
-                      <option value="">-- 選択してください --</option>
-                    </select>
+                    <div class="ss-wrapper" id="ss-salesPerson">
+                      <input type="text" class="input-field input-dropdown-type ss-input" id="salesPerson" placeholder="-- 選択してください --" autocomplete="off">
+                      <div class="ss-dropdown" id="ss-salesPerson-list"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1228,9 +1287,10 @@
                 <div class="field-label">取引先</div>
                 <div class="field-value">
                   <div class="select-wrapper">
-                    <select id="customer" class="input-field input-dropdown-type" onchange="onCustomerChange()">
-                      <option value="">-- 選択してください --</option>
-                    </select>
+                    <div class="ss-wrapper" id="ss-customer">
+                      <input type="text" class="input-field input-dropdown-type ss-input" id="customer" placeholder="-- 選択してください --" autocomplete="off">
+                      <div class="ss-dropdown" id="ss-customer-list"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1303,15 +1363,15 @@
               <div class="tax-summary-rows">
                 <div class="tax-summary-row subtotal">
                   <div class="tax-summary-label">小計(税抜)</div>
-                  <div class="tax-summary-value" id="displaySubtotal">¥800,000,000</div>
+                  <div class="tax-summary-value" id="displaySubtotal">--</div>
                 </div>
                 <div class="tax-summary-row tax-detail">
                   <div class="tax-summary-label" id="displayTaxLabel">消費税(10%)</div>
-                  <div class="tax-summary-value" id="displayTaxAmount">¥80,000,000</div>
+                  <div class="tax-summary-value" id="displayTaxAmount">--</div>
                 </div>
                 <div class="tax-summary-row total">
                   <div class="tax-summary-label" style="font-weight: 600; color: var(--accent-blue);">合計(税込)</div>
-                  <div class="tax-summary-value" style="font-size:18px;font-weight:700;color:var(--accent-blue);font-family:\'Inter\',sans-serif;" id="displayTotal">¥880,000,000</div>
+                  <div class="tax-summary-value" style="font-size:18px;font-weight:700;color:var(--accent-blue);font-family:'Inter',sans-serif;" id="displayTotal">--</div>
                 </div>
               </div>
             </div>
@@ -1464,6 +1524,11 @@ function calcRowTotal(row) {
   if (calcEl) calcEl.textContent = formatNumber(lineTotal);
   return lineTotal;
 }
+function getCurrencySymbol(currency) {
+  const map = { JPY: '¥', USD: 'USD ', EUR: 'EUR ', RMB: 'RMB ', CNY: 'CNY ' };
+  return map[currency] || (currency + ' ');
+}
+
 function updateTotals() {
   const rows = document.querySelectorAll('#productTableBody tr');
   let subtotal = 0;
@@ -1471,12 +1536,13 @@ function updateTotals() {
   const taxRate   = 10;
   const taxAmount = Math.floor(subtotal * taxRate / 100);
   const total     = subtotal + taxAmount;
+  const sym = getCurrencySymbol(currentBillingCurrency);
   const subtotalEl = document.getElementById('displaySubtotal');
   const taxEl      = document.getElementById('displayTaxAmount');
   const totalEl    = document.getElementById('displayTotal');
-  if (subtotalEl) subtotalEl.textContent = '¥' + formatNumber(subtotal);
-  if (taxEl)      taxEl.textContent      = '¥' + formatNumber(taxAmount);
-  if (totalEl)    totalEl.textContent    = '¥' + formatNumber(total);
+  if (subtotalEl) subtotalEl.textContent = sym + formatNumber(subtotal);
+  if (taxEl)      taxEl.textContent      = sym + formatNumber(taxAmount);
+  if (totalEl)    totalEl.textContent    = sym + formatNumber(total);
 }
 function setupPriceInput(input) {
   input.addEventListener('focus', function() {
@@ -1502,10 +1568,10 @@ function addProductRow() {
   tr.innerHTML = `
     <td>${rowNo}</td>
     <td>
-      <div class="table-select-wrapper">
-        <select class="table-input dropdown" onchange="onProductChange(this)">
-          <option value="">製品を選択</option>
-        </select>
+      <div class="table-ss-wrapper">
+        <input type="text" class="table-input ss-input-product" placeholder="製品を検索・選択" autocomplete="off"
+               style="padding-right:22px;background:var(--input-dropdown-bg);color:var(--input-dropdown);border-color:var(--input-dropdown-border);">
+        <div class="ss-dropdown ss-dropdown-product"></div>
       </div>
     </td>
     <td style="text-align:center;"><input type="text" class="table-input direct qty" value="1"></td>
@@ -1519,9 +1585,7 @@ function addProductRow() {
       </button>
     </td>`;
   tbody.appendChild(tr);
-  // 製品プルダウンをマスタで動的生成
-  const productSel = tr.querySelector('select.table-input.dropdown');
-  populateProductSelect(productSel, null);
+  createTableSS(tr, null);
   setupRowEvents(tr);
   updateTotals();
 }
@@ -1597,8 +1661,8 @@ function showToast(message, type = 'success', duration = 3000) {
 function collectFormData() {
   const projectName  = (document.getElementById('projectName')?.value  || '').trim();
   const deliveryDate = document.getElementById('deliveryDate')?.value  || '';
-  const salesPerson  = document.getElementById('salesPerson')?.value   || '';
-  const customer     = document.getElementById('customer')?.value      || '';
+  const salesPerson  = ssStaff    ? ssStaff.getValue()    : (document.getElementById('salesPerson')?.value || '');
+  const customer     = ssCustomer ? ssCustomer.getValue() : (document.getElementById('customer')?.value    || '');
   const probability  = parseInt(document.getElementById('probValue')?.textContent) || 50;
   const memo         = (document.getElementById('memo')?.value || '').trim();
 
@@ -1617,7 +1681,7 @@ function collectFormData() {
   const products = [];
   let subtotal = 0;
   document.querySelectorAll('#productTableBody tr').forEach((row, index) => {
-    const productSelect = row.querySelector('select.table-input.dropdown');
+    const productSelect = row.querySelector('.ss-input-product');
     const qtyInput      = row.querySelector('input.table-input.direct.qty');
     const priceInput    = row.querySelector('input.table-input.direct.price');
     const autofills     = row.querySelectorAll('input.table-input.autofill');
@@ -1705,7 +1769,7 @@ function validateForSubmit(data) {
     data.products.forEach((p, i) => {
       const row = document.querySelectorAll('#productTableBody tr')[i];
       if (!p.productName) {
-        addFieldError(row?.querySelector('select.table-input.dropdown'), '品名は必須です');
+        addFieldError(row?.querySelector('.ss-input-product'), '品名は必須です');
         errors.push('明細' + (i+1) + '行目:品名');
       }
       if (!p.qty || p.qty <= 0) {
@@ -1870,10 +1934,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         tr.innerHTML = `
           <td>${i + 1}</td>
           <td>
-            <div class="table-select-wrapper">
-              <select class="table-input dropdown" onchange="onProductChange(this)">
-                <option value="">製品を選択</option>
-              </select>
+            <div class="table-ss-wrapper">
+              <input type="text" class="table-input ss-input-product" placeholder="製品を検索・選択" autocomplete="off"
+                     style="padding-right:22px;background:var(--input-dropdown-bg);color:var(--input-dropdown);border-color:var(--input-dropdown-border);">
+              <div class="ss-dropdown ss-dropdown-product"></div>
             </div>
           </td>
           <td style="text-align:center;"><input type="text" class="table-input direct qty" value="${p.qty || 1}"></td>
@@ -1887,9 +1951,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             </button>
           </td>`;
         tbody.appendChild(tr);
-        // マスタから製品プルダウンを生成して保存値を復元
-        const productSel = tr.querySelector('select.table-input.dropdown');
-        populateProductSelect(productSel, p.productName || '');
+        createTableSS(tr, p.productName || '');
         setupRowEvents(tr);
       });
       updateTotals();
@@ -1910,6 +1972,317 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 const MC = { staff: [], customers: [], products: [], prices: [] };
 let currentBillingCurrency = 'JPY';
+
+function lsGetMaster(key) {
+  try { const v = localStorage.getItem('qururi:' + key); return v ? JSON.parse(v) : []; }
+  catch { return []; }
+}
+function initMasterData() {
+  MC.staff     = lsGetMaster('staff');
+  MC.customers = lsGetMaster('customers');
+  MC.products  = lsGetMaster('products');
+  MC.prices    = lsGetMaster('prices');
+}
+
+// ===================================================
+// SearchableSelect — 軽量カスタムドロップダウン
+// ===================================================
+// options: [{ value, label }]
+// onSelect: function(value, label)
+function SearchableSelect(wrapperId, inputId, listId, options, onSelect, placeholder) {
+  const wrapper  = document.getElementById(wrapperId);
+  const input    = document.getElementById(inputId);
+  const list     = document.getElementById(listId);
+  if (!wrapper || !input || !list) return;
+
+  let selectedValue = '';
+  let focusedIndex  = -1;
+  let allOptions    = options || [];
+
+  function open() {
+    wrapper.classList.add('is-open');
+    input.classList.add('is-open');
+    renderList(input.value);
+  }
+  function close() {
+    wrapper.classList.remove('is-open');
+    input.classList.remove('is-open');
+    focusedIndex = -1;
+    // 未確定テキストをリセット（選択済みなら選択値を戻す）
+    if (selectedValue) {
+      const found = allOptions.find(o => o.value === selectedValue);
+      if (found) input.value = found.label;
+    } else {
+      input.value = '';
+    }
+  }
+  function renderList(query) {
+    const q = (query || '').toLowerCase();
+    const filtered = q
+      ? allOptions.filter(o => o.label.toLowerCase().includes(q))
+      : allOptions;
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="ss-empty">該当なし</div>';
+      focusedIndex = -1;
+      return;
+    }
+    list.innerHTML = filtered.map((o, i) =>
+      `<div class="ss-item${o.value === selectedValue ? ' selected' : ''}"
+            data-value="${o.value}" data-index="${i}">${highlight(o.label, q)}</div>`
+    ).join('');
+    list.querySelectorAll('.ss-item').forEach(item => {
+      item.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        select(this.dataset.value, this.textContent);
+      });
+    });
+    focusedIndex = -1;
+  }
+  function highlight(text, q) {
+    if (!q) return text;
+    const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+    return text.replace(re, '<mark style="background:var(--input-dropdown-bg);color:var(--input-dropdown);font-weight:700;border-radius:2px;">$1</mark>');
+  }
+  function select(value, label) {
+    selectedValue = value;
+    input.value = label || value;
+    close();
+    if (onSelect) onSelect(value, label);
+  }
+  function setFocus(idx) {
+    const items = list.querySelectorAll('.ss-item');
+    items.forEach(el => el.classList.remove('focused'));
+    if (idx >= 0 && idx < items.length) {
+      items[idx].classList.add('focused');
+      items[idx].scrollIntoView({ block: 'nearest' });
+    }
+    focusedIndex = idx;
+  }
+
+  // イベント
+  input.addEventListener('focus', function() { open(); });
+  input.addEventListener('input', function() {
+    open();
+    renderList(this.value);
+  });
+  input.addEventListener('blur', function() {
+    setTimeout(close, 150);
+  });
+  input.addEventListener('keydown', function(e) {
+    const items = list.querySelectorAll('.ss-item');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setFocus(Math.min(focusedIndex + 1, items.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setFocus(Math.max(focusedIndex - 1, 0));
+    } else if (e.key === 'Enter' && focusedIndex >= 0) {
+      e.preventDefault();
+      const item = items[focusedIndex];
+      if (item) select(item.dataset.value, item.textContent);
+    } else if (e.key === 'Escape') {
+      close();
+      input.blur();
+    }
+  });
+
+  // 公開API
+  return {
+    setOptions: function(opts) {
+      allOptions = opts;
+      if (wrapper.classList.contains('is-open')) renderList(input.value);
+    },
+    setValue: function(value) {
+      const found = allOptions.find(o => o.value === value);
+      if (found) { selectedValue = value; input.value = found.label; }
+      else { selectedValue = ''; input.value = value || ''; }
+    },
+    getValue: function() { return selectedValue || input.value; },
+    clear: function() { selectedValue = ''; input.value = ''; input.placeholder = placeholder || ''; }
+  };
+}
+
+// ===================================================
+// テーブル行内のSearchableSelect（製品名）
+// ===================================================
+function createTableSS(row, restoreValue) {
+  // wrapperをdivで作成
+  const wrapper = row.querySelector('.table-ss-wrapper');
+  if (!wrapper) return null;
+  wrapper.classList.add('ss-wrapper', 'table-ss');
+  wrapper.style.position = 'relative';
+
+  const input = wrapper.querySelector('.ss-input-product');
+  const list  = wrapper.querySelector('.ss-dropdown-product');
+  if (!input || !list) return null;
+
+  let selectedValue = '';
+  let focusedIndex  = -1;
+
+  function open() {
+    wrapper.classList.add('is-open');
+    input.classList.add('is-open');
+    renderList(input.value);
+  }
+  function close() {
+    wrapper.classList.remove('is-open');
+    input.classList.remove('is-open');
+    focusedIndex = -1;
+    if (selectedValue) {
+      const found = MC.products.find(p => p.product_name === selectedValue);
+      if (found) input.value = found.product_name;
+    } else {
+      input.value = '';
+    }
+  }
+  function renderList(query) {
+    const q = (query || '').toLowerCase();
+    const filtered = q
+      ? MC.products.filter(p => p.product_name.toLowerCase().includes(q))
+      : MC.products;
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="ss-empty">該当なし</div>';
+      focusedIndex = -1; return;
+    }
+    list.innerHTML = filtered.map((p, i) =>
+      `<div class="ss-item${p.product_name === selectedValue ? ' selected' : ''}"
+            data-code="${p.product_code}" data-name="${p.product_name}" data-index="${i}">
+        ${q ? p.product_name.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark style="background:var(--input-dropdown-bg);color:var(--input-dropdown);font-weight:700;border-radius:2px;">$1</mark>') : p.product_name}
+       </div>`
+    ).join('');
+    list.querySelectorAll('.ss-item').forEach(item => {
+      item.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        selectProduct(this.dataset.code, this.dataset.name);
+      });
+    });
+    focusedIndex = -1;
+  }
+  function selectProduct(code, name) {
+    selectedValue = name;
+    input.value = name;
+    close();
+    setProductPrice(row, code);
+  }
+  function setFocus(idx) {
+    const items = list.querySelectorAll('.ss-item');
+    items.forEach(el => el.classList.remove('focused'));
+    if (idx >= 0 && idx < items.length) {
+      items[idx].classList.add('focused');
+      items[idx].scrollIntoView({ block: 'nearest' });
+    }
+    focusedIndex = idx;
+  }
+
+  input.addEventListener('focus', function() { open(); });
+  input.addEventListener('input', function() { open(); renderList(this.value); });
+  input.addEventListener('blur',  function() { setTimeout(close, 150); });
+  input.addEventListener('keydown', function(e) {
+    const items = list.querySelectorAll('.ss-item');
+    if (e.key === 'ArrowDown') { e.preventDefault(); setFocus(Math.min(focusedIndex+1, items.length-1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setFocus(Math.max(focusedIndex-1, 0)); }
+    else if (e.key === 'Enter' && focusedIndex >= 0) {
+      e.preventDefault();
+      const item = items[focusedIndex];
+      if (item) selectProduct(item.dataset.code, item.dataset.name);
+    } else if (e.key === 'Escape') { close(); input.blur(); }
+  });
+
+  // 復元
+  if (restoreValue) { selectedValue = restoreValue; input.value = restoreValue; }
+
+  return {
+    getValue: function() { return selectedValue || input.value; }
+  };
+}
+
+// ===================================================
+// グローバルSearchableSelectインスタンス
+// ===================================================
+let ssStaff    = null;
+let ssCustomer = null;
+
+function populateStaffSelect(restoreValue) {
+  const opts = MC.staff.length
+    ? MC.staff.map(s => ({ value: s.display_name || `${s.staff_name}（${s.department || ''}）`, label: s.display_name || `${s.staff_name}（${s.department || ''}）` }))
+    : [];
+  if (ssStaff) {
+    ssStaff.setOptions(opts);
+    if (restoreValue) ssStaff.setValue(restoreValue);
+  } else {
+    ssStaff = SearchableSelect('ss-salesPerson', 'salesPerson', 'ss-salesPerson-list', opts, null, '-- 選択してください --');
+    if (restoreValue && ssStaff) ssStaff.setValue(restoreValue);
+  }
+}
+
+function populateCustomerSelect(restoreValue) {
+  const opts = MC.customers.length
+    ? MC.customers.map(c => ({ value: c.customer_name, label: c.customer_name }))
+    : [];
+  if (ssCustomer) {
+    ssCustomer.setOptions(opts);
+    if (restoreValue) { ssCustomer.setValue(restoreValue); onCustomerChange(false); }
+  } else {
+    ssCustomer = SearchableSelect('ss-customer', 'customer', 'ss-customer-list', opts,
+      function(value) { onCustomerChange(true); }, '-- 選択してください --');
+    if (restoreValue && ssCustomer) { ssCustomer.setValue(restoreValue); onCustomerChange(false); }
+  }
+}
+
+// --- 取引先変更 → 自動転記 + 通貨更新 ---
+function onCustomerChange(repriceRows) {
+  if (repriceRows === undefined) repriceRows = true;
+  const name = ssCustomer ? ssCustomer.getValue() : (document.getElementById('customer')?.value || '');
+  const cust = MC.customers.find(c => c.customer_name === name);
+
+  const set = function(id, val) { const el = document.getElementById(id); if (el) el.textContent = val || '--'; };
+  set('af-region',   cust ? cust.region   : '');
+  set('af-industry', cust ? cust.industry : '');
+  set('af-channel',  cust ? cust.channel  : '');
+  set('af-segment',  cust ? cust.segment  : '');
+
+  currentBillingCurrency = (cust && cust.billing_currency) ? cust.billing_currency : 'JPY';
+
+  document.querySelectorAll('#productTableBody tr').forEach(function(row) {
+    const currencyInput = row.querySelectorAll('input.table-input.autofill')[0];
+    if (currencyInput) currencyInput.value = currentBillingCurrency;
+    if (repriceRows) {
+      const nameInput = row.querySelector('.ss-input-product');
+      const name = nameInput ? nameInput.value : '';
+      const prod = MC.products.find(p => p.product_name === name);
+      if (prod) setProductPrice(row, prod.product_code);
+    }
+  });
+  updateTotals();
+}
+
+// --- 製品選択 → 単価セット ---
+function setProductPrice(row, productCode) {
+  if (!productCode) return;
+  const priceRec = MC.prices.find(function(p) { return Number(p.product_code) === Number(productCode); });
+  if (!priceRec) return;
+  const key = 'price_' + currentBillingCurrency.toLowerCase();
+  const price = priceRec[key];
+  if (price != null && price !== '') {
+    const priceInput = row.querySelector('input.table-input.direct.price');
+    if (priceInput) { priceInput.value = Number(price).toLocaleString(); updateTotals(); }
+  }
+}
+
+// ===================================================
+// マスター連携初期化
+// ===================================================
+document.addEventListener('DOMContentLoaded', function() {
+  initMasterData();
+  populateStaffSelect();
+  populateCustomerSelect();
+  const tbody  = document.getElementById('productTableBody');
+  const params = new URLSearchParams(window.location.search);
+  if (!params.get('projectNo') && tbody && tbody.children.length === 0) {
+    addProductRow();
+  }
+});
+</script>
 
 function lsGetMaster(key) {
   try {
