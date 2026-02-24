@@ -1312,20 +1312,37 @@ function parseFxCSV(text) {
 
 function confirmFxImport() {
   if (!fxImportRows || !fxSelMonth) return;
+
+  // ① 通貨マスタを更新（CSVの通貨コードを登録）
   const importedCc = fxImportRows.map(r => r.currency_code).filter(Boolean);
-  const merged = [...new Set([...currencies, ...importedCc])];
-  if (merged.length !== currencies.length) {
-    currencies = merged;
-    lsSet('currencies', currencies);
-  }
+  currencies = [...new Set([...currencies, ...importedCc])];
+  lsSet('currencies', currencies);
+
+  // ② fxEditing に読み込み（全通貨分を初期化した上で上書き）
+  currencies.forEach(cc => { if (!fxEditing[cc]) fxEditing[cc] = { rate_avg: '', rate_eom: '' }; });
   fxImportRows.forEach(r => {
     fxEditing[r.currency_code] = { rate_avg: r.rate_avg ?? '', rate_eom: r.rate_eom ?? '' };
   });
-  merged.forEach(cc => { if (!fxEditing[cc]) fxEditing[cc] = { rate_avg: '', rate_eom: '' }; });
   fxDirty = true;
+
+  // ③ モーダルを閉じてから即座に保存（中間状態を作らない）
   closeImportModal();
+  // saveFxMonth内のトーストを上書きして分かりやすいメッセージにする
+  if (!fxSelMonth) return;
+  const rates = masterData.exchange_rates || [];
+  const otherRates = rates.filter(r => r.year_month !== fxSelMonth);
+  const monthRates = currencies.map(cc => ({
+    year_month: fxSelMonth,
+    currency_code: cc,
+    rate_avg: Number(fxEditing[cc]?.rate_avg) || 0,
+    rate_eom: Number(fxEditing[cc]?.rate_eom) || 0,
+  }));
+  masterData.exchange_rates = [...otherRates, ...monthRates];
+  lsSet('exchange_rates', masterData.exchange_rates);
+  fxDirty = false;
+  updateBadges();
   renderFX();
-  showToast(`${fxImportRows.length}件のレートを読み込みました。保存ボタンで確定してください`, 'warning');
+  showToast(`${fmtMonth(fxSelMonth)}: ${fxImportRows.length}通貨のレートをインポート・保存しました`, 'success');
 }
 
 function exportFxCSV() {
