@@ -937,7 +937,7 @@
         <div class="summary-card">
           <div class="summary-label">合計金額（税抜）</div>
           <div class="summary-value" id="sumTotal">–</div>
-          <div class="summary-sub">円</div>
+          <div class="summary-sub" id="sumCurrencyNote">円</div>
         </div>
         <div class="summary-card">
           <div class="summary-label">受注確度加重平均</div>
@@ -1409,6 +1409,18 @@ function renderSummary() {
   document.getElementById('sumProb').textContent = formatMoney(weightedSum);
   document.getElementById('sumStatusTop').textContent = probAvg + '%';
 
+  // 通貨の注記：単一通貨なら通貨名、混在なら「複数通貨混在・円換算外」
+  const currencies = [...new Set(filteredProjects.map(p => p.billingCurrency || 'JPY'))];
+  const noteEl = document.getElementById('sumCurrencyNote');
+  if (noteEl) {
+    if (currencies.length === 1) {
+      noteEl.textContent = currencies[0] === 'JPY' ? '円' : currencies[0];
+    } else {
+      noteEl.textContent = '複数通貨混在（参考値）';
+      noteEl.style.color = '#f59e0b';
+    }
+  }
+
   // Status breakdown
   const statusCounts = {};
   filteredProjects.forEach(p => {
@@ -1469,7 +1481,7 @@ function renderTable() {
       <td style="max-width:140px;" title="${p.customer || ''}">${p.customer || '–'}</td>
       <td><span class="status-badge ${statusCfg.class}">${statusCfg.label}</span></td>
       <td class="td-amount" style="text-align:right;">
-        <span class="currency-badge">JPY</span>¥${(p.subtotal || 0).toLocaleString()}
+        <span class="currency-badge">${p.billingCurrency || 'JPY'}</span>${getCurrencySymbol(p.billingCurrency || 'JPY')}${(p.subtotal || 0).toLocaleString()}
       </td>
       <td class="td-prob">
         <span class="prob-badge" style="background:${probBg};color:${probColor};">${prob}%</span>
@@ -1898,6 +1910,11 @@ function navigateTo(page, projectNo) {
 }
 
 // ─── Helpers ───
+function getCurrencySymbol(currency) {
+  const map = { JPY: '¥', USD: 'USD ', EUR: 'EUR ', RMB: 'RMB ', CNY: 'CNY ' };
+  return map[currency] || (currency + ' ');
+}
+
 function formatMoney(n) {
   if (n === undefined || n === null) return '–';
   if (n >= 100000000) return (n / 100000000).toFixed(1) + '億';
