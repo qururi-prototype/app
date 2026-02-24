@@ -283,7 +283,7 @@
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
-    overflow: hidden;
+    overflow: visible;
     margin-bottom: 20px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
@@ -550,6 +550,7 @@
   /* Product Detail Table */
   .detail-table-wrapper {
     overflow-x: auto;
+    overflow-y: visible;
   }
 
   .detail-table {
@@ -1098,8 +1099,8 @@
     border-radius: 0 0 var(--radius-sm) var(--radius-sm);
     max-height: 240px;
     overflow-y: auto;
-    z-index: 9999;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    z-index: 99999;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
   }
   .ss-wrapper.is-open .ss-dropdown { display: block; }
   .ss-item {
