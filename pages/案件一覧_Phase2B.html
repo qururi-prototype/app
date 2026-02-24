@@ -1489,62 +1489,51 @@ function renderTable() {
     const probBg    = prob >= 70 ? '#edf8f2' : prob >= 40 ? '#fffbeb' : '#fdf0ee';
 
     let dateClass = 'td-date';
-    let dateLabel = p.deliveryDate ? formatDate(p.deliveryDate) : '–';
+    let dateLabel = p.deliveryDate ? formatDate(p.deliveryDate) : '\u2013';
     if (p.deliveryDate && p.deliveryDate < today && !['invoiced','paid'].includes(p.status)) {
-      dateClass += ' date-overdue'; dateLabel += ' ⚠';
+      dateClass += ' date-overdue'; dateLabel += ' \u26a0';
     } else if (p.deliveryDate && p.deliveryDate <= soonStr) {
       dateClass += ' date-soon';
     }
 
-    // 通貨：製品行の currency → 案件の currency → JPY の優先順
-    const currency = prod?.currency || p.currency || 'JPY';
-    const sym      = CURRENCY_SYMBOL[currency] || currency + ' ';
+    const currency = (prod && prod.currency) ? prod.currency : (p.currency || 'JPY');
+    const sym      = CURRENCY_SYMBOL[currency] || (currency + ' ');
 
-    // 金額表示：JPYは¥+数値、外貨は通貨コード+数値（subtotalはJPY換算済み）
     const amountDisplay = currency === 'JPY'
-      ? `<span class="currency-badge">${currency}</span>${sym}${(p.subtotal || 0).toLocaleString()}`
-      : `<span class="currency-badge" style="background:#e8f0fe;color:#376ee6;">${currency}</span>${sym}${(p.subtotal || 0).toLocaleString()}`;
+      ? '<span class="currency-badge">' + currency + '</span>' + sym + (p.subtotal || 0).toLocaleString()
+      : '<span class="currency-badge" style="background:#e8f0fe;color:#376ee6;">' + currency + '</span>' + sym + (p.subtotal || 0).toLocaleString();
 
-    // 製品名セル（照合済みの製品名を表示）
-    const prodName = prod
-      ? (prod.productCode ? `${prod.productName || '–'}` : (prod.productName || '–'))
-      : '–';
-    const prodCell = `<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
-                          title="${(prod?.productName || '')} ${prod?.productCode ? '（' + prod.productCode + '）' : ''}"
-                      >${prodName}</td>`;
+    const prodName = prod ? (prod.productName || '\u2013') : '\u2013';
+    const prodTitle = prod ? ((prod.productName || '') + (prod.productCode ? ' (' + prod.productCode + ')' : '')) : '';
+    const prodCell = '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + prodTitle + '">' + prodName + '</td>';
 
-    // 1案件の最初の行のみ案件情報セルを表示（2行目以降は製品名のみ）
     if (isFirst) {
-      return \`<tr class="\${rowClass}" onclick="handleRowClick('\${p.projectNo}', event)">
-        <td onclick="event.stopPropagation()" style="padding:12px;">
-          <input type="checkbox" class="row-checkbox" \${checked}
-                 onchange="toggleCheck('\${p.projectNo}', this.checked)">
-        </td>
-        <td class="td-no">\${p.projectNo || '–'}</td>
-        <td class="td-name" style="max-width:220px;" title="\${p.projectName || ''}">\${p.projectName || '–'}</td>
-        <td style="max-width:140px;" title="\${p.customer || ''}">\${p.customer || '–'}</td>
-        <td><span class="status-badge \${statusCfg.class}">\${statusCfg.label}</span></td>
-        \${prodCell}
-        <td class="td-amount" style="text-align:right;">\${amountDisplay}</td>
-        <td class="td-prob">
-          <span class="prob-badge" style="background:\${probBg};color:\${probColor};">\${prob}%</span>
-        </td>
-        <td class="\${dateClass}">\${dateLabel}</td>
-        <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">\${p.salesPerson || '–'}</td>
-        <td>\${p.salesRegion || '–'}</td>
-        <td class="td-date">\${p.updatedAt ? formatDate(p.updatedAt) : '–'}</td>
-      </tr>\`;
+      return '<tr class="' + rowClass + '" onclick="handleRowClick(\'' + p.projectNo + '\', event)">'
+        + '<td onclick="event.stopPropagation()" style="padding:12px;">'
+        +   '<input type="checkbox" class="row-checkbox" ' + checked
+        +   ' onchange="toggleCheck(\'' + p.projectNo + '\', this.checked)">'
+        + '</td>'
+        + '<td class="td-no">' + (p.projectNo || '\u2013') + '</td>'
+        + '<td class="td-name" style="max-width:220px;" title="' + (p.projectName || '') + '">' + (p.projectName || '\u2013') + '</td>'
+        + '<td style="max-width:140px;" title="' + (p.customer || '') + '">' + (p.customer || '\u2013') + '</td>'
+        + '<td><span class="status-badge ' + statusCfg.class + '">' + statusCfg.label + '</span></td>'
+        + prodCell
+        + '<td class="td-amount" style="text-align:right;">' + amountDisplay + '</td>'
+        + '<td class="td-prob"><span class="prob-badge" style="background:' + probBg + ';color:' + probColor + ';">' + prob + '%</span></td>'
+        + '<td class="' + dateClass + '">' + dateLabel + '</td>'
+        + '<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.salesPerson || '\u2013') + '</td>'
+        + '<td>' + (p.salesRegion || '\u2013') + '</td>'
+        + '<td class="td-date">' + (p.updatedAt ? formatDate(p.updatedAt) : '\u2013') + '</td>'
+        + '</tr>';
     } else {
-      // 2行目以降：案件No・案件名・取引先・ステータス・金額・確度・日付・担当者・地域・更新日は空セル
-      // 視覚的に同一案件とわかるよう薄いborder-topで区切る
-      return \`<tr class="\${rowClass} prod-subrow" onclick="handleRowClick('\${p.projectNo}', event)"
-               style="border-top:1px dashed var(--border-subtle);">
-        <td></td>
-        <td class="td-no" style="color:var(--text-tertiary);font-size:11px;">\${p.projectNo || ''}</td>
-        <td></td><td></td><td></td>
-        \${prodCell}
-        <td></td><td></td><td></td><td></td><td></td><td></td>
-      </tr>\`;
+      return '<tr class="' + rowClass + ' prod-subrow" onclick="handleRowClick(\'' + p.projectNo + '\', event)"'
+        + ' style="border-top:1px dashed var(--border-subtle);">'
+        + '<td></td>'
+        + '<td class="td-no" style="color:var(--text-tertiary);font-size:11px;">' + (p.projectNo || '') + '</td>'
+        + '<td></td><td></td><td></td>'
+        + prodCell
+        + '<td></td><td></td><td></td><td></td><td></td><td></td>'
+        + '</tr>';
     }
   }).join('');
 }
