@@ -1868,48 +1868,48 @@ function resolveMaster(code, name, byCode, byName, hasMaster, label) {
 }
 
 function parseImportCSV(text) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim() && !l.trim().startsWith('#'));
-  if (lines.length < 2) {
+  const rawLines = text.split(/\r?\n/).filter(l => l.trim() && !l.trim().startsWith('#'));
+  if (rawLines.length < 2) {
     showToast('CSVにデータ行がありません', 'error');
     return;
   }
 
-  const headers = parseCSVLine(lines[0]);
+  const headers = parseCSVLine(rawLines[0]);
 
-  // ─── 列マッピング（コード列・名前列を分離） ───
+  // ─── 列マッピング ───
   const COL = {
     projectNo:      findCol(headers, ['案件No', 'project_no', 'projectNo']),
     projectName:    findCol(headers, ['案件名', 'project_name', 'projectName']),
-    // 取引先：コード優先 → 名前フォールバック
     customerCode:   findCol(headers, ['取引先コード', 'customer_code', 'customerCode']),
     customerName:   findCol(headers, ['取引先名', '取引先', 'customer_name', 'customer']),
-    // 担当者：コード優先 → 名前フォールバック（任意）
     staffCode:      findCol(headers, ['担当者コード', '従業員ID', 'staff_code', 'staffCode']),
     staffName:      findCol(headers, ['担当者名', '担当者', 'staff_name', 'salesPerson']),
-    // 製品：コード優先 → 名前フォールバック（任意）
     productCode:    findCol(headers, ['製品コード', 'product_code', 'productCode']),
     productName:    findCol(headers, ['製品名', 'product_name', 'productName']),
-    // その他
     deliveryDate:   findCol(headers, ['納品予定日', 'delivery_date', 'deliveryDate']),
     probability:    findCol(headers, ['受注確度', 'probability']),
     status:         findCol(headers, ['ステータス', 'status']),
-    subtotal:       findCol(headers, ['金額', '合計金額（税抜）', '合計金額', 'subtotal', 'amount']),
+    amount:         findCol(headers, ['金額', '合計金額（税抜）', '合計金額', 'subtotal', 'amount']),
     memo:           findCol(headers, ['備考', 'memo']),
-    // 地域：旧CSV互換のため列があれば読む（マスタ照合で上書きされる）
     salesRegionRaw: findCol(headers, ['地域', '販売地域', 'region', 'salesRegion']),
   };
 
-  // ─── マスタ照合Mapを取得 ───
-  const masters = loadMasterSets();
+  const masters      = loadMasterSets();
+  const existingNos  = new Set(allProjects.map(p => p.projectNo));
 
-  const existingNos = new Set(allProjects.map(p => p.projectNo));
   importData.valid      = [];
   importData.errors     = [];
   importData.updates    = [];
   importData.masterWarn = !masters.hasMasterCustomers;
 
-  for (let i = 1; i < lines.length; i++) {
-    const cols = parseCSVLine(lines[i]);
+  // ══════════════════════════════════════════════════════
+  // STEP 1: 全行をパース・バリデーション・マスタ照合
+  //         同一案件の複数製品行を検出するため、まず全行処理
+  // ══════════════════════════════════════════════════════
+  const parsedRows = [];   // バリデーション通過行のみ
+
+  for (let i = 1; i < rawLines.length; i++) {
+    const cols   = parseCSVLine(rawLines[i]);
     if (cols.every(c => !c.trim())) continue;
 
     const rowNum = i + 1;
@@ -1918,7 +1918,7 @@ function parseImportCSV(text) {
     const errs = [];
     const addErr = (col, value, message) => errs.push({ row: rowNum, col, value, message });
 
-    // ─── 基本項目 ───
+    // ─── 基本値取得 ───
     const projectName  = g('projectName');
     const customerCode = g('customerCode');
     const customerName = g('customerName');
@@ -1929,12 +1929,15 @@ function parseImportCSV(text) {
     const probability  = g('probability');
     let   deliveryDate = g('deliveryDate');
     const status       = g('status');
-    const subtotal     = g('subtotal');
+    const amount       = g('amount');
     const memo         = g('memo');
+    const projectNo    = g('projectNo');
 
     // ─── 必須チェック ───
-    if (!projectName) addErr('案件名', '', '必須項目です');
-    if (!customerCode && !customerName) addErr('取引先', '', '取引先コードまたは取引先名のどちらかは必須です');
+    if (!projectName)
+      addErr('案件名', '', '必須項目です');
+    if (!customerCode && !customerName)
+      addErr('取引先', '', '取引先コードまたは取引先名のどちらかは必須です');
 
     // ─── 受注確度 ───
     if (probability !== '') {
@@ -1955,26 +1958,17 @@ function parseImportCSV(text) {
     if (status && !validStatuses.includes(status))
       addErr('ステータス', status, '有効値: draft / quoted / ordered / delivered / invoiced / paid');
 
-    // ─── マスタ照合（コード優先 → 名前フォールバック） ───
-    const custResult = resolveMaster(
-      customerCode, customerName,
-      masters.customerByCode, masters.customerByName,
-      masters.hasMasterCustomers, '取引先'
-    );
+    // ─── マスタ照合 ───
+    const custResult = resolveMaster(customerCode, customerName,
+      masters.customerByCode, masters.customerByName, masters.hasMasterCustomers, '取引先');
     if (custResult.error) addErr('取引先', customerCode || customerName, custResult.error);
 
-    const staffResult = resolveMaster(
-      staffCode, staffName,
-      masters.staffByCode, masters.staffByName,
-      masters.hasMasterStaff, '担当者'
-    );
+    const staffResult = resolveMaster(staffCode, staffName,
+      masters.staffByCode, masters.staffByName, masters.hasMasterStaff, '担当者');
     if (staffResult.error) addErr('担当者', staffCode || staffName, staffResult.error);
 
-    const prodResult = resolveMaster(
-      productCode, productName,
-      masters.productByCode, masters.productByName,
-      masters.hasMasterProducts, '製品'
-    );
+    const prodResult = resolveMaster(productCode, productName,
+      masters.productByCode, masters.productByName, masters.hasMasterProducts, '製品');
     if (prodResult.error) addErr('製品', productCode || productName, prodResult.error);
 
     if (errs.length > 0) {
@@ -1982,72 +1976,156 @@ function parseImportCSV(text) {
       continue;
     }
 
-    // ─── レコード組み立て ───
-    // 取引先：照合成功時はマスタから名前・地域・通貨を自動引き継ぎ
-    const custRecord     = custResult.record;
-    const resolvedName   = custRecord?.customer_name || customerName;
-    const resolvedRegion = custRecord?.region || g('salesRegionRaw') || 'JP';
+    // ─── 照合結果からマスタ値を解決 ───
+    const custRecord       = custResult.record;
+    const resolvedCustName = custRecord?.customer_name || customerName;
+    const resolvedRegion   = custRecord?.region || g('salesRegionRaw') || 'JP';
     const resolvedCurrency = (custRecord?.billing_currency || 'JPY').toUpperCase();
+    const resolvedCustCode = String(custRecord?.customer_code || customerCode || '');
 
-    // 担当者：照合成功時はマスタから名前を引き継ぎ
-    const staffRecord = staffResult.record;
-    const resolvedStaff = staffRecord?.staff_name || staffName;
+    const staffRecord      = staffResult.record;
+    const resolvedStaff    = staffRecord?.staff_name || staffName;
+    const resolvedStaffCode= String(staffRecord?.staff_code || staffCode || '');
 
-    // 製品：照合成功時はマスタから名前を引き継ぎ
-    const prodRecord          = prodResult.record;
-    const resolvedProduct     = prodRecord?.product_name || productName;
-    const resolvedProductCode = String(prodRecord?.product_code || productCode || '');
+    const prodRecord       = prodResult.record;
+    const resolvedProdName = prodRecord?.product_name || productName;
+    const resolvedProdCode = String(prodRecord?.product_code || productCode || '');
 
-    // ─── 金額決定ロジック ───
-    // CSV入力金額がある → そのまま採用（JPY換算済みとみなす）
-    // CSV金額がブランク → 単価マスタ × 取引先通貨で自動算出
-    let resolvedSubtotal = 0;
-    let priceNote = '';   // プレビュー用メモ
-    const rawSubtotal = subtotal ? String(subtotal).replace(/[,¥\s]/g, '') : '';
+    // ─── 製品明細の単価・金額を決定 ───
+    // 案件入力画面と同一の products[] 行構造：
+    // { lineNo, productName, productId, qty, unitPrice, currency, taxRate, lineTotal }
+    let unitPrice = 0;
+    let lineTotal = 0;
+    let priceNote = '';
+    const rawAmount = amount ? String(amount).replace(/[,¥\s]/g, '') : '';
 
-    if (rawSubtotal !== '') {
-      resolvedSubtotal = Number(rawSubtotal);
-    } else if (resolvedProductCode && masters.priceByCode.has(resolvedProductCode)) {
+    if (rawAmount !== '') {
+      // CSV直接入力：金額欄の値を lineTotal・unitPrice に使用（数量1として扱う）
+      lineTotal = Number(rawAmount);
+      unitPrice = lineTotal;
+    } else if (resolvedProdCode && masters.priceByCode.has(resolvedProdCode)) {
       // 単価マスタから通貨別単価を取得
-      const priceRec = masters.priceByCode.get(resolvedProductCode);
+      const priceRec  = masters.priceByCode.get(resolvedProdCode);
       const priceInfo = getPriceForCurrency(priceRec, resolvedCurrency, masters.fxRates);
+      unitPrice = priceInfo.unitPrice;
 
       if (priceInfo.jpyAmount != null) {
-        resolvedSubtotal = priceInfo.jpyAmount;
+        lineTotal = priceInfo.jpyAmount;   // JPY換算済み金額をlineTotalに
         priceNote = resolvedCurrency === 'JPY'
-          ? `単価マスタ参照（JPY ${priceInfo.unitPrice.toLocaleString()}）`
-          : `単価マスタ参照（${resolvedCurrency} ${priceInfo.unitPrice.toLocaleString()} × レート${masters.fxRates[resolvedCurrency]}）`;
-      } else if (priceInfo.unitPrice > 0) {
-        // 為替レート未登録の外貨の場合：外貨金額のみ記録・JPY換算は0
-        resolvedSubtotal = 0;
-        priceNote = `単価マスタ参照（${resolvedCurrency} ${priceInfo.unitPrice.toLocaleString()}・為替レート未設定のためJPY換算不可）`;
+          ? `単価マスタ参照（JPY ${unitPrice.toLocaleString()}）`
+          : `単価マスタ参照（${resolvedCurrency} ${unitPrice.toLocaleString()} × レート${masters.fxRates[resolvedCurrency]}）`;
+      } else if (unitPrice > 0) {
+        lineTotal = 0;
+        priceNote = `単価マスタ参照（${resolvedCurrency} ${unitPrice.toLocaleString()}・為替レート未設定）`;
       }
     }
 
-    const record = {
-      projectName:   projectName,
-      customer:      resolvedName,
-      customerCode:  custRecord?.customer_code || customerCode || '',
-      salesPerson:   resolvedStaff,
-      staffCode:     staffRecord?.staff_code || staffCode || '',
-      productName:   resolvedProduct,
-      productCode:   resolvedProductCode,
-      deliveryDate:  deliveryDate || null,
-      probability:   probability !== '' ? Number(probability) : 50,
-      salesRegion:   resolvedRegion,
-      currency:      resolvedCurrency,
-      status:        status || 'draft',
-      subtotal:      resolvedSubtotal,
-      priceNote:     priceNote,   // プレビュー・UI表示用
-      memo:          memo,
-      updatedAt:     new Date().toISOString().slice(0, 10),
-    };
-    // 消費税：JPY取引のみ10%加算。外貨取引はそのまま（税処理は別途）
-    record.total = resolvedCurrency === 'JPY'
-      ? Math.round(resolvedSubtotal * 1.1)
-      : resolvedSubtotal;
+    parsedRows.push({
+      // 案件特定キー（グルーピング用）
+      _groupKey:    `${projectName}||${resolvedCustCode || resolvedCustName}||${deliveryDate || ''}||${status || 'draft'}`,
+      _rowNum:      rowNum,
+      _projectNo:   projectNo,
+      // 案件ヘッダー情報
+      projectName,
+      customer:     resolvedCustName,
+      customerCode: resolvedCustCode,
+      salesPerson:  resolvedStaff,
+      staffCode:    resolvedStaffCode,
+      deliveryDate: deliveryDate || null,
+      probability:  probability !== '' ? Number(probability) : 50,
+      salesRegion:  resolvedRegion,
+      status:       status || 'draft',
+      memo,
+      // 製品明細1行分
+      prodLine: {
+        productName: resolvedProdName,
+        productCode: resolvedProdCode,
+        productId:   null,
+        qty:         1,
+        unitPrice,
+        currency:    resolvedCurrency,
+        taxRate:     10,
+        lineTotal,
+        priceNote,
+      },
+    });
+  }
 
-    const pNo = g('projectNo');
+  // ══════════════════════════════════════════════════════
+  // STEP 2: グルーピング
+  //   同一 _groupKey の行を1案件にまとめ、products[] 配列に集約
+  // ══════════════════════════════════════════════════════
+  const groupMap = new Map();   // groupKey → 案件レコード
+
+  for (const row of parsedRows) {
+    if (!groupMap.has(row._groupKey)) {
+      // 案件ヘッダーを初期化
+      groupMap.set(row._groupKey, {
+        _projectNo: row._projectNo,
+        projectName:  row.projectName,
+        customer:     row.customer,
+        customerCode: row.customerCode,
+        salesPerson:  row.salesPerson,
+        staffCode:    row.staffCode,
+        deliveryDate: row.deliveryDate,
+        probability:  row.probability,
+        salesRegion:  row.salesRegion,
+        status:       row.status,
+        memo:         row.memo,
+        products:     [],
+        priceNotes:   [],
+      });
+    }
+    const proj = groupMap.get(row._groupKey);
+
+    // 製品明細を追加
+    const line = { ...row.prodLine, lineNo: proj.products.length + 1 };
+    proj.products.push(line);
+    if (row.prodLine.priceNote) proj.priceNotes.push(row.prodLine.priceNote);
+  }
+
+  // ══════════════════════════════════════════════════════
+  // STEP 3: 案件レコード確定（集計・税計算）
+  // ══════════════════════════════════════════════════════
+  for (const proj of groupMap.values()) {
+    // 税率別集計（インボイス対応・案件入力画面と同一ロジック）
+    const taxMap = {};
+    let subtotal = 0;
+    const currency = proj.products[0]?.currency || 'JPY';
+
+    proj.products.forEach(p => {
+      subtotal += p.lineTotal;
+      if (!taxMap[p.taxRate]) taxMap[p.taxRate] = { taxRate: p.taxRate, taxBase: 0, taxAmount: 0 };
+      taxMap[p.taxRate].taxBase += p.lineTotal;
+    });
+
+    const taxDetails = Object.values(taxMap).map(t => ({
+      ...t,
+      taxAmount: currency === 'JPY' ? Math.floor(t.taxBase * t.taxRate / 100) : 0,
+    }));
+    const total = subtotal + taxDetails.reduce((s, t) => s + t.taxAmount, 0);
+
+    const record = {
+      projectName:  proj.projectName,
+      customer:     proj.customer,
+      customerCode: proj.customerCode,
+      salesPerson:  proj.salesPerson,
+      staffCode:    proj.staffCode,
+      deliveryDate: proj.deliveryDate,
+      probability:  proj.probability,
+      salesRegion:  proj.salesRegion,
+      currency,
+      status:       proj.status,
+      memo:         proj.memo,
+      products:     proj.products,     // ← 案件入力画面と同一構造
+      taxDetails,
+      subtotal,
+      total,
+      priceNote:    proj.priceNotes.join(' / '),
+      updatedAt:    new Date().toISOString().slice(0, 10),
+    };
+
+    const pNo = proj._projectNo;
     if (pNo && existingNos.has(pNo)) {
       record.projectNo = pNo;
       importData.updates.push(record);
@@ -2179,25 +2257,30 @@ function renderImportPreviewTable() {
     const badge = isNew
       ? '<span class="badge-new">新規</span>'
       : '<span class="badge-update">更新</span>';
-    const custLabel = r.customerCode ? `${r.customer}（${r.customerCode}）` : (r.customer || '–');
+    const custLabel  = r.customerCode ? `${r.customer}（${r.customerCode}）` : (r.customer || '–');
     const staffLabel = r.staffCode ? `${r.salesPerson}（${r.staffCode}）` : (r.salesPerson || '–');
-    const prodLabel = r.productCode ? `${r.productName}（${r.productCode}）` : (r.productName || '–');
+    // products[] 配列から製品名リストを生成（グルーピング対応）
+    const prodLines  = (r.products && r.products.length > 0)
+      ? r.products.map(p => p.productCode ? `${p.productName}（${p.productCode}）` : p.productName).join('<br>')
+      : '–';
+    const currency = r.currency || (r.products?.[0]?.currency) || 'JPY';
     // 金額セル：単価マスタ参照した場合はツールチップで出典を表示
+    const amtPrefix = currency !== 'JPY' ? currency + ' ' : '¥';
     const amtCell = r.priceNote
       ? `<td style="text-align:right;" title="${r.priceNote}">
-           ${r.currency !== 'JPY' ? r.currency + ' ' : '¥'}${fmt(r.subtotal)}
-           <span style="font-size:10px;color:var(--accent-blue);margin-left:3px;">M</span>
+           ${amtPrefix}${fmt(r.subtotal)}
+           <span style="font-size:10px;color:var(--accent-blue);margin-left:3px;" title="${r.priceNote}">M</span>
          </td>`
-      : `<td style="text-align:right;">${r.currency !== 'JPY' ? r.currency + ' ' : '¥'}${fmt(r.subtotal)}</td>`;
+      : `<td style="text-align:right;">${amtPrefix}${fmt(r.subtotal)}</td>`;
     return `<tr class="row-${r._type}">
       <td>${badge}</td>
       <td>${r.projectName || ''}</td>
       <td>${custLabel}</td>
       <td>${staffLabel}</td>
-      <td>${prodLabel}</td>
+      <td style="min-width:140px;">${prodLines}</td>
       <td>${STATUS_LABEL[r.status] || r.status || 'draft'}</td>
       ${amtCell}
-      <td style="text-align:center;">${r.currency || 'JPY'}</td>
+      <td style="text-align:center;">${currency}</td>
       <td style="text-align:center;">${r.probability ?? 50}%</td>
       <td>${r.deliveryDate || '–'}</td>
     </tr>`;
