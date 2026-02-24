@@ -1542,6 +1542,16 @@ function getCurrencyFromRows() {
   return (firstCurrencyInput?.value?.trim() || 'JPY').toUpperCase();
 }
 
+function getSalesRegionFromForm() {
+  // 自動転記の「販売地域」テキストから取得
+  let region = '';
+  document.querySelectorAll('.autofill-item').forEach(item => {
+    const lbl = item.querySelector('.autofill-label')?.textContent?.trim();
+    if (lbl === '販売地域') region = item.querySelector('.autofill-value')?.textContent?.trim() || '';
+  });
+  return region.toUpperCase();
+}
+
 function updateTotals() {
   const rows = document.querySelectorAll('#productTableBody tr');
   let subtotal = 0;
@@ -1550,12 +1560,13 @@ function updateTotals() {
   // 通貨を製品行から動的取得
   const currency  = getCurrencyFromRows();
   const sym       = CURRENCY_SYMBOL[currency] || (currency + ' ');
-  const isJPY     = currency === 'JPY';
 
-  // 消費税：JPYのみ10%課税。外貨は0（消費税は円建て取引にのみ適用）
-  const taxRate   = isJPY ? 10 : 0;
-  const taxAmount = isJPY ? Math.floor(subtotal * taxRate / 100) : 0;
-  const total     = subtotal + taxAmount;
+  // 消費税：販売地域=JPのみ10%課税（通貨ではなく地域で判定）
+  const salesRegion = getSalesRegionFromForm();
+  const isJP       = salesRegion === 'JP';
+  const taxRate     = isJP ? 10 : 0;
+  const taxAmount   = isJP ? Math.floor(subtotal * taxRate / 100) : 0;
+  const total       = subtotal + taxAmount;
 
   const subtotalEl = document.getElementById('displaySubtotal');
   const taxEl      = document.getElementById('displayTaxAmount');
@@ -1563,8 +1574,8 @@ function updateTotals() {
   const totalEl    = document.getElementById('displayTotal');
 
   if (subtotalEl) subtotalEl.textContent = sym + formatNumber(subtotal);
-  if (taxEl)      taxEl.textContent      = isJPY ? sym + formatNumber(taxAmount) : '–';
-  if (taxLabelEl) taxLabelEl.textContent = isJPY ? '消費税(10%)' : '消費税(0%・非課税)';
+  if (taxEl)      taxEl.textContent      = isJP ? sym + formatNumber(taxAmount) : '–';
+  if (taxLabelEl) taxLabelEl.textContent = isJP ? '消費税(10%)' : '消費税(0%・非課税)';
   if (totalEl)    totalEl.textContent    = sym + formatNumber(total);
 }
 function setupPriceInput(input) {
@@ -1625,7 +1636,8 @@ function onProductChange(select, row) {
   // 通貨に対応する単価フィールド
   const PRICE_FIELD = { JPY:'price_jpy', USD:'price_usd', EUR:'price_eur', RMB:'price_rmb' };
   const unitPrice = priceRec ? (Number(priceRec[PRICE_FIELD[currency] || 'price_jpy']) || 0) : 0;
-  const taxRate   = currency === 'JPY' ? 10 : 0;
+  const salesReg  = getSalesRegionFromForm();
+  const taxRate   = salesReg === 'JP' ? 10 : 0;
 
   // 行の各inputを更新
   const priceInput    = row.querySelector('input.table-input.direct.price');
@@ -1642,7 +1654,7 @@ function addProductRow() {
   if (!tbody) return;
   const rowNo   = tbody.querySelectorAll('tr').length + 1;
   const defCurr = getCurrencyFromRows();
-  const defTax  = defCurr === 'JPY' ? '10%' : '0%';
+  const defTax  = getSalesRegionFromForm() === 'JP' ? '10%' : '0%';
 
   const tr = document.createElement('tr');
   tr.innerHTML =
@@ -2062,7 +2074,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       tbody.innerHTML = '';
       data.products.forEach((p, i) => {
         const taxRateVal = p.taxRate != null ? p.taxRate
-          : (p.currency && p.currency !== 'JPY' ? 0 : 10);
+          : (data.salesRegion === 'JP' ? 10 : 0);  // 販売地域JPのみデフォルト10%
         const tr = document.createElement('tr');
         tr.innerHTML =
           '<td>' + (i + 1) + '</td>'

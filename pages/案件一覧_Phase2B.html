@@ -2184,7 +2184,7 @@ function parseImportCSV(text) {
         qty:         1,
         unitPrice,
         currency:    resolvedCurrency,
-        taxRate:     resolvedCurrency === 'JPY' ? 10 : 0,   // 外貨は消費税0
+        taxRate:     resolvedRegion === 'JP' ? 10 : 0,   // 販売地域JPのみ消費税10%
         lineTotal,
         priceNote,
       },
@@ -2244,7 +2244,7 @@ function parseImportCSV(text) {
 
     const taxDetails = Object.values(taxMap).map(t => ({
       ...t,
-      taxAmount: currency === 'JPY' ? Math.floor(t.taxBase * t.taxRate / 100) : 0,
+      taxAmount: proj.salesRegion === 'JP' ? Math.floor(t.taxBase * t.taxRate / 100) : 0,
     }));
     const total = subtotal + taxDetails.reduce((s, t) => s + t.taxAmount, 0);
 
