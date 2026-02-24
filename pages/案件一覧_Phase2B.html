@@ -884,25 +884,30 @@
       </div>
       <hr class="sidebar-divider">
       <div class="nav-section-label">マスター</div>
-      <div class="nav-item">
+      <div class="nav-item" style="cursor:pointer" onclick="location.href='マスター管理画面_Phase2C.html?tab=products'" id="nav-products">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         製品マスタ
+        <span id="sidebar-badge-products" style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);color:#e5e7eb;border-radius:10px;padding:1px 7px;min-width:24px;text-align:center;display:none;"></span>
       </div>
-      <div class="nav-item">
+      <div class="nav-item" style="cursor:pointer" onclick="location.href='マスター管理画面_Phase2C.html?tab=prices'" id="nav-prices">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         単価マスタ
+        <span id="sidebar-badge-prices" style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);color:#e5e7eb;border-radius:10px;padding:1px 7px;min-width:24px;text-align:center;display:none;"></span>
       </div>
-      <div class="nav-item">
+      <div class="nav-item" style="cursor:pointer" onclick="location.href='マスター管理画面_Phase2C.html?tab=exchange_rates'" id="nav-exchange_rates">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         為替マスタ
+        <span id="sidebar-badge-exchange_rates" style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);color:#e5e7eb;border-radius:10px;padding:1px 7px;min-width:24px;text-align:center;display:none;"></span>
       </div>
-      <div class="nav-item">
+      <div class="nav-item" style="cursor:pointer" onclick="location.href='マスター管理画面_Phase2C.html?tab=customers'" id="nav-customers">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         取引先マスタ
+        <span id="sidebar-badge-customers" style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);color:#e5e7eb;border-radius:10px;padding:1px 7px;min-width:24px;text-align:center;display:none;"></span>
       </div>
-      <div class="nav-item">
+      <div class="nav-item" style="cursor:pointer" onclick="location.href='マスター管理画面_Phase2C.html?tab=staff'" id="nav-staff">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         担当者マスタ
+        <span id="sidebar-badge-staff" style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);color:#e5e7eb;border-radius:10px;padding:1px 7px;min-width:24px;text-align:center;display:none;"></span>
       </div>
     </nav>
   </aside>
@@ -1727,6 +1732,33 @@ function downloadTemplate() {
   ];
   downloadCSV(lines.join('\n'), 'QURURi_案件インポートひな形.csv');
 }
+
+
+// ─── サイドバー マスター件数バッジ更新 ───
+function updateMasterBadges() {
+  const MASTERS = [
+    { key: 'qururi:products',        id: 'sidebar-badge-products' },
+    { key: 'qururi:prices',          id: 'sidebar-badge-prices' },
+    { key: 'qururi:exchange_rates',  id: 'sidebar-badge-exchange_rates' },
+    { key: 'qururi:customers',       id: 'sidebar-badge-customers' },
+    { key: 'qururi:staff',           id: 'sidebar-badge-staff' },
+  ];
+  MASTERS.forEach(m => {
+    const el = document.getElementById(m.id);
+    if (!el) return;
+    try {
+      const data = JSON.parse(localStorage.getItem(m.key) || '[]');
+      const count = Array.isArray(data) ? data.length : 0;
+      if (count > 0) {
+        el.textContent = count.toLocaleString();
+        el.style.display = 'inline-block';
+      } else {
+        el.style.display = 'none';
+      }
+    } catch(e) { el.style.display = 'none'; }
+  });
+}
+document.addEventListener('DOMContentLoaded', updateMasterBadges);
 
 // ─── CSV Import ───
 function openImportModal() {
