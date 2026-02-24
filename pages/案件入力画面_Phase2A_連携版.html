@@ -1960,6 +1960,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     const tbody = document.getElementById('productTableBody');
     if (tbody && data.products && data.products.length > 0) {
       tbody.innerHTML = '';
+      // 地域から正しい税率を再計算（JP=10%、それ以外=0%）
+      const correctTaxRate = (data.salesRegion === 'JP') ? '10%' : '0%';
+      // currentBillingCurrencyも保存データから復元
+      if (data.billingCurrency) currentBillingCurrency = data.billingCurrency;
       data.products.forEach((p, i) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -1974,7 +1978,7 @@ document.addEventListener('DOMContentLoaded', async function() {
           <td style="text-align:center;"><input type="text" class="table-input direct qty" value="${p.qty || 1}"></td>
           <td><input class="table-input direct price" value="${(p.unitPrice || 0).toLocaleString()}"></td>
           <td><input class="table-input autofill" value="${p.currency || currentBillingCurrency}" readonly style="text-align:center;"></td>
-          <td><input class="table-input autofill" value="${p.taxRate || 10}%" readonly style="text-align:center;"></td>
+          <td><input class="table-input autofill" value="${correctTaxRate}" readonly style="text-align:center;"></td>
           <td><span class="table-input calc price">${(p.lineTotal || 0).toLocaleString()}</span></td>
           <td style="text-align:center;">
             <button class="btn-delete" title="削除">
