@@ -2007,7 +2007,10 @@ function parseImportCSV(text) {
     const resolvedCustName = custRecord?.customer_name || customerName;
     const resolvedRegion   = custRecord?.region || g('salesRegionRaw') || 'JP';
     const resolvedCurrency = (custRecord?.billing_currency || 'JPY').toUpperCase();
-    const resolvedCustCode = String(custRecord?.customer_code || customerCode || '');
+    const resolvedCustCode  = String(custRecord?.customer_code || customerCode || '');
+    const resolvedIndustry  = custRecord?.industry || '';
+    const resolvedChannel   = custRecord?.channel  || '';
+    const resolvedSegment   = custRecord?.segment  || '';
 
     const staffRecord      = staffResult.record;
     const resolvedStaff    = staffRecord?.staff_name || staffName;
@@ -2060,6 +2063,9 @@ function parseImportCSV(text) {
       deliveryDate: deliveryDate || null,
       probability:  probability !== '' ? Number(probability) : 50,
       salesRegion:  resolvedRegion,
+      industry:     resolvedIndustry,
+      channel:      resolvedChannel,
+      segment:      resolvedSegment,
       status:       status || 'draft',
       memo,
       // 製品明細1行分
@@ -2070,7 +2076,7 @@ function parseImportCSV(text) {
         qty:         1,
         unitPrice,
         currency:    resolvedCurrency,
-        taxRate:     10,
+        taxRate:     resolvedCurrency === 'JPY' ? 10 : 0,   // 外貨は消費税0
         lineTotal,
         priceNote,
       },
@@ -2087,19 +2093,22 @@ function parseImportCSV(text) {
     if (!groupMap.has(row._groupKey)) {
       // 案件ヘッダーを初期化
       groupMap.set(row._groupKey, {
-        _projectNo: row._projectNo,
-        projectName:  row.projectName,
-        customer:     row.customer,
-        customerCode: row.customerCode,
-        salesPerson:  row.salesPerson,
-        staffCode:    row.staffCode,
-        deliveryDate: row.deliveryDate,
-        probability:  row.probability,
-        salesRegion:  row.salesRegion,
-        status:       row.status,
-        memo:         row.memo,
-        products:     [],
-        priceNotes:   [],
+        _projectNo:  row._projectNo,
+        projectName: row.projectName,
+        customer:    row.customer,
+        customerCode:row.customerCode,
+        salesPerson: row.salesPerson,
+        staffCode:   row.staffCode,
+        deliveryDate:row.deliveryDate,
+        probability: row.probability,
+        salesRegion: row.salesRegion,
+        industry:    row.industry  || '',
+        channel:     row.channel   || '',
+        segment:     row.segment   || '',
+        status:      row.status,
+        memo:        row.memo,
+        products:    [],
+        priceNotes:  [],
       });
     }
     const proj = groupMap.get(row._groupKey);
@@ -2140,6 +2149,9 @@ function parseImportCSV(text) {
       deliveryDate: proj.deliveryDate,
       probability:  proj.probability,
       salesRegion:  proj.salesRegion,
+      industry:     proj.industry  || '',
+      channel:      proj.channel   || '',
+      segment:      proj.segment   || '',
       currency,
       status:       proj.status,
       memo:         proj.memo,

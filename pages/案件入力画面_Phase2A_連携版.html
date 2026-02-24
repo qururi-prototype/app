@@ -1909,29 +1909,52 @@ document.addEventListener('DOMContentLoaded', async function() {
     const data = await DataAPI.loadProject(projectNo);
     if (!data) { showToast('案件が見つかりません: ' + projectNo, 'error'); return; }
 
-    // 案件No表示
+    // ─ 案件No表示 ─
     document.getElementById('projectNoDisplay').textContent = data.projectNo;
 
-    // 基本情報
+    // ─ テキスト系基本情報 ─
     if (document.getElementById('projectName'))
       document.getElementById('projectName').value = data.projectName || '';
     if (document.getElementById('deliveryDate'))
       document.getElementById('deliveryDate').value = data.deliveryDate || '';
     if (document.getElementById('memo'))
       document.getElementById('memo').value = data.memo || '';
-    if (document.getElementById('salesPerson'))
-      document.getElementById('salesPerson').value = data.salesPerson || '';
-    if (document.getElementById('customer'))
-      document.getElementById('customer').value = data.customer || '';
 
-    // 受注確度
+    // ─ 営業担当 select：マスタから選択肢を動的生成してからセット ─
+    const spSelect = document.getElementById('salesPerson');
+    if (spSelect && data.salesPerson) {
+      // 既存optionにマッチするものがなければ先頭に追加
+      const spExists = Array.from(spSelect.options).some(o => o.value === data.salesPerson || o.text === data.salesPerson);
+      if (!spExists) {
+        const opt = document.createElement('option');
+        opt.value = data.salesPerson;
+        opt.text  = data.salesPerson;
+        spSelect.insertBefore(opt, spSelect.firstChild);
+      }
+      spSelect.value = data.salesPerson;
+    }
+
+    // ─ 取引先 select：同様に動的追加してからセット ─
+    const custSelect = document.getElementById('customer');
+    if (custSelect && data.customer) {
+      const custExists = Array.from(custSelect.options).some(o => o.value === data.customer || o.text === data.customer);
+      if (!custExists) {
+        const opt = document.createElement('option');
+        opt.value = data.customer;
+        opt.text  = data.customer;
+        custSelect.insertBefore(opt, custSelect.firstChild);
+      }
+      custSelect.value = data.customer;
+    }
+
+    // ─ 受注確度 ─
     const pct = data.probability || 50;
     const fill  = document.getElementById('probFill');
     const label = document.getElementById('probValue');
     if (fill)  fill.style.width  = pct + '%';
     if (label) label.textContent = pct + '%';
 
-    // 自動転記項目
+    // ─ 自動転記（取引先マスタ由来） ─
     document.querySelectorAll('.autofill-item').forEach(item => {
       const lbl = item.querySelector('.autofill-label')?.textContent?.trim();
       const val = item.querySelector('.autofill-value');
@@ -1942,40 +1965,85 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (lbl === '自社セグ') val.textContent = data.segment     || '';
     });
 
-    // 製品明細：既存行を全削除して読み込みデータで再構築
+    // ─ 製品明細：既存行をクリアして再構築 ─
     const tbody = document.getElementById('productTableBody');
     if (tbody && data.products && data.products.length > 0) {
       tbody.innerHTML = '';
       data.products.forEach((p, i) => {
+        const taxRateVal = p.taxRate != null ? p.taxRate
+          : (p.currency && p.currency !== 'JPY' ? 0 : 10);
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${i + 1}</td>
-          <td>
-            <div class="table-select-wrapper">
-              <select class="table-input dropdown">
-                <option selected>${p.productName || ''}</option>
-              </select>
-            </div>
-          </td>
-          <td style="text-align:center;"><input type="text" class="table-input direct qty" value="${p.qty || 1}"></td>
-          <td><input class="table-input direct price" value="${(p.unitPrice || 0).toLocaleString()}"></td>
-          <td><input class="table-input autofill" value="${p.currency || 'JPY'}" readonly style="text-align:center;"></td>
-          <td><input class="table-input autofill" value="${p.taxRate || 10}%" readonly style="text-align:center;"></td>
-          <td><span class="table-input calc price">${(p.lineTotal || 0).toLocaleString()}</span></td>
-          <td style="text-align:center;">
-            <button class="btn-delete" title="削除">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </td>`;
+        tr.innerHTML =
+          '<td>' + (i + 1) + '</td>'
+          + '<td><div class="table-select-wrapper"><select class="table-input dropdown">'
+          + '<option selected>' + (p.productName || '') + '</option>'
+          + '</select></div></td>'
+          + '<td style="text-align:center;"><input type="text" class="table-input direct qty" value="' + (p.qty || 1) + '"></td>'
+          + '<td><input class="table-input direct price" value="' + (p.unitPrice || 0).toLocaleString() + '"></td>'
+          + '<td><input class="table-input autofill" value="' + (p.currency || 'JPY') + '" readonly style="text-align:center;"></td>'
+          + '<td><input class="table-input autofill" value="' + taxRateVal + '%" readonly style="text-align:center;"></td>'
+          + '<td><span class="table-input calc price">' + (p.lineTotal || 0).toLocaleString() + '</span></td>'
+          + '<td style="text-align:center;"><button class="btn-delete" title="削除">'
+          + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+          + '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
+          + '</svg></button></td>';
         tbody.appendChild(tr);
         setupRowEvents(tr);
       });
       updateTotals();
     }
 
-    console.log('[QURURi] 案件データを読み込みました:', data.projectNo);
+    // ─ 大区分・中区分・小区分：製品マスタから動的再描画 ─
     const autofillSection = document.getElementById('productAutofillSection');
-    if (autofillSection) autofillSection.style.display = '';
+    if (autofillSection && data.products && data.products.length > 0) {
+      // 製品マスタをLocalStorageから取得
+      let productMaster = [];
+      try { productMaster = JSON.parse(localStorage.getItem('qururi:products') || '[]'); } catch(e) {}
+      const prodMap = new Map(productMaster.map(r => [String(r.product_code || ''), r]));
+
+      // 区分ラベルと対応フィールド
+      const CATS = [
+        { label: '大区分', field: 'category_l' },
+        { label: '中区分', field: 'category_m' },
+        { label: '小区分', field: 'category_s' },
+      ];
+
+      const grid = autofillSection.querySelector('.product-autofill-grid');
+      if (grid) {
+        grid.innerHTML = '';
+        CATS.forEach(cat => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'product-autofill-item';
+
+          const labelDiv = document.createElement('div');
+          labelDiv.className = 'product-autofill-label';
+          labelDiv.textContent = cat.label;
+          itemDiv.appendChild(labelDiv);
+
+          const valuesDiv = document.createElement('div');
+          valuesDiv.className = 'product-autofill-values';
+
+          data.products.forEach((p, i) => {
+            const masterRec = prodMap.get(String(p.productCode || ''));
+            const catVal    = masterRec?.[cat.field] || '';
+            const row = document.createElement('div');
+            row.className = 'product-autofill-row';
+            row.innerHTML = '<span class="product-autofill-number">' + (i + 1) + '</span>'
+                          + '<span class="product-autofill-value">' + (catVal || '–') + '</span>';
+            valuesDiv.appendChild(row);
+          });
+
+          itemDiv.appendChild(valuesDiv);
+          grid.appendChild(itemDiv);
+        });
+      }
+
+      autofillSection.style.display = '';
+    } else if (autofillSection) {
+      autofillSection.style.display = 'none';
+    }
+
+    console.log('[QURURi] 案件データを読み込みました:', data.projectNo);
   } catch (err) {
     console.error('読み込みエラー:', err);
     showToast('案件の読み込みに失敗しました', 'error');
