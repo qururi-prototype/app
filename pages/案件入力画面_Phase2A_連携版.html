@@ -283,7 +283,7 @@
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
-    overflow: visible;
+    overflow: hidden;
     margin-bottom: 20px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
@@ -550,7 +550,6 @@
   /* Product Detail Table */
   .detail-table-wrapper {
     overflow-x: auto;
-    overflow-y: visible;
   }
 
   .detail-table {
@@ -1078,103 +1077,6 @@
     background: var(--danger-bg); border-radius: var(--radius-sm); margin-top: 6px;
   }
 
-  /* ===== SearchableSelect ===== */
-  .ss-wrapper { position: relative; }
-  .ss-input {
-    width: 100%;
-    cursor: pointer !important;
-    padding-right: 32px !important; /* 矢印アイコン分の余白 */
-  }
-  .ss-input:hover {
-    border-color: var(--input-dropdown) !important;
-  }
-  .ss-input.is-open {
-    border-color: var(--input-dropdown) !important;
-    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  }
-  /* 担当者・取引先用の▼矢印 */
-  .ss-wrapper:not(.table-ss)::after {
-    content: '';
-    position: absolute;
-    right: 10px; top: 50%;
-    transform: translateY(-50%);
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 6px solid var(--text-tertiary, #999);
-    pointer-events: none;
-    transition: transform 0.15s, border-top-color 0.15s;
-  }
-  .ss-wrapper.is-open:not(.table-ss)::after {
-    transform: translateY(-50%) rotate(180deg);
-    border-top-color: var(--input-dropdown, #2563eb);
-  }
-  .ss-dropdown {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0; right: 0;
-    background: #fff;
-    border: 1.5px solid var(--input-dropdown-border);
-    border-top: none;
-    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-    max-height: 240px;
-    overflow-y: auto;
-    z-index: 99999;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-  }
-  .ss-wrapper.is-open .ss-dropdown { display: block; }
-  .ss-item {
-    padding: 9px 12px;
-    font-size: 13px;
-    color: var(--text-primary);
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: background 0.1s;
-  }
-  .ss-item:hover, .ss-item.focused { background: var(--input-dropdown-bg); color: var(--input-dropdown); }
-  .ss-item.selected { font-weight: 600; color: var(--input-dropdown); background: color-mix(in srgb, var(--input-dropdown-bg) 60%, white); }
-  .ss-empty { padding: 10px 12px; font-size: 12px; color: var(--text-tertiary); text-align: center; }
-  /* テーブル行内 */
-  .ss-wrapper.table-ss .ss-input {
-    font-size: 12px;
-    padding: 6px 24px 6px 8px;
-    border-radius: var(--radius-sm);
-    border: 1.5px solid var(--input-dropdown-border);
-    background: var(--input-dropdown-bg);
-    color: var(--input-dropdown);
-    width: 100%;
-  }
-  /* 製品名フィールド専用 */
-  input.ss-input-product {
-    cursor: pointer !important;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  input.ss-input-product:hover {
-    border-color: var(--input-dropdown) !important;
-  }
-  input.ss-input-product:focus,
-  input.ss-input-product.is-open {
-    border-color: var(--input-dropdown) !important;
-    box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
-    outline: none;
-  }
-  .ss-wrapper.table-ss::after {
-    content: '';
-    position: absolute;
-    right: 6px; top: 50%;
-    transform: translateY(-50%);
-    border-left: 3px solid transparent;
-    border-right: 3px solid transparent;
-    border-top: 4px solid var(--input-dropdown);
-    pointer-events: none;
-    transition: transform 0.15s;
-  }
-  .ss-wrapper.table-ss.is-open::after {
-    transform: translateY(-50%) rotate(180deg);
-  }
-  .ss-wrapper.table-ss .ss-dropdown { font-size: 12px; min-width: 220px; }
 </style>
 <script src="https://qururi-prototype.github.io/database/dataManager.js"></script>
 </head>
@@ -1204,23 +1106,23 @@
       </div>
       
       <div class="nav-section-label">マスター管理</div>
-      <div class="nav-item" onclick="window.location.href='マスター管理画面_Phase2C.html#products'" style="cursor:pointer">
+      <div class="nav-item" style="cursor:not-allowed;opacity:0.5">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         製品マスタ
       </div>
-      <div class="nav-item" onclick="window.location.href='マスター管理画面_Phase2C.html#prices'" style="cursor:pointer">
+      <div class="nav-item" style="cursor:not-allowed;opacity:0.5">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         単価マスタ
       </div>
-      <div class="nav-item" onclick="window.location.href='マスター管理画面_Phase2C.html#exchange_rates'" style="cursor:pointer">
+      <div class="nav-item" style="cursor:not-allowed;opacity:0.5">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         為替マスタ
       </div>
-      <div class="nav-item" onclick="window.location.href='マスター管理画面_Phase2C.html#customers'" style="cursor:pointer">
+      <div class="nav-item" style="cursor:not-allowed;opacity:0.5">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         取引先マスタ
       </div>
-      <div class="nav-item" onclick="window.location.href='マスター管理画面_Phase2C.html#staff'" style="cursor:pointer">
+      <div class="nav-item" style="cursor:not-allowed;opacity:0.5">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         担当者マスタ
       </div>
@@ -1314,10 +1216,11 @@
                 <div class="field-label">営業担当</div>
                 <div class="field-value">
                   <div class="select-wrapper">
-                    <div class="ss-wrapper" id="ss-salesPerson">
-                      <input type="text" class="input-field input-dropdown-type ss-input" id="salesPerson" placeholder="-- 選択してください --" autocomplete="off">
-                      <div class="ss-dropdown" id="ss-salesPerson-list"></div>
-                    </div>
+                    <select id="salesPerson" class="input-field input-dropdown-type">
+                      <option selected>佐藤 健一(営業第一部)</option>
+                      <option>田中 美咲(営業第二部)</option>
+                      <option>鈴木 大輔(営業第三部)</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -1327,10 +1230,11 @@
                 <div class="field-label">取引先</div>
                 <div class="field-value">
                   <div class="select-wrapper">
-                    <div class="ss-wrapper" id="ss-customer">
-                      <input type="text" class="input-field input-dropdown-type ss-input" id="customer" placeholder="-- 選択してください --" autocomplete="off">
-                      <div class="ss-dropdown" id="ss-customer-list"></div>
-                    </div>
+                    <select id="customer" class="input-field input-dropdown-type">
+                      <option selected>トヨタ自動車</option>
+                      <option>デンソー</option>
+                      <option>本田技研工業</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -1343,19 +1247,19 @@
               <div class="autofill-grid">
                 <div class="autofill-item">
                   <span class="autofill-label">販売地域</span>
-                  <span class="autofill-value" id="af-region">--</span>
+                  <span class="autofill-value">JP</span>
                 </div>
                 <div class="autofill-item">
                   <span class="autofill-label">業界</span>
-                  <span class="autofill-value" id="af-industry">--</span>
+                  <span class="autofill-value">自動車</span>
                 </div>
                 <div class="autofill-item">
                   <span class="autofill-label">商流</span>
-                  <span class="autofill-value" id="af-channel">--</span>
+                  <span class="autofill-value">直販</span>
                 </div>
                 <div class="autofill-item">
                   <span class="autofill-label">自社セグ</span>
-                  <span class="autofill-value" id="af-segment">--</span>
+                  <span class="autofill-value">検査装置</span>
                 </div>
               </div>
             </div>
@@ -1393,6 +1297,66 @@
                 </tr>
               </thead>
               <tbody id="productTableBody">
+                <tr>
+                  <td>1</td>
+                  <td>
+                    <div class="table-select-wrapper">
+                      <select class="table-input dropdown">
+                        <option selected>CVD装置</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="1"></td>
+                  <td><input class="table-input direct price" value="200,000,000"></td>
+                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
+                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
+                  <td><span class="table-input calc price">200,000,000</span></td>
+                  <td style="text-align: center;">
+                    <button class="btn-delete" title="削除">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>
+                    <div class="table-select-wrapper">
+                      <select class="table-input dropdown">
+                        <option selected>マスクアライナー</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="2"></td>
+                  <td><input class="table-input direct price" value="150,000,000"></td>
+                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
+                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
+                  <td><span class="table-input calc price">300,000,000</span></td>
+                  <td style="text-align: center;">
+                    <button class="btn-delete" title="削除">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>
+                    <div class="table-select-wrapper">
+                      <select class="table-input dropdown">
+                        <option selected>ウェットエッチング装置</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="1"></td>
+                  <td><input class="table-input direct price" value="300,000,000"></td>
+                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
+                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
+                  <td><span class="table-input calc price">300,000,000</span></td>
+                  <td style="text-align: center;">
+                    <button class="btn-delete" title="削除">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -1403,15 +1367,15 @@
               <div class="tax-summary-rows">
                 <div class="tax-summary-row subtotal">
                   <div class="tax-summary-label">小計(税抜)</div>
-                  <div class="tax-summary-value" id="displaySubtotal">--</div>
+                  <div class="tax-summary-value" id="displaySubtotal">¥0</div>
                 </div>
                 <div class="tax-summary-row tax-detail">
                   <div class="tax-summary-label" id="displayTaxLabel">消費税(10%)</div>
-                  <div class="tax-summary-value" id="displayTaxAmount">--</div>
+                  <div class="tax-summary-value" id="displayTaxAmount">¥0</div>
                 </div>
                 <div class="tax-summary-row total">
                   <div class="tax-summary-label" style="font-weight: 600; color: var(--accent-blue);">合計(税込)</div>
-                  <div class="tax-summary-value" style="font-size:18px;font-weight:700;color:var(--accent-blue);font-family:'Inter',sans-serif;" id="displayTotal">--</div>
+                  <div class="tax-summary-value" style="font-size:18px;font-weight:700;color:var(--accent-blue);font-family:\'Inter\',sans-serif;" id="displayTotal">¥0</div>
                 </div>
               </div>
             </div>
@@ -1564,53 +1528,38 @@ function calcRowTotal(row) {
   if (calcEl) calcEl.textContent = formatNumber(lineTotal);
   return lineTotal;
 }
-function getCurrencySymbol(currency) {
-  const map = { JPY: '¥', USD: 'USD ', EUR: 'EUR ', RMB: 'RMB ', CNY: 'CNY ' };
-  return map[currency] || (currency + ' ');
+// 通貨記号マップ
+const CURRENCY_SYMBOL = { JPY: '¥', USD: '$', EUR: '€', RMB: '¥', CNY: '¥', GBP: '£' };
+
+function getCurrencyFromRows() {
+  // 製品明細の1行目の通貨inputから取得（全行同一通貨を前提）
+  const firstCurrencyInput = document.querySelector('#productTableBody tr input.autofill');
+  return (firstCurrencyInput?.value?.trim() || 'JPY').toUpperCase();
 }
 
 function updateTotals() {
   const rows = document.querySelectorAll('#productTableBody tr');
-  const sym = getCurrencySymbol(currentBillingCurrency);
-
-  // 税率別に集計（各行のautofill[1]から税率を読む）
-  const taxMap = {};
   let subtotal = 0;
-  rows.forEach(function(row) {
-    const lineTotal   = calcRowTotal(row);
-    const autofills   = row.querySelectorAll('input.table-input.autofill');
-    const taxRateStr  = autofills[1] ? autofills[1].value : '10%';
-    const taxRate     = parseFloat(taxRateStr.replace('%','')) || 0;
-    subtotal += lineTotal;
-    if (!taxMap[taxRate]) taxMap[taxRate] = { taxBase: 0, taxAmount: 0 };
-    taxMap[taxRate].taxBase += lineTotal;
-  });
+  rows.forEach(row => { subtotal += calcRowTotal(row); });
 
-  // 税額合計
-  let totalTax = 0;
-  Object.keys(taxMap).forEach(function(rate) {
-    const amt = Math.floor(taxMap[rate].taxBase * Number(rate) / 100);
-    taxMap[rate].taxAmount = amt;
-    totalTax += amt;
-  });
-  const total = subtotal + totalTax;
+  // 通貨を製品行から動的取得
+  const currency  = getCurrencyFromRows();
+  const sym       = CURRENCY_SYMBOL[currency] || (currency + ' ');
+  const isJPY     = currency === 'JPY';
 
-  // 税ラベル表示（税率が1種類の場合はその税率を表示）
-  const rates = Object.keys(taxMap);
-  const taxLabelEl = document.getElementById('displayTaxLabel');
-  if (taxLabelEl) {
-    if (rates.length === 1) {
-      taxLabelEl.textContent = rates[0] === '0' ? '消費税(0%・非課税)' : `消費税(${rates[0]}%)`;
-    } else {
-      taxLabelEl.textContent = '消費税(税率混在)';
-    }
-  }
+  // 消費税：JPYのみ10%課税。外貨は0（消費税は円建て取引にのみ適用）
+  const taxRate   = isJPY ? 10 : 0;
+  const taxAmount = isJPY ? Math.floor(subtotal * taxRate / 100) : 0;
+  const total     = subtotal + taxAmount;
 
   const subtotalEl = document.getElementById('displaySubtotal');
   const taxEl      = document.getElementById('displayTaxAmount');
+  const taxLabelEl = document.getElementById('displayTaxLabel');
   const totalEl    = document.getElementById('displayTotal');
+
   if (subtotalEl) subtotalEl.textContent = sym + formatNumber(subtotal);
-  if (taxEl)      taxEl.textContent      = sym + formatNumber(totalTax);
+  if (taxEl)      taxEl.textContent      = isJPY ? sym + formatNumber(taxAmount) : '–';
+  if (taxLabelEl) taxLabelEl.textContent = isJPY ? '消費税(10%)' : '消費税(0%・非課税)';
   if (totalEl)    totalEl.textContent    = sym + formatNumber(total);
 }
 function setupPriceInput(input) {
@@ -1637,16 +1586,16 @@ function addProductRow() {
   tr.innerHTML = `
     <td>${rowNo}</td>
     <td>
-      <div class="table-ss-wrapper">
-        <input type="text" class="table-input ss-input-product" placeholder="製品を検索・選択" autocomplete="off"
-               style="padding-right:22px;background:var(--input-dropdown-bg);color:var(--input-dropdown);border-color:var(--input-dropdown-border);cursor:pointer;">
-        <div class="ss-dropdown ss-dropdown-product"></div>
+      <div class="table-select-wrapper">
+        <select class="table-input dropdown">
+          <option value="" selected>製品を選択</option>
+        </select>
       </div>
     </td>
     <td style="text-align:center;"><input type="text" class="table-input direct qty" value="1"></td>
     <td><input class="table-input direct price" value="0"></td>
-    <td><input class="table-input autofill" value="${currentBillingCurrency}" readonly style="text-align:center;"></td>
-    <td><input class="table-input autofill" value="${(document.getElementById('af-region')?.textContent||'JP')==='JP'?'10%':'0%'}" readonly style="text-align:center;"></td>
+    <td><input class="table-input autofill" value="${getCurrencyFromRows()}" readonly style="text-align:center;"></td>
+    <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
     <td><span class="table-input calc price">0</span></td>
     <td style="text-align:center;">
       <button class="btn-delete" title="削除">
@@ -1654,7 +1603,6 @@ function addProductRow() {
       </button>
     </td>`;
   tbody.appendChild(tr);
-  createTableSS(tr, null);
   setupRowEvents(tr);
   updateTotals();
 }
@@ -1730,8 +1678,8 @@ function showToast(message, type = 'success', duration = 3000) {
 function collectFormData() {
   const projectName  = (document.getElementById('projectName')?.value  || '').trim();
   const deliveryDate = document.getElementById('deliveryDate')?.value  || '';
-  const salesPerson  = ssStaff    ? ssStaff.getValue()    : (document.getElementById('salesPerson')?.value || '');
-  const customer     = ssCustomer ? ssCustomer.getValue() : (document.getElementById('customer')?.value    || '');
+  const salesPerson  = document.getElementById('salesPerson')?.value   || '';
+  const customer     = document.getElementById('customer')?.value      || '';
   const probability  = parseInt(document.getElementById('probValue')?.textContent) || 50;
   const memo         = (document.getElementById('memo')?.value || '').trim();
 
@@ -1750,7 +1698,7 @@ function collectFormData() {
   const products = [];
   let subtotal = 0;
   document.querySelectorAll('#productTableBody tr').forEach((row, index) => {
-    const productSelect = row.querySelector('.ss-input-product');
+    const productSelect = row.querySelector('select.table-input.dropdown');
     const qtyInput      = row.querySelector('input.table-input.direct.qty');
     const priceInput    = row.querySelector('input.table-input.direct.price');
     const autofills     = row.querySelectorAll('input.table-input.autofill');
@@ -1784,7 +1732,6 @@ function collectFormData() {
     projectName, probability, deliveryDate, salesPerson, customer,
     salesRegion: autoData.salesRegion, industry: autoData.industry,
     channel: autoData.channel, segment: autoData.segment,
-    billingCurrency: currentBillingCurrency,
     products, subtotal, taxDetails, total, memo, status: 'draft'
   };
 }
@@ -1839,7 +1786,7 @@ function validateForSubmit(data) {
     data.products.forEach((p, i) => {
       const row = document.querySelectorAll('#productTableBody tr')[i];
       if (!p.productName) {
-        addFieldError(row?.querySelector('.ss-input-product'), '品名は必須です');
+        addFieldError(row?.querySelector('select.table-input.dropdown'), '品名は必須です');
         errors.push('明細' + (i+1) + '行目:品名');
       }
       if (!p.qty || p.qty <= 0) {
@@ -1972,10 +1919,10 @@ document.addEventListener('DOMContentLoaded', async function() {
       document.getElementById('deliveryDate').value = data.deliveryDate || '';
     if (document.getElementById('memo'))
       document.getElementById('memo').value = data.memo || '';
-
-    // 担当者・取引先（マスタ再生成してから値を復元）
-    populateStaffSelect(data.salesPerson || '');
-    populateCustomerSelect(data.customer || '');
+    if (document.getElementById('salesPerson'))
+      document.getElementById('salesPerson').value = data.salesPerson || '';
+    if (document.getElementById('customer'))
+      document.getElementById('customer').value = data.customer || '';
 
     // 受注確度
     const pct = data.probability || 50;
@@ -1999,25 +1946,21 @@ document.addEventListener('DOMContentLoaded', async function() {
     const tbody = document.getElementById('productTableBody');
     if (tbody && data.products && data.products.length > 0) {
       tbody.innerHTML = '';
-      // 地域から正しい税率を再計算（JP=10%、それ以外=0%）
-      const correctTaxRate = (data.salesRegion === 'JP') ? '10%' : '0%';
-      // currentBillingCurrencyも保存データから復元
-      if (data.billingCurrency) currentBillingCurrency = data.billingCurrency;
       data.products.forEach((p, i) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${i + 1}</td>
           <td>
-            <div class="table-ss-wrapper">
-              <input type="text" class="table-input ss-input-product" placeholder="製品を検索・選択" autocomplete="off"
-                     style="padding-right:22px;background:var(--input-dropdown-bg);color:var(--input-dropdown);border-color:var(--input-dropdown-border);cursor:pointer;">
-              <div class="ss-dropdown ss-dropdown-product"></div>
+            <div class="table-select-wrapper">
+              <select class="table-input dropdown">
+                <option selected>${p.productName || ''}</option>
+              </select>
             </div>
           </td>
           <td style="text-align:center;"><input type="text" class="table-input direct qty" value="${p.qty || 1}"></td>
           <td><input class="table-input direct price" value="${(p.unitPrice || 0).toLocaleString()}"></td>
-          <td><input class="table-input autofill" value="${p.currency || currentBillingCurrency}" readonly style="text-align:center;"></td>
-          <td><input class="table-input autofill" value="${correctTaxRate}" readonly style="text-align:center;"></td>
+          <td><input class="table-input autofill" value="${p.currency || 'JPY'}" readonly style="text-align:center;"></td>
+          <td><input class="table-input autofill" value="${p.taxRate || 10}%" readonly style="text-align:center;"></td>
           <td><span class="table-input calc price">${(p.lineTotal || 0).toLocaleString()}</span></td>
           <td style="text-align:center;">
             <button class="btn-delete" title="削除">
@@ -2025,7 +1968,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             </button>
           </td>`;
         tbody.appendChild(tr);
-        createTableSS(tr, p.productName || '');
         setupRowEvents(tr);
       });
       updateTotals();
@@ -2037,443 +1979,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   } catch (err) {
     console.error('読み込みエラー:', err);
     showToast('案件の読み込みに失敗しました', 'error');
-  }
-});
-
-// ===================================================
-// マスター連携（Phase 2C）
-// ===================================================
-
-const MC = { staff: [], customers: [], products: [], prices: [] };
-let currentBillingCurrency = 'JPY';
-
-function lsGetMaster(key) {
-  try { const v = localStorage.getItem('qururi:' + key); return v ? JSON.parse(v) : []; }
-  catch { return []; }
-}
-function initMasterData() {
-  MC.staff     = lsGetMaster('staff');
-  MC.customers = lsGetMaster('customers');
-  MC.products  = lsGetMaster('products');
-  MC.prices    = lsGetMaster('prices');
-}
-
-// ===================================================
-// SearchableSelect — 軽量カスタムドロップダウン
-// ===================================================
-// options: [{ value, label }]
-// onSelect: function(value, label)
-function SearchableSelect(wrapperId, inputId, listId, options, onSelect, placeholder) {
-  const wrapper  = document.getElementById(wrapperId);
-  const input    = document.getElementById(inputId);
-  const list     = document.getElementById(listId);
-  if (!wrapper || !input || !list) return;
-
-  let selectedValue = '';
-  let focusedIndex  = -1;
-  let allOptions    = options || [];
-
-  function open() {
-    wrapper.classList.add('is-open');
-    input.classList.add('is-open');
-    // 現在の入力テキストが選択済みラベルと一致する場合は全候補を表示
-    const currentLabel = selectedValue ? (allOptions.find(o => o.value === selectedValue)?.label || '') : '';
-    if (input.value === currentLabel) {
-      renderList('');
-    } else {
-      renderList(input.value);
-    }
-  }
-  function close() {
-    wrapper.classList.remove('is-open');
-    input.classList.remove('is-open');
-    focusedIndex = -1;
-    // blur時：未選択のまま閉じたら選択済み値に戻す
-    if (selectedValue) {
-      const found = allOptions.find(o => o.value === selectedValue);
-      if (found) input.value = found.label;
-    } else {
-      input.value = '';
-    }
-    updateClearBtn();
-  }
-  function renderList(query) {
-    const q = (query || '').toLowerCase();
-    const filtered = q
-      ? allOptions.filter(o => o.label.toLowerCase().includes(q))
-      : allOptions;
-    if (filtered.length === 0) {
-      list.innerHTML = '<div class="ss-empty">該当なし</div>';
-      focusedIndex = -1;
-      return;
-    }
-    list.innerHTML = filtered.map((o, i) =>
-      `<div class="ss-item${o.value === selectedValue ? ' selected' : ''}"
-            data-value="${o.value}" data-index="${i}">${highlight(o.label, q)}</div>`
-    ).join('');
-    list.querySelectorAll('.ss-item').forEach(item => {
-      item.addEventListener('mousedown', function(e) {
-        e.preventDefault();
-        select(this.dataset.value, this.textContent);
-      });
-    });
-    focusedIndex = -1;
-  }
-  function highlight(text, q) {
-    if (!q) return text;
-    const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
-    return text.replace(re, '<mark style="background:var(--input-dropdown-bg);color:var(--input-dropdown);font-weight:700;border-radius:2px;">$1</mark>');
-  }
-  function select(value, label) {
-    selectedValue = value;
-    input.value = label || value;
-    close();
-    updateClearBtn();
-    if (onSelect) onSelect(value, label);
-  }
-  function clearSelection() {
-    selectedValue = '';
-    input.value = '';
-    updateClearBtn();
-    input.focus();
-  }
-  function setFocus(idx) {
-    const items = list.querySelectorAll('.ss-item');
-    items.forEach(el => el.classList.remove('focused'));
-    if (idx >= 0 && idx < items.length) {
-      items[idx].classList.add('focused');
-      items[idx].scrollIntoView({ block: 'nearest' });
-    }
-    focusedIndex = idx;
-  }
-
-  // クリアボタンを生成してwrapperに追加
-  const clearBtn = document.createElement('button');
-  clearBtn.type = 'button';
-  clearBtn.className = 'ss-clear-btn';
-  clearBtn.innerHTML = '×';
-  clearBtn.title = 'クリア';
-  clearBtn.style.cssText = 'display:none;position:absolute;right:28px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:#aaa;padding:0 6px;z-index:2;line-height:1;border-radius:50%;transition:color 0.15s;';
-  clearBtn.addEventListener('mouseover', function() { this.style.color = '#e05'; });
-  clearBtn.addEventListener('mouseout',  function() { this.style.color = '#aaa'; });
-  clearBtn.addEventListener('mousedown', function(e) { e.preventDefault(); clearSelection(); });
-  wrapper.appendChild(clearBtn);
-  function updateClearBtn() {
-    clearBtn.style.display = selectedValue ? 'block' : 'none';
-  }
-
-  // イベント
-  let isMouseDownOnList = false; // リスト上のmousedownフラグ
-
-  input.addEventListener('click', function() {
-    if (!wrapper.classList.contains('is-open')) {
-      this.select();
-      open();
-    } else {
-      // 開いている状態でクリック → テキスト全選択してすぐ検索できる状態に
-      this.select();
-    }
-    setTimeout(function() {
-      const selected = list.querySelector('.ss-item.selected');
-      if (selected) selected.scrollIntoView({ block: 'nearest' });
-    }, 0);
-  });
-  input.addEventListener('focus', function() {
-    if (!wrapper.classList.contains('is-open')) {
-      this.select();
-      open();
-      setTimeout(function() {
-        const selected = list.querySelector('.ss-item.selected');
-        if (selected) selected.scrollIntoView({ block: 'nearest' });
-      }, 0);
-    }
-  });
-  list.addEventListener('mousedown', function() { isMouseDownOnList = true; });
-  list.addEventListener('mouseup',   function() { isMouseDownOnList = false; });
-  input.addEventListener('input', function() {
-    if (!wrapper.classList.contains('is-open')) open();
-    renderList(this.value);
-  });
-  input.addEventListener('blur', function() {
-    if (isMouseDownOnList) return; // リストクリック中はblurを無視
-    setTimeout(close, 150);
-  });
-  input.addEventListener('keydown', function(e) {
-    const items = list.querySelectorAll('.ss-item');
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      // 未フォーカス状態から↓を押したとき選択中項目から開始
-      if (focusedIndex < 0) {
-        const selIdx = [...items].findIndex(el => el.classList.contains('selected'));
-        setFocus(selIdx >= 0 ? selIdx : 0);
-      } else {
-        setFocus(Math.min(focusedIndex + 1, items.length - 1));
-      }
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setFocus(Math.max(focusedIndex - 1, 0));
-    } else if (e.key === 'Enter' && focusedIndex >= 0) {
-      e.preventDefault();
-      const item = items[focusedIndex];
-      if (item) select(item.dataset.value, item.textContent);
-    } else if (e.key === 'Escape') {
-      close();
-      input.blur();
-    }
-  });
-
-  // 公開API
-  return {
-    setOptions: function(opts) {
-      allOptions = opts;
-      if (wrapper.classList.contains('is-open')) renderList(input.value);
-    },
-    setValue: function(value) {
-      const found = allOptions.find(o => o.value === value);
-      if (found) { selectedValue = value; input.value = found.label; }
-      else { selectedValue = ''; input.value = value || ''; }
-    },
-    getValue: function() { return selectedValue || input.value; },
-    clear: function() { selectedValue = ''; input.value = ''; input.placeholder = placeholder || ''; }
-  };
-}
-
-// ===================================================
-// テーブル行内のSearchableSelect（製品名）
-// ===================================================
-function createTableSS(row, restoreValue) {
-  const wrapper = row.querySelector('.table-ss-wrapper');
-  if (!wrapper) return null;
-  wrapper.classList.add('ss-wrapper', 'table-ss');
-  wrapper.style.position = 'relative';
-
-  const input = wrapper.querySelector('.ss-input-product');
-  const list  = wrapper.querySelector('.ss-dropdown-product');
-  if (!input || !list) return null;
-
-  // ドロップダウンをbodyに移動してoverflow:autoのクリップを回避
-  list.style.position = 'fixed';
-  list.style.zIndex   = '99999';
-  document.body.appendChild(list);
-
-  let selectedValue = '';
-  let focusedIndex  = -1;
-
-  function reposition() {
-    const rect = input.getBoundingClientRect();
-    list.style.top   = rect.bottom + 'px';
-    list.style.left  = rect.left   + 'px';
-    list.style.width = rect.width  + 'px';
-  }
-
-  function open() {
-    wrapper.classList.add('is-open');
-    input.classList.add('is-open');
-    reposition();
-    list.style.display = 'block';
-    // 選択済みの値と入力テキストが一致している場合は全候補を表示（再選択しやすくする）
-    if (selectedValue && input.value === selectedValue) {
-      renderList('');
-    } else {
-      renderList(input.value);
-    }
-    // 選択中の項目までスクロール
-    setTimeout(function() {
-      const selected = list.querySelector('.ss-item.selected');
-      if (selected) selected.scrollIntoView({ block: 'nearest' });
-    }, 0);
-  }
-  function close() {
-    wrapper.classList.remove('is-open');
-    input.classList.remove('is-open');
-    list.style.display = 'none';
-    focusedIndex = -1;
-    if (selectedValue) {
-      const found = MC.products.find(p => p.product_name === selectedValue);
-      if (found) input.value = found.product_name;
-    } else {
-      input.value = '';
-    }
-  }
-  function renderList(query) {
-    const q = (query || '').toLowerCase();
-    const filtered = q
-      ? MC.products.filter(p => p.product_name.toLowerCase().includes(q))
-      : MC.products;
-    if (filtered.length === 0) {
-      list.innerHTML = '<div class="ss-empty">該当なし</div>';
-      focusedIndex = -1; return;
-    }
-    list.innerHTML = filtered.map((p, i) =>
-      `<div class="ss-item${p.product_name === selectedValue ? ' selected' : ''}"
-            data-code="${p.product_code}" data-name="${p.product_name}" data-index="${i}">
-        ${q ? p.product_name.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark style="background:var(--input-dropdown-bg);color:var(--input-dropdown);font-weight:700;border-radius:2px;">$1</mark>') : p.product_name}
-       </div>`
-    ).join('');
-    list.querySelectorAll('.ss-item').forEach(item => {
-      item.addEventListener('mousedown', function(e) {
-        e.preventDefault();
-        selectProduct(this.dataset.code, this.dataset.name);
-      });
-    });
-    focusedIndex = -1;
-  }
-  function selectProduct(code, name) {
-    selectedValue = name;
-    input.value = name;
-    close();
-    setProductPrice(row, code);
-  }
-  function setFocus(idx) {
-    const items = list.querySelectorAll('.ss-item');
-    items.forEach(el => el.classList.remove('focused'));
-    if (idx >= 0 && idx < items.length) {
-      items[idx].classList.add('focused');
-      items[idx].scrollIntoView({ block: 'nearest' });
-    }
-    focusedIndex = idx;
-  }
-
-  let isMouseDownOnList = false;
-  list.addEventListener('mousedown', function() { isMouseDownOnList = true; });
-  list.addEventListener('mouseup',   function() { isMouseDownOnList = false; });
-
-  input.addEventListener('click', function() {
-    if (wrapper.classList.contains('is-open')) {
-      // 開いている状態でクリック → テキスト全選択してすぐ検索できる状態に
-      this.select();
-    } else {
-      this.select();
-      open();
-    }
-  });
-  input.addEventListener('focus', function() {
-    if (!wrapper.classList.contains('is-open')) {
-      this.select();
-      open();
-    }
-  });
-  input.addEventListener('input', function() {
-    if (!wrapper.classList.contains('is-open')) open();
-    renderList(this.value);
-  });
-  input.addEventListener('blur', function() {
-    if (isMouseDownOnList) return;
-    setTimeout(close, 150);
-  });
-  input.addEventListener('keydown', function(e) {
-    const items = list.querySelectorAll('.ss-item');
-    if (e.key === 'ArrowDown') { e.preventDefault(); setFocus(Math.min(focusedIndex+1, items.length-1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setFocus(Math.max(focusedIndex-1, 0)); }
-    else if (e.key === 'Enter' && focusedIndex >= 0) {
-      e.preventDefault();
-      const item = items[focusedIndex];
-      if (item) selectProduct(item.dataset.code, item.dataset.name);
-    } else if (e.key === 'Escape') { close(); input.blur(); }
-  });
-  // スクロール時にドロップダウン位置を追従
-  window.addEventListener('scroll', function() { if (list.style.display === 'block') reposition(); }, true);
-
-  if (restoreValue) { selectedValue = restoreValue; input.value = restoreValue; }
-
-  return {
-    getValue: function() { return selectedValue || input.value; }
-  };
-}
-
-// ===================================================
-// グローバルSearchableSelectインスタンス
-// ===================================================
-let ssStaff    = null;
-let ssCustomer = null;
-
-function populateStaffSelect(restoreValue) {
-  const opts = MC.staff.length
-    ? MC.staff.map(s => ({ value: s.display_name || `${s.staff_name}（${s.department || ''}）`, label: s.display_name || `${s.staff_name}（${s.department || ''}）` }))
-    : [];
-  if (ssStaff) {
-    ssStaff.setOptions(opts);
-    if (restoreValue) ssStaff.setValue(restoreValue);
-  } else {
-    ssStaff = SearchableSelect('ss-salesPerson', 'salesPerson', 'ss-salesPerson-list', opts, null, '-- 選択してください --');
-    if (restoreValue && ssStaff) ssStaff.setValue(restoreValue);
-  }
-}
-
-function populateCustomerSelect(restoreValue) {
-  const opts = MC.customers.length
-    ? MC.customers.map(c => ({ value: c.customer_name, label: c.customer_name }))
-    : [];
-  if (ssCustomer) {
-    ssCustomer.setOptions(opts);
-    if (restoreValue) { ssCustomer.setValue(restoreValue); onCustomerChange(false); }
-  } else {
-    ssCustomer = SearchableSelect('ss-customer', 'customer', 'ss-customer-list', opts,
-      function(value) { onCustomerChange(true); }, '-- 選択してください --');
-    if (restoreValue && ssCustomer) { ssCustomer.setValue(restoreValue); onCustomerChange(false); }
-  }
-}
-
-// --- 取引先変更 → 自動転記 + 通貨更新 ---
-function onCustomerChange(repriceRows) {
-  if (repriceRows === undefined) repriceRows = true;
-  const name = ssCustomer ? ssCustomer.getValue() : (document.getElementById('customer')?.value || '');
-  const cust = MC.customers.find(c => c.customer_name === name);
-
-  const set = function(id, val) { const el = document.getElementById(id); if (el) el.textContent = val || '--'; };
-  set('af-region',   cust ? cust.region   : '');
-  set('af-industry', cust ? cust.industry : '');
-  set('af-channel',  cust ? cust.channel  : '');
-  set('af-segment',  cust ? cust.segment  : '');
-
-  currentBillingCurrency = (cust && cust.billing_currency) ? cust.billing_currency : 'JPY';
-
-  // 地域に応じた税率を決定（JP=10%、それ以外=0%）
-  const region  = cust ? cust.region : 'JP';
-  const taxRate = (region === 'JP') ? '10%' : '0%';
-
-  document.querySelectorAll('#productTableBody tr').forEach(function(row) {
-    // 通貨を更新
-    const currencyInput = row.querySelectorAll('input.table-input.autofill')[0];
-    if (currencyInput) currencyInput.value = currentBillingCurrency;
-    // 税率を更新
-    const taxInput = row.querySelectorAll('input.table-input.autofill')[1];
-    if (taxInput) taxInput.value = taxRate;
-    // 単価を再セット
-    if (repriceRows) {
-      const nameInput = row.querySelector('.ss-input-product');
-      const prodName  = nameInput ? nameInput.value : '';
-      const prod      = MC.products.find(p => p.product_name === prodName);
-      if (prod) setProductPrice(row, prod.product_code);
-    }
-  });
-  updateTotals();
-}
-
-// --- 製品選択 → 単価セット ---
-function setProductPrice(row, productCode) {
-  if (!productCode) return;
-  const priceRec = MC.prices.find(function(p) { return Number(p.product_code) === Number(productCode); });
-  if (!priceRec) return;
-  const key = 'price_' + currentBillingCurrency.toLowerCase();
-  const price = priceRec[key];
-  if (price != null && price !== '') {
-    const priceInput = row.querySelector('input.table-input.direct.price');
-    if (priceInput) { priceInput.value = Number(price).toLocaleString(); updateTotals(); }
-  }
-}
-
-// ===================================================
-// マスター連携初期化
-// ===================================================
-document.addEventListener('DOMContentLoaded', function() {
-  initMasterData();
-  populateStaffSelect();
-  populateCustomerSelect();
-  const tbody  = document.getElementById('productTableBody');
-  const params = new URLSearchParams(window.location.search);
-  if (!params.get('projectNo') && tbody && tbody.children.length === 0) {
-    addProductRow();
   }
 });
 </script>
