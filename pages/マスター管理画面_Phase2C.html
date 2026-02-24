@@ -903,16 +903,17 @@ function openImportModal() {
   document.getElementById('importModalOverlay').style.display = 'flex';
 }
 
-function closeImportModal() { document.getElementById('importModalOverlay').style.display = 'none'; }
+function closeImportModal() {
+  document.getElementById('importModalOverlay').style.display = 'none';
+  isFxImportMode = false;
+}
 
 function handleDropFile(e) {
   e.preventDefault();
   document.getElementById('dropZone').classList.remove('drag-over');
   const f = e.dataTransfer.files[0];
   if (!f) return;
-  // 為替インポートモーダルで開いている場合はFX専用ハンドラーへ
-  const title = document.getElementById('importModalTitle')?.textContent || '';
-  if (title.includes('為替')) {
+  if (isFxImportMode) {
     handleFxImportFile(f);
   } else {
     handleImportFile(f);
@@ -1248,6 +1249,7 @@ function addMonth() {
 
 // FX Import
 let fxImportRows = null;
+let isFxImportMode = false;  // ドロップ判定用フラグ
 
 // インポートボタン押下時：月未選択なら先に月追加を促す
 function openFxImportGuard() {
@@ -1260,6 +1262,7 @@ function openFxImportGuard() {
 
 function openFxImport() {
   fxImportRows = null;
+  isFxImportMode = true;   // ← ドロップ判定フラグON
   document.getElementById('importFileName').textContent = '';
   document.getElementById('importPreviewWrap').style.display = 'none';
   document.getElementById('importConfirmBtn').disabled = true;
