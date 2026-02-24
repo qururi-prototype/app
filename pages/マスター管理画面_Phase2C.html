@@ -596,7 +596,10 @@ window.addEventListener('DOMContentLoaded', () => {
   currencies = lsGet('currencies') || [];
 
   updateBadges();
-  switchMaster('products');
+  // URLハッシュで直接マスタを開く（例: #customers）
+  const hash = location.hash.replace('#', '');
+  const validIds = MASTERS.map(m => m.id).concat(['exchange_rates']);
+  switchMaster(validIds.includes(hash) ? hash : 'products');
 });
 
 function updateBadges() {
@@ -903,21 +906,13 @@ function openImportModal() {
   document.getElementById('importModalOverlay').style.display = 'flex';
 }
 
-function closeImportModal() {
-  document.getElementById('importModalOverlay').style.display = 'none';
-  isFxImportMode = false;
-}
+function closeImportModal() { document.getElementById('importModalOverlay').style.display = 'none'; }
 
 function handleDropFile(e) {
   e.preventDefault();
   document.getElementById('dropZone').classList.remove('drag-over');
   const f = e.dataTransfer.files[0];
-  if (!f) return;
-  if (isFxImportMode) {
-    handleFxImportFile(f);
-  } else {
-    handleImportFile(f);
-  }
+  if (f) handleImportFile(f);
 }
 
 function handleImportFile(file) {
@@ -1127,11 +1122,11 @@ function renderFX() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             ひな形CSV
           </button>
-          <button class="btn" onclick="openFxImportGuard()">
+          ${fxSelMonth ? `
+          <button class="btn" onclick="openFxImport()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             インポート
           </button>
-          ${fxSelMonth ? `
           <button class="btn" onclick="exportFxCSV()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             エクスポート
@@ -1249,20 +1244,8 @@ function addMonth() {
 
 // FX Import
 let fxImportRows = null;
-let isFxImportMode = false;  // ドロップ判定用フラグ
-
-// インポートボタン押下時：月未選択なら先に月追加を促す
-function openFxImportGuard() {
-  if (!fxSelMonth) {
-    showToast('先に「新しい月を追加」でインポート対象の年月を作成してください', 'error');
-    return;
-  }
-  openFxImport();
-}
-
 function openFxImport() {
   fxImportRows = null;
-  isFxImportMode = true;   // ← ドロップ判定フラグON
   document.getElementById('importFileName').textContent = '';
   document.getElementById('importPreviewWrap').style.display = 'none';
   document.getElementById('importConfirmBtn').disabled = true;
@@ -1315,37 +1298,20 @@ function parseFxCSV(text) {
 
 function confirmFxImport() {
   if (!fxImportRows || !fxSelMonth) return;
-
-  // ① 通貨マスタを更新（CSVの通貨コードを登録）
   const importedCc = fxImportRows.map(r => r.currency_code).filter(Boolean);
-  currencies = [...new Set([...currencies, ...importedCc])];
-  lsSet('currencies', currencies);
-
-  // ② fxEditing に読み込み（全通貨分を初期化した上で上書き）
-  currencies.forEach(cc => { if (!fxEditing[cc]) fxEditing[cc] = { rate_avg: '', rate_eom: '' }; });
+  const merged = [...new Set([...currencies, ...importedCc])];
+  if (merged.length !== currencies.length) {
+    currencies = merged;
+    lsSet('currencies', currencies);
+  }
   fxImportRows.forEach(r => {
     fxEditing[r.currency_code] = { rate_avg: r.rate_avg ?? '', rate_eom: r.rate_eom ?? '' };
   });
+  merged.forEach(cc => { if (!fxEditing[cc]) fxEditing[cc] = { rate_avg: '', rate_eom: '' }; });
   fxDirty = true;
-
-  // ③ モーダルを閉じてから即座に保存（中間状態を作らない）
   closeImportModal();
-  // saveFxMonth内のトーストを上書きして分かりやすいメッセージにする
-  if (!fxSelMonth) return;
-  const rates = masterData.exchange_rates || [];
-  const otherRates = rates.filter(r => r.year_month !== fxSelMonth);
-  const monthRates = currencies.map(cc => ({
-    year_month: fxSelMonth,
-    currency_code: cc,
-    rate_avg: Number(fxEditing[cc]?.rate_avg) || 0,
-    rate_eom: Number(fxEditing[cc]?.rate_eom) || 0,
-  }));
-  masterData.exchange_rates = [...otherRates, ...monthRates];
-  lsSet('exchange_rates', masterData.exchange_rates);
-  fxDirty = false;
-  updateBadges();
   renderFX();
-  showToast(`${fmtMonth(fxSelMonth)}: ${fxImportRows.length}通貨のレートをインポート・保存しました`, 'success');
+  showToast(`${fxImportRows.length}件のレートを読み込みました。保存ボタンで確定してください`, 'warning');
 }
 
 function exportFxCSV() {
