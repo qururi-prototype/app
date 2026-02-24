@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QURURi – マスター管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #f5f6f8;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f0f1f4;
+    --border-subtle: #e8eaed;
+    --border-default: #d4d7dd;
+    --text-primary: #1a1d26;
+    --text-secondary: #5f6577;
+    --text-tertiary: #9198a8;
+    --accent-blue: #376ee6;
+    --accent-blue-glow: #eef3fc;
+    --danger: #d9503f;
+    --danger-bg: #fdf0ee;
+    --success: #1a8f5c;
+    --success-bg: #edf8f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+  }
+  .app-shell { display: flex; min-height: 100vh; padding-left: 240px; }
+
+  /* ─── Sidebar ─── */
+  .sidebar {
+    width: 240px;
+    background: #1a1d26;
+    padding: 24px 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+  }
+  .sidebar-logo { padding: 0 20px; margin-bottom: 32px; }
+  .sidebar-logo-main { font-size: 20px; font-weight: 700; letter-spacing: 1px; color: #fff; margin-bottom: 4px; }
+  .sidebar-logo-sub { font-size: 11px; font-weight: 500; color: #9ca3af; letter-spacing: 0.5px; }
+  .sidebar-nav { flex: 1; }
+  .nav-section-label {
+    padding: 0 20px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 8px; margin-top: 20px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px;
+    color: #9ca3af;
+    text-decoration: none;
+    font-size: 14px; font-weight: 400;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    border: none; background: none; width: 100%; text-align: left;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color: #e5e7eb; background: rgba(255,255,255,0.05); }
+  .nav-item.active { color: #60a5fa; background: #1e3a8a; border-left-color: #3b82f6; font-weight: 500; }
+  .nav-item svg { width: 18px; height: 18px; opacity: 0.8; flex-shrink: 0; }
+  .nav-item.active svg { opacity: 1; }
+  .nav-badge {
+    margin-left: auto;
+    font-size: 11px; font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+    color: #9ca3af;
+  }
+  .nav-item.active .nav-badge { background: rgba(96,165,250,0.25); color: #93c5fd; }
+  .sidebar-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 12px 20px; }
+
+  /* ─── Main ─── */
+  main { flex: 1; display: flex; flex-direction: column; min-height: 100vh; overflow: hidden; }
+
+  /* ─── Master Content Area ─── */
+  .master-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .master-header {
+    background: #fff;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 16px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .master-header-left h2 { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+  .master-header-left p { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+
+  /* ─── Buttons ─── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500;
+    font-family: inherit; cursor: pointer;
+    border: 1px solid var(--border-default);
+    transition: all 0.15s ease; white-space: nowrap;
+    background: #fff; color: var(--text-secondary);
+  }
+  .btn:hover { background: var(--bg-tertiary); }
+  .btn svg { width: 14px; height: 14px; }
+  .btn-primary { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+  .btn-primary:hover { background: #2858c4; border-color: #2858c4; }
+  .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: #f5bdb8; }
+  .btn-danger:hover { background: #fbe8e6; }
+
+  /* ─── Search ─── */
+  .search-bar {
+    background: #fff; border-bottom: 1px solid var(--border-subtle);
+    padding: 10px 28px;
+    flex-shrink: 0;
+  }
+  .search-wrap { position: relative; max-width: 360px; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--text-tertiary); }
+  .search-wrap input {
+    width: 100%; padding: 8px 12px 8px 34px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-family: inherit; color: var(--text-primary);
+    background: var(--bg-primary);
+  }
+  .search-wrap input:focus { outline: none; border-color: var(--accent-blue); background: #fff; }
+
+  /* ─── Table Area ─── */
+  .table-area { flex: 1; overflow: auto; padding: 20px 28px; }
+  .table-card { background: #fff; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--bg-primary); border-bottom: 1px solid var(--border-subtle); }
+  th {
+    padding: 10px 12px; text-align: left;
+    font-size: 12px; font-weight: 600; color: var(--text-tertiary);
+    white-space: nowrap; cursor: pointer; user-select: none;
+  }
+  th:hover { color: var(--text-secondary); }
+  th .sort-icon { display: inline; margin-left: 4px; opacity: 0.5; }
+  tbody tr { border-bottom: 1px solid var(--border-subtle); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--accent-blue-glow); }
+  td { padding: 9px 12px; font-size: 13px; color: var(--text-primary); white-space: nowrap; }
+  td.ops { text-align: center; }
+  .op-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 6px;
+    border: none; background: none; cursor: pointer;
+    color: var(--text-tertiary); transition: all 0.15s;
+  }
+  .op-btn:hover.edit { background: var(--accent-blue-glow); color: var(--accent-blue); }
+  .op-btn:hover.del { background: var(--danger-bg); color: var(--danger); }
+  .op-btn svg { width: 14px; height: 14px; }
+
+  .table-footer {
+    padding: 10px 16px;
+    background: var(--bg-primary); border-top: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--text-tertiary);
+  }
+  .dirty-notice { display: flex; align-items: center; gap: 8px; color: var(--warning); font-weight: 500; }
+
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 64px 20px;
+    color: var(--text-tertiary);
+  }
+  .empty-state svg { width: 40px; height: 40px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-state p { font-size: 14px; font-weight: 500; }
+  .empty-state span { font-size: 12px; margin-top: 4px; }
+
+  /* ─── FX: Month Tabs ─── */
+  .month-tabs {
+    background: #fff; border-bottom: 1px solid var(--border-subtle);
+    padding: 8px 28px;
+    display: flex; align-items: center; gap: 4px;
+    overflow-x: auto; flex-shrink: 0;
+  }
+  .month-tab {
+    padding: 6px 16px; border-radius: 6px;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: none; background: none; color: var(--text-secondary);
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .month-tab:hover { background: var(--bg-primary); }
+  .month-tab.active { background: var(--accent-blue); color: #fff; }
+
+  /* ─── Modal Overlay ─── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200;
+  }
+  .modal {
+    background: #fff; border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    width: 100%; max-width: 520px; max-height: 90vh;
+    overflow-y: auto; margin: 16px;
+  }
+  .modal-lg { max-width: 720px; }
+  .modal-sm { max-width: 400px; }
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-header h3 { font-size: 16px; font-weight: 600; }
+  .modal-close {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: none; background: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-tertiary);
+  }
+  .modal-close:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .modal-close svg { width: 16px; height: 16px; }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-subtle);
+    background: var(--bg-primary);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    display: flex; justify-content: flex-end; gap: 10px;
+  }
+
+  /* ─── Form Fields ─── */
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--text-secondary); margin-bottom: 6px;
+  }
+  .form-group label .req { color: var(--danger); margin-left: 3px; }
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-family: inherit; color: var(--text-primary);
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none; border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(55,110,230,0.1);
+  }
+  .form-group input:disabled { background: var(--bg-tertiary); color: var(--text-tertiary); cursor: not-allowed; }
+  .form-error { font-size: 12px; color: var(--danger); margin-top: 8px; display: flex; align-items: center; gap: 5px; }
+  .form-error svg { width: 13px; height: 13px; }
+
+  /* ─── Drop Zone ─── */
+  .drop-zone {
+    border: 2px dashed var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 32px 20px; text-align: center;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent-blue); background: var(--accent-blue-glow); }
+  .drop-zone svg { width: 32px; height: 32px; color: var(--text-tertiary); margin-bottom: 10px; }
+  .drop-zone p { font-size: 13px; color: var(--text-secondary); }
+  .drop-zone .file-name { font-size: 13px; color: var(--accent-blue); font-weight: 500; margin-top: 6px; }
+
+  .preview-table-wrap { border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: auto; max-height: 200px; margin-top: 16px; }
+  .preview-table-wrap table { min-width: 100%; }
+  .preview-table-wrap thead { position: sticky; top: 0; background: var(--bg-primary); }
+  .preview-table-wrap th { font-size: 11px; }
+  .preview-table-wrap td { font-size: 12px; }
+
+  /* ─── Delete Confirm ─── */
+  .del-icon-wrap {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--danger-bg);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px;
+  }
+  .del-icon-wrap svg { width: 22px; height: 22px; color: var(--danger); }
+
+  /* ─── Toast ─── */
+  #toastContainer { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 18px; border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 500; color: #fff;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    transform: translateX(120%);
+    transition: transform 0.25s ease;
+    min-width: 260px;
+  }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+  .toast.warning { background: var(--warning); color: #fff; }
+  .toast.show { transform: translateX(0); }
+  .toast svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* ─── FX inline edit ─── */
+  .fx-table input[type=number] {
+    width: 120px; padding: 5px 8px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    font-size: 13px; text-align: right;
+    font-family: 'Inter', sans-serif;
+  }
+  .fx-table input[type=number]:focus { outline: none; border-color: var(--accent-blue); }
+  .fx-table input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-main">QURURi</div>
+      <div class="sidebar-logo-sub">Your INTELLIGENCE</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">案件管理</div>
+      <div class="nav-item" onclick="window.location.href='案件入力画面_Phase2A_連携版.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        案件入力
+      </div>
+      <div class="nav-item" onclick="window.location.href='案件一覧_Phase2B.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        案件一覧
+      </div>
+      <hr class="sidebar-divider">
+      <div class="nav-section-label">マスター管理</div>
+      <button class="nav-item" id="nav-products" onclick="switchMaster('products')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        製品マスタ
+        <span class="nav-badge" id="badge-products">0</span>
+      </button>
+      <button class="nav-item" id="nav-prices" onclick="switchMaster('prices')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        単価マスタ
+        <span class="nav-badge" id="badge-prices">0</span>
+      </button>
+      <button class="nav-item" id="nav-exchange_rates" onclick="switchMaster('exchange_rates')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        為替マスタ
+        <span class="nav-badge" id="badge-exchange_rates">0</span>
+      </button>
+      <button class="nav-item" id="nav-customers" onclick="switchMaster('customers')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        取引先マスタ
+        <span class="nav-badge" id="badge-customers">0</span>
+      </button>
+      <button class="nav-item" id="nav-staff" onclick="switchMaster('staff')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        担当者マスタ
+        <span class="nav-badge" id="badge-staff">0</span>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main id="mainContent">
+    <!-- dynamically rendered -->
+  </main>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer"></div>
+
+<!-- ===================================================
+     Modal: Edit / Add
+     =================================================== -->
+<div class="modal-overlay" id="editModalOverlay" style="display:none" onclick="closeEditModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="editModalTitle">編集</h3>
+      <button class="modal-close" onclick="closeEditModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="editModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeEditModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveEditModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <span id="editModalSaveLbl">保存</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Delete Confirm -->
+<div class="modal-overlay" id="delModalOverlay" style="display:none" onclick="closeDelModal()">
+  <div class="modal modal-sm" onclick="event.stopPropagation()">
+    <div class="modal-body" style="text-align:center; padding: 32px 24px 24px;">
+      <div class="del-icon-wrap" style="margin: 0 auto 14px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </div>
+      <h3 style="font-size:16px; font-weight:600; margin-bottom:10px;">削除の確認</h3>
+      <p style="font-size:13px; color:var(--text-secondary);" id="delModalMsg">このレコードを削除しますか？</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeDelModal()">キャンセル</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: CSV Import -->
+<div class="modal-overlay" id="importModalOverlay" style="display:none" onclick="closeImportModal()">
+  <div class="modal modal-lg" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="importModalTitle">CSVインポート</h3>
+      <button class="modal-close" onclick="closeImportModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('importFileInput').click()"
+        ondragover="event.preventDefault(); this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleDropFile(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p>CSVファイルをドラッグ＆ドロップ、またはクリックして選択</p>
+        <div class="file-name" id="importFileName"></div>
+        <input type="file" id="importFileInput" accept=".csv" style="display:none" onchange="handleImportFile(this.files[0])">
+      </div>
+      <div id="importPreviewWrap" style="display:none">
+        <p style="font-size:13px; font-weight:600; margin-top:16px; margin-bottom:8px;" id="importPreviewCount"></p>
+        <div class="preview-table-wrap">
+          <table id="importPreviewTable"></table>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeImportModal()">キャンセル</button>
+      <button class="btn btn-primary" id="importConfirmBtn" disabled onclick="confirmImport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        読み込む
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Month (FX) -->
+<div class="modal-overlay" id="addMonthOverlay" style="display:none" onclick="closeAddMonth()">
+  <div class="modal modal-sm" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>新しい月を追加</h3>
+      <button class="modal-close" onclick="closeAddMonth()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; gap:12px; margin-bottom:16px;">
+        <div class="form-group" style="flex:1; margin-bottom:0;">
+          <label>年</label>
+          <select id="newMonthYear">
+            <option>2024</option><option>2025</option><option selected>2026</option><option>2027</option><option>2028</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1; margin-bottom:0;">
+          <label>月</label>
+          <select id="newMonthMon">
+            <option value="01">1月</option><option value="02">2月</option><option value="03">3月</option>
+            <option value="04">4月</option><option value="05">5月</option><option value="06">6月</option>
+            <option value="07">7月</option><option value="08">8月</option><option value="09">9月</option>
+            <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+          </select>
+        </div>
+      </div>
+      <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
+        <input type="checkbox" id="copyPrevMonth" checked>
+        前月のレートをコピー
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAddMonth()">キャンセル</button>
+      <button class="btn btn-primary" onclick="addMonth()">追加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================================================
+// マスター定義
+// ===================================================
+const STORAGE_PREFIX = 'qururi:';
+
+const MASTERS = [
+  {
+    id: 'products', label: '製品マスタ',
+    pk: 'product_code',
+    fields: [
+      { k: 'product_code', l: '製品コード', t: 'number', req: true, w: 120 },
+      { k: 'product_name', l: '製品名',     t: 'string', req: true, w: 200 },
+      { k: 'category_l',  l: '大区分',     t: 'string', w: 160 },
+      { k: 'category_m',  l: '中区分',     t: 'string', w: 120 },
+      { k: 'category_s',  l: '小区分',     t: 'string', w: 120 },
+    ],
+    hmap: { '製品コード':'product_code','製品名':'product_name','大区分':'category_l','中区分':'category_m','小区分':'category_s' }
+  },
+  {
+    id: 'prices', label: '単価マスタ',
+    pk: 'product_code',
+    fields: [
+      { k: 'product_code', l: '製品コード', t: 'number', req: true, w: 120 },
+      { k: 'product_name', l: '製品名',     t: 'string', w: 200 },
+      { k: 'price_jpy',   l: 'JPY単価',   t: 'number', fmt: 'jpy', w: 150 },
+      { k: 'price_usd',   l: 'USD単価',   t: 'number', fmt: 'usd', w: 130 },
+      { k: 'price_eur',   l: 'EUR単価',   t: 'number', fmt: 'eur', w: 130 },
+      { k: 'price_rmb',   l: 'RMB単価',   t: 'number', fmt: 'rmb', w: 130 },
+    ],
+    hmap: { '製品コード':'product_code','製品名':'product_name','JPY単価':'price_jpy','USD単価':'price_usd','EUR単価':'price_eur','RMB単価':'price_rmb','JPY':'price_jpy','USD':'price_usd','EUR':'price_eur','RMB':'price_rmb' }
+  },
+  {
+    id: 'customers', label: '取引先マスタ',
+    pk: 'customer_code',
+    fields: [
+      { k: 'customer_code', l: '取引先コード', t: 'number', req: true, w: 120 },
+      { k: 'customer_name', l: '取引先名',    t: 'string', req: true, w: 180 },
+      { k: 'region',        l: '販売地域',    t: 'select', opts: ['JP','NA','EU','AP','SA'], w: 100 },
+      { k: 'billing_currency', l: '請求通貨', t: 'select', opts: ['JPY','USD','EUR','RMB'], w: 100 },
+      { k: 'country',       l: '国名',       t: 'string', w: 100 },
+      { k: 'department',    l: '部門',       t: 'string', w: 120 },
+      { k: 'channel',       l: '商流',       t: 'select', opts: ['直販','代理店'], w: 80 },
+      { k: 'industry',      l: '業界区分',   t: 'string', w: 140 },
+      { k: 'segment',       l: '自社セグ',   t: 'string', w: 120 },
+    ],
+    hmap: { '取引先コード':'customer_code','取引先名':'customer_name','販売地域':'region','地域':'region','請求通貨':'billing_currency','通貨':'billing_currency','国名':'country','国':'country','部門':'department','取引先部門':'department','商流':'channel','業界区分':'industry','業界':'industry','自社セグ':'segment','セグメント':'segment','自社セグメント':'segment' }
+  },
+  {
+    id: 'staff', label: '担当者マスタ',
+    pk: 'staff_code',
+    fields: [
+      { k: 'staff_code',  l: '従業員ID', t: 'string', req: true, w: 110 },
+      { k: 'department',  l: '部署',     t: 'select', opts: ['営業第一部','営業第二部','ソリューション営業部','海外営業部'], w: 160 },
+      { k: 'title',       l: '役職',     t: 'string', w: 80 },
+      { k: 'staff_name',  l: '氏名',     t: 'string', req: true, w: 120 },
+      { k: 'email',       l: 'メール',   t: 'string', w: 200 },
+    ],
+    hmap: { '従業員ID':'staff_code','従業員コード':'staff_code','ID':'staff_code','部署':'department','役職':'title','氏名':'staff_name','名前':'staff_name','メール':'email','メールアドレス':'email' }
+  },
+];
+
+const FX_HMAP = { '通貨コード':'currency_code','通貨':'currency_code','月中平均レート':'rate_avg','月中平均':'rate_avg','月末レート':'rate_eom','月末':'rate_eom','平均':'rate_avg','currency_code':'currency_code','rate_avg':'rate_avg','rate_eom':'rate_eom' };
+
+// ===================================================
+// State
+// ===================================================
+let activeMaster = 'products';
+let masterData   = {};  // { products: [...], prices: [...], ... }
+let currencies   = [];
+let searchQuery  = '';
+let sortState    = { k: null, asc: true };
+let importDirty  = false;
+
+let editRecord   = null;  // null = new
+let editIsNew    = true;
+let deleteRecord = null;
+let importRows   = null;
+
+// FX state
+let fxSelMonth   = null;
+let fxEditing    = {};   // { USD: { rate_avg: ..., rate_eom: ... }, ... }
+let fxDirty      = false;
+
+// ===================================================
+// LocalStorage helpers
+// ===================================================
+function lsGet(key) {
+  try { const v = localStorage.getItem(STORAGE_PREFIX + key); return v ? JSON.parse(v) : null; } catch { return null; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(val)); } catch(e) { console.error(e); }
+}
+
+// ===================================================
+// Init
+// ===================================================
+window.addEventListener('DOMContentLoaded', () => {
+  // Load all masters from localStorage
+  for (const m of MASTERS) {
+    masterData[m.id] = lsGet(m.id) || [];
+  }
+  masterData.exchange_rates = lsGet('exchange_rates') || [];
+  currencies = lsGet('currencies') || [];
+
+  updateBadges();
+  switchMaster('products');
+});
+
+function updateBadges() {
+  for (const m of MASTERS) {
+    const el = document.getElementById('badge-' + m.id);
+    if (el) el.textContent = (masterData[m.id] || []).length;
+  }
+  // FX badge: currencies × months
+  const fxEl = document.getElementById('badge-exchange_rates');
+  if (fxEl) {
+    const months = [...new Set((masterData.exchange_rates || []).map(r => r.year_month))];
+    fxEl.textContent = currencies.length + '×' + months.length;
+  }
+}
+
+// ===================================================
+// Master Switch
+// ===================================================
+function switchMaster(id) {
+  if (fxDirty && activeMaster === 'exchange_rates' && id !== 'exchange_rates') {
+    if (!confirm('未保存の変更があります。切り替えますか？')) return;
+    fxDirty = false;
+  }
+  activeMaster = id;
+  searchQuery = '';
+  sortState = { k: null, asc: true };
+  importDirty = false;
+
+  // Update sidebar active
+  document.querySelectorAll('.nav-item[id^="nav-"]').forEach(el => el.classList.remove('active'));
+  const nav = document.getElementById('nav-' + id);
+  if (nav) nav.classList.add('active');
+
+  renderMain();
+}
+
+// ===================================================
+// Format helpers
+// ===================================================
+function fmtNum(v, fmt) {
+  if (v == null || v === '') return '';
+  const n = Number(v);
+  if (isNaN(n)) return v;
+  if (fmt === 'jpy') return '¥' + n.toLocaleString('ja-JP');
+  if (fmt === 'usd') return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0 });
+  if (fmt === 'eur') return '€' + n.toLocaleString('en-US', { minimumFractionDigits: 0 });
+  if (fmt === 'rmb') return '¥' + n.toLocaleString('zh-CN', { minimumFractionDigits: 0 });
+  if (fmt === 'rate') return n.toFixed(2);
+  return n.toLocaleString();
+}
+
+function fmtMonth(ym) {
+  if (!ym) return '';
+  const [y, m] = ym.split('-');
+  return `${y}年${parseInt(m)}月`;
+}
+
+// ===================================================
+// Render Main
+// ===================================================
+function renderMain() {
+  if (activeMaster === 'exchange_rates') {
+    renderFX();
+  } else {
+    renderGeneric();
+  }
+}
+
+// ===================================================
+// Generic Master Render
+// ===================================================
+function renderGeneric() {
+  const cfg = MASTERS.find(m => m.id === activeMaster);
+  const allRows = masterData[activeMaster] || [];
+  let rows = [...allRows];
+
+  // Search
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    rows = rows.filter(r => Object.values(r).some(v => v != null && String(v).toLowerCase().includes(q)));
+  }
+  // Sort
+  if (sortState.k) {
+    rows.sort((a, b) => {
+      const av = a[sortState.k] ?? ''; const bv = b[sortState.k] ?? '';
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return sortState.asc ? cmp : -cmp;
+    });
+  }
+
+  const tableRows = rows.map((r, i) => {
+    const cells = cfg.fields.map(f => `<td style="min-width:${f.w}px">${f.fmt ? fmtNum(r[f.k], f.fmt) : (r[f.k] ?? '')}</td>`).join('');
+    const rIdx = JSON.stringify(r).replace(/'/g, '&#39;');
+    return `<tr>
+      <td style="color:var(--text-tertiary); font-size:12px;">${i + 1}</td>
+      ${cells}
+      <td class="ops">
+        <button class="op-btn edit" onclick='openEdit(${JSON.stringify(r)})' title="編集">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="op-btn del" onclick='openDelete(${JSON.stringify(r)})' title="削除">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const thCells = cfg.fields.map(f => {
+    const icon = sortState.k === f.k ? (sortState.asc ? ' ↑' : ' ↓') : '';
+    return `<th style="min-width:${f.w}px" onclick="toggleSort('${f.k}')">${f.l}<span class="sort-icon">${icon}</span></th>`;
+  }).join('');
+
+  const dirtyBar = importDirty ? `
+    <div class="dirty-notice">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      未保存の変更があります
+      <button class="btn btn-primary" style="padding:5px 12px;font-size:12px;" onclick="saveImport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        保存
+      </button>
+    </div>` : '';
+
+  const tableContent = rows.length === 0 ? `
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+      <p>${searchQuery ? '検索結果がありません' : 'データがありません'}</p>
+      <span>${searchQuery ? '検索条件を変更してください' : '新規追加またはCSVインポートでデータを登録してください'}</span>
+    </div>` : `
+    <div class="table-card">
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th style="width:40px;">#</th>${thCells}<th style="width:80px; text-align:center;">操作</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span>${rows.length}件表示${searchQuery ? ` (全${allRows.length}件中)` : ''}</span>
+        ${dirtyBar}
+      </div>
+    </div>`;
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="master-area">
+      <div class="master-header">
+        <div class="master-header-left">
+          <h2>${cfg.label}</h2>
+          <p>${allRows.length}件</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn" onclick="downloadTemplate()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            ひな形CSV
+          </button>
+          <button class="btn" onclick="openImportModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            インポート
+          </button>
+          <button class="btn" onclick="exportCSV()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            エクスポート
+          </button>
+          <button class="btn btn-primary" onclick="openAdd()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新規追加
+          </button>
+        </div>
+      </div>
+      <div class="search-bar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="検索..." value="${searchQuery}" oninput="searchQuery=this.value; renderMain()">
+        </div>
+      </div>
+      <div class="table-area">${tableContent}</div>
+    </div>`;
+}
+
+// ===================================================
+// Sort
+// ===================================================
+function toggleSort(k) {
+  if (sortState.k === k) sortState.asc = !sortState.asc;
+  else sortState = { k, asc: true };
+  renderMain();
+}
+
+// ===================================================
+// Edit / Add Modal
+// ===================================================
+function openAdd() {
+  const cfg = MASTERS.find(m => m.id === activeMaster);
+  editRecord = null; editIsNew = true;
+  document.getElementById('editModalTitle').textContent = `新規追加 – ${cfg.label}`;
+  document.getElementById('editModalSaveLbl').textContent = '追加';
+  buildEditForm(cfg, null);
+  document.getElementById('editModalOverlay').style.display = 'flex';
+}
+
+function openEdit(rec) {
+  const cfg = MASTERS.find(m => m.id === activeMaster);
+  editRecord = rec; editIsNew = false;
+  document.getElementById('editModalTitle').textContent = `編集 – ${cfg.label}`;
+  document.getElementById('editModalSaveLbl').textContent = '保存';
+  buildEditForm(cfg, rec);
+  document.getElementById('editModalOverlay').style.display = 'flex';
+}
+
+function buildEditForm(cfg, rec) {
+  const html = cfg.fields.map(f => {
+    const val = rec ? (rec[f.k] ?? '') : '';
+    const disabled = !editIsNew && f.k === cfg.pk ? 'disabled' : '';
+    let input;
+    if (f.t === 'select') {
+      const opts = (f.opts || []).map(o => `<option value="${o}" ${val == o ? 'selected' : ''}>${o}</option>`).join('');
+      input = `<select id="ef_${f.k}" ${disabled}><option value="">選択してください</option>${opts}</select>`;
+    } else {
+      input = `<input type="${f.t === 'number' ? 'number' : 'text'}" id="ef_${f.k}" value="${val}" ${disabled}>`;
+    }
+    return `<div class="form-group">
+      <label>${f.l}${f.req ? '<span class="req">*</span>' : ''}</label>
+      ${input}
+    </div>`;
+  }).join('');
+  document.getElementById('editModalBody').innerHTML = html + '<div id="editFormError"></div>';
+}
+
+function closeEditModal() {
+  document.getElementById('editModalOverlay').style.display = 'none';
+}
+
+function saveEditModal() {
+  const cfg = MASTERS.find(m => m.id === activeMaster);
+  const rec = {};
+  for (const f of cfg.fields) {
+    const el = document.getElementById('ef_' + f.k);
+    if (!el) continue;
+    let val = el.value;
+    if (f.req && (val === '' || val == null)) {
+      document.getElementById('editFormError').innerHTML =
+        `<div class="form-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${f.l}は必須です</div>`;
+      return;
+    }
+    rec[f.k] = f.t === 'number' && val !== '' ? Number(val) : val;
+  }
+  // PKが無効の場合は既存から引き継ぐ
+  if (!editIsNew && editRecord) rec[cfg.pk] = editRecord[cfg.pk];
+
+  const all = [...(masterData[activeMaster] || [])];
+  if (editIsNew) {
+    if (all.find(r => r[cfg.pk] === rec[cfg.pk])) {
+      document.getElementById('editFormError').innerHTML =
+        `<div class="form-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${cfg.pk}: ${rec[cfg.pk]} は既に存在します</div>`;
+      return;
+    }
+    if (activeMaster === 'staff') rec.display_name = `${rec.staff_name}（${rec.department || ''}）`;
+    all.push(rec);
+    showToast('1件追加しました', 'success');
+  } else {
+    const idx = all.findIndex(r => r[cfg.pk] === rec[cfg.pk]);
+    if (activeMaster === 'staff') rec.display_name = `${rec.staff_name}（${rec.department || ''}）`;
+    if (idx >= 0) all[idx] = rec;
+    showToast('更新しました', 'success');
+  }
+  masterData[activeMaster] = all;
+  lsSet(activeMaster, all);
+  closeEditModal();
+  updateBadges();
+  renderMain();
+}
+
+// ===================================================
+// Delete
+// ===================================================
+function openDelete(rec) {
+  const cfg = MASTERS.find(m => m.id === activeMaster);
+  deleteRecord = rec;
+  document.getElementById('delModalMsg').textContent = `このレコード（${cfg.pk}: ${rec[cfg.pk]}）を削除します。この操作は元に戻せません。`;
+  document.getElementById('delModalOverlay').style.display = 'flex';
+}
+
+function closeDelModal() { document.getElementById('delModalOverlay').style.display = 'none'; }
+
+function confirmDelete() {
+  const cfg = MASTERS.find(m => m.id === activeMaster);
+  masterData[activeMaster] = (masterData[activeMaster] || []).filter(r => r[cfg.pk] !== deleteRecord[cfg.pk]);
+  lsSet(activeMaster, masterData[activeMaster]);
+  closeDelModal();
+  updateBadges();
+  renderMain();
+  showToast('1件削除しました', 'success');
+}
+
+// ===================================================
+// CSV Import
+// ===================================================
+function openImportModal() {
+  importRows = null;
+  document.getElementById('importFileName').textContent = '';
+  document.getElementById('importPreviewWrap').style.display = 'none';
+  document.getElementById('importConfirmBtn').disabled = true;
+  const cfg = MASTERS.find(m => m.id === activeMaster);
+  document.getElementById('importModalTitle').textContent = `CSVインポート – ${cfg.label}`;
+  document.getElementById('importFileInput').value = '';
+  document.getElementById('importModalOverlay').style.display = 'flex';
+}
+
+function closeImportModal() { document.getElementById('importModalOverlay').style.display = 'none'; }
+
+function handleDropFile(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) handleImportFile(f);
+}
+
+function handleImportFile(file) {
+  if (!file) return;
+  document.getElementById('importFileName').textContent = file.name;
+  const cfg = MASTERS.find(m => m.id === activeMaster);
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    parseCSV(text, cfg);
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseCSV(text, cfg) {
+  // BOM除去
+  text = text.replace(/^\uFEFF/, '');
+  // コメント行除去
+  const lines = text.split('\n').filter(l => l.trim() && !l.trim().startsWith('#'));
+  if (lines.length < 2) { showToast('データが見つかりません', 'error'); return; }
+
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = splitCSVLine(lines[i]);
+    if (vals.every(v => !v.trim())) continue;
+    const row = {};
+    headers.forEach((h, j) => {
+      const mapped = cfg.hmap[h];
+      if (mapped) {
+        const f = cfg.fields.find(ff => ff.k === mapped);
+        const v = (vals[j] || '').trim().replace(/^"|"$/g, '');
+        row[mapped] = f?.t === 'number' ? (v === '' ? null : Number(v)) : v;
+      }
+    });
+    if (row[cfg.pk] != null && row[cfg.pk] !== '') rows.push(row);
+  }
+
+  importRows = rows;
+  showImportPreview(cfg, rows);
+}
+
+function splitCSVLine(line) {
+  const result = []; let cur = ''; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur);
+  return result;
+}
+
+function showImportPreview(cfg, rows) {
+  const count = rows.length;
+  document.getElementById('importPreviewCount').textContent = `プレビュー: ${count}件`;
+  const ths = cfg.fields.map(f => `<th>${f.l}</th>`).join('');
+  const trs = rows.slice(0, 5).map(r =>
+    `<tr>${cfg.fields.map(f => `<td>${r[f.k] ?? ''}</td>`).join('')}</tr>`
+  ).join('');
+  const more = count > 5 ? `<tr><td colspan="${cfg.fields.length}" style="text-align:center;color:var(--text-tertiary);font-size:11px;">他 ${count-5} 件...</td></tr>` : '';
+  document.getElementById('importPreviewTable').innerHTML = `<thead><tr><th>#</th>${ths}</tr></thead><tbody>${rows.slice(0,5).map((r,i)=>`<tr><td style="color:var(--text-tertiary);font-size:11px;">${i+1}</td>${cfg.fields.map(f=>`<td>${r[f.k]??''}</td>`).join('')}</tr>`).join('')}${more}</tbody>`;
+  document.getElementById('importPreviewWrap').style.display = 'block';
+  document.getElementById('importConfirmBtn').disabled = count === 0;
+}
+
+function confirmImport() {
+  if (!importRows || !importRows.length) return;
+  const cfg = MASTERS.find(m => m.id === activeMaster);
+  const all = [...(masterData[activeMaster] || [])];
+  let added = 0, updated = 0;
+  for (const r of importRows) {
+    if (activeMaster === 'staff') r.display_name = `${r.staff_name || ''}（${r.department || ''}）`;
+    const idx = all.findIndex(x => x[cfg.pk] === r[cfg.pk]);
+    if (idx >= 0) { all[idx] = r; updated++; } else { all.push(r); added++; }
+  }
+  masterData[activeMaster] = all;
+  importDirty = true;
+  closeImportModal();
+  updateBadges();
+  renderMain();
+  showToast(`${added}件追加、${updated}件更新を読み込みました。保存ボタンで確定してください`, 'warning');
+}
+
+function saveImport() {
+  lsSet(activeMaster, masterData[activeMaster] || []);
+  importDirty = false;
+  renderMain();
+  showToast(`${MASTERS.find(m=>m.id===activeMaster)?.label}を保存しました`, 'success');
+}
+
+// ===================================================
+// Export CSV
+// ===================================================
+function exportCSV() {
+  const cfg = MASTERS.find(m => m.id === activeMaster);
+  const rows = masterData[activeMaster] || [];
+  if (!rows.length) { showToast('エクスポートするデータがありません', 'error'); return; }
+  const header = cfg.fields.map(f => f.l).join(',');
+  const body = rows.map(r => cfg.fields.map(f => {
+    const v = r[f.k] ?? '';
+    return String(v).includes(',') ? `"${v}"` : v;
+  }).join(',')).join('\n');
+  const today = new Date().toISOString().slice(0,10);
+  downloadCSV(`${cfg.id}_${today}.csv`, header + '\n' + body);
+  showToast(`${rows.length}件をエクスポートしました`, 'success');
+}
+
+function downloadTemplate() {
+  const cfg = MASTERS.find(m => m.id === activeMaster);
+  const header = cfg.fields.map(f => f.l).join(',');
+  const sample = cfg.fields.map(f => f.t === 'number' ? (f.fmt ? '0' : '100001') : (f.opts?.[0] || '')).join(',');
+  downloadCSV(`${cfg.id}_template.csv`, header + '\n' + sample);
+  showToast('ひな形CSVをダウンロードしました', 'success');
+}
+
+function downloadCSV(filename, content) {
+  const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+
+// ===================================================
+// FX Master Render
+// ===================================================
+function renderFX() {
+  const rates = masterData.exchange_rates || [];
+  const months = [...new Set(rates.map(r => r.year_month))].sort();
+
+  if (!fxSelMonth && months.length > 0) fxSelMonth = months[months.length - 1];
+  if (months.length > 0 && !months.includes(fxSelMonth)) fxSelMonth = months[months.length - 1];
+
+  // Build editing state for selected month
+  if (fxSelMonth && Object.keys(fxEditing).length === 0) {
+    loadFxMonth(fxSelMonth);
+  }
+
+  const monthTabs = months.map(m =>
+    `<button class="month-tab ${m === fxSelMonth ? 'active' : ''}" onclick="selectFxMonth('${m}')">${fmtMonth(m)}</button>`
+  ).join('');
+
+  const noMonths = months.length === 0 ? `<p style="font-size:13px; color:var(--text-tertiary); padding:8px 0;">月データがありません。「新しい月を追加」から開始してください。</p>` : '';
+
+  let tableContent = '';
+  if (fxSelMonth && currencies.length > 0) {
+    const rows = currencies.map((cc, i) => {
+      const avg = fxEditing[cc]?.rate_avg ?? '';
+      const eom = fxEditing[cc]?.rate_eom ?? '';
+      return `<tr>
+        <td style="color:var(--text-tertiary);font-size:12px;">${i+1}</td>
+        <td style="font-weight:500;">${cc}</td>
+        <td><input type="number" step="0.01" value="${avg}" onchange="fxChange('${cc}','rate_avg',this.value)" class=""></td>
+        <td><input type="number" step="0.01" value="${eom}" onchange="fxChange('${cc}','rate_eom',this.value)" class=""></td>
+      </tr>`;
+    }).join('');
+
+    const dirtyBar = fxDirty ? `
+      <div class="dirty-notice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        未保存の変更があります
+      </div>` : `<span>${currencies.length}通貨</span>`;
+
+    tableContent = `
+      <div class="table-card">
+        <div style="overflow-x:auto;">
+          <table class="fx-table">
+            <thead><tr>
+              <th style="width:40px;">#</th>
+              <th style="width:120px;">通貨コード</th>
+              <th style="width:180px;">月中平均レート</th>
+              <th style="width:180px;">月末レート</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          ${dirtyBar}
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-danger" onclick="deleteFxMonth()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              この月を削除
+            </button>
+            <button class="btn btn-primary" onclick="saveFxMonth()" ${!fxDirty ? 'disabled style="opacity:0.4;"' : ''}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              保存
+            </button>
+          </div>
+        </div>
+      </div>`;
+  } else if (fxSelMonth && currencies.length === 0) {
+    tableContent = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><p>通貨データがありません</p><span>CSVインポートで通貨一覧を登録してください</span></div>`;
+  }
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="master-area">
+      <div class="master-header">
+        <div class="master-header-left">
+          <h2>為替マスタ</h2>
+          <p>${currencies.length}通貨 × ${months.length}ヶ月分のデータ</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn" onclick="downloadFxTemplate()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            ひな形CSV
+          </button>
+          ${fxSelMonth ? `
+          <button class="btn" onclick="openFxImport()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            インポート
+          </button>
+          <button class="btn" onclick="exportFxCSV()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            エクスポート
+          </button>` : ''}
+          <button class="btn btn-primary" onclick="openAddMonth()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新しい月を追加
+          </button>
+        </div>
+      </div>
+      <div class="month-tabs">${noMonths}${monthTabs}</div>
+      <div class="table-area">${tableContent}</div>
+    </div>`;
+}
+
+function loadFxMonth(ym) {
+  const rates = masterData.exchange_rates || [];
+  const map = {};
+  rates.filter(r => r.year_month === ym).forEach(r => {
+    map[r.currency_code] = { rate_avg: r.rate_avg ?? '', rate_eom: r.rate_eom ?? '' };
+  });
+  currencies.forEach(cc => { if (!map[cc]) map[cc] = { rate_avg: '', rate_eom: '' }; });
+  fxEditing = map;
+  fxDirty = false;
+}
+
+function selectFxMonth(ym) {
+  if (fxDirty && !confirm('未保存の変更があります。切り替えますか？')) return;
+  fxSelMonth = ym;
+  loadFxMonth(ym);
+  renderFX();
+}
+
+function fxChange(cc, field, val) {
+  if (!fxEditing[cc]) fxEditing[cc] = { rate_avg: '', rate_eom: '' };
+  fxEditing[cc][field] = val;
+  fxDirty = true;
+  // 保存ボタンのみ更新（再描画しない）
+  const saveBtn = document.querySelector('.table-footer .btn-primary');
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = '1'; }
+  const dirtyEl = document.querySelector('.dirty-notice');
+  if (!dirtyEl) {
+    const footer = document.querySelector('.table-footer');
+    if (footer) {
+      const span = footer.querySelector('span');
+      if (span) span.outerHTML = `<div class="dirty-notice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>未保存の変更があります</div>`;
+    }
+  }
+}
+
+function saveFxMonth() {
+  if (!fxSelMonth) return;
+  const rates = masterData.exchange_rates || [];
+  const otherRates = rates.filter(r => r.year_month !== fxSelMonth);
+  const monthRates = currencies.map(cc => ({
+    year_month: fxSelMonth,
+    currency_code: cc,
+    rate_avg: Number(fxEditing[cc]?.rate_avg) || 0,
+    rate_eom: Number(fxEditing[cc]?.rate_eom) || 0,
+  }));
+  masterData.exchange_rates = [...otherRates, ...monthRates];
+  lsSet('exchange_rates', masterData.exchange_rates);
+  fxDirty = false;
+  updateBadges();
+  renderFX();
+  showToast(`${fmtMonth(fxSelMonth)}の為替レートを保存しました`, 'success');
+}
+
+function deleteFxMonth() {
+  if (!fxSelMonth) return;
+  if (!confirm(`${fmtMonth(fxSelMonth)}の為替データ（${currencies.length}件）を削除しますか？`)) return;
+  masterData.exchange_rates = (masterData.exchange_rates || []).filter(r => r.year_month !== fxSelMonth);
+  lsSet('exchange_rates', masterData.exchange_rates);
+  const months = [...new Set((masterData.exchange_rates || []).map(r => r.year_month))].sort();
+  fxSelMonth = months.length > 0 ? months[months.length - 1] : null;
+  if (fxSelMonth) loadFxMonth(fxSelMonth); else fxEditing = {};
+  fxDirty = false;
+  updateBadges();
+  renderFX();
+  showToast('削除しました', 'success');
+}
+
+// FX add month
+function openAddMonth() { document.getElementById('addMonthOverlay').style.display = 'flex'; }
+function closeAddMonth() { document.getElementById('addMonthOverlay').style.display = 'none'; }
+
+function addMonth() {
+  const y = document.getElementById('newMonthYear').value;
+  const m = document.getElementById('newMonthMon').value;
+  const ym = `${y}-${m}`;
+  const months = [...new Set((masterData.exchange_rates || []).map(r => r.year_month))].sort();
+  if (months.includes(ym)) { showToast(`${fmtMonth(ym)}は既に存在します`, 'error'); return; }
+
+  const copyPrev = document.getElementById('copyPrevMonth').checked;
+  let newRates;
+  if (copyPrev && months.length > 0) {
+    const lastMonth = months[months.length - 1];
+    const prevRates = (masterData.exchange_rates || []).filter(r => r.year_month === lastMonth);
+    newRates = currencies.map(cc => {
+      const pr = prevRates.find(r => r.currency_code === cc);
+      return { year_month: ym, currency_code: cc, rate_avg: pr?.rate_avg ?? 0, rate_eom: pr?.rate_eom ?? 0 };
+    });
+  } else {
+    newRates = currencies.map(cc => ({ year_month: ym, currency_code: cc, rate_avg: 0, rate_eom: 0 }));
+  }
+  masterData.exchange_rates = [...(masterData.exchange_rates || []), ...newRates];
+  lsSet('exchange_rates', masterData.exchange_rates);
+  fxSelMonth = ym;
+  loadFxMonth(ym);
+  closeAddMonth();
+  updateBadges();
+  renderFX();
+  showToast(`${fmtMonth(ym)}を追加しました${copyPrev && months.length > 0 ? '（前月からコピー）' : ''}`, 'success');
+}
+
+// FX Import
+let fxImportRows = null;
+function openFxImport() {
+  fxImportRows = null;
+  document.getElementById('importFileName').textContent = '';
+  document.getElementById('importPreviewWrap').style.display = 'none';
+  document.getElementById('importConfirmBtn').disabled = true;
+  document.getElementById('importModalTitle').textContent = `CSVインポート – ${fmtMonth(fxSelMonth)}`;
+  document.getElementById('importFileInput').value = '';
+  // Override confirm to use FX import
+  document.getElementById('importConfirmBtn').onclick = confirmFxImport;
+  document.getElementById('importModalOverlay').style.display = 'flex';
+  // Override file handler for FX
+  document.getElementById('importFileInput').onchange = (e) => handleFxImportFile(e.target.files[0]);
+}
+
+function handleFxImportFile(file) {
+  if (!file) return;
+  document.getElementById('importFileName').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = (e) => parseFxCSV(e.target.result.replace(/^\uFEFF/, ''));
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseFxCSV(text) {
+  const lines = text.split('\n').filter(l => l.trim() && !l.trim().startsWith('#'));
+  if (lines.length < 2) { showToast('データが見つかりません', 'error'); return; }
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = splitCSVLine(lines[i]);
+    if (vals.every(v => !v.trim())) continue;
+    const row = {};
+    headers.forEach((h, j) => {
+      const mapped = FX_HMAP[h];
+      if (mapped) {
+        const v = (vals[j] || '').trim().replace(/^"|"$/g, '');
+        row[mapped] = mapped === 'currency_code' ? v : (v === '' ? null : Number(v));
+      }
+    });
+    if (row.currency_code) rows.push(row);
+  }
+  fxImportRows = rows;
+
+  // Preview
+  document.getElementById('importPreviewCount').textContent = `プレビュー: ${rows.length}件`;
+  const trs = rows.slice(0, 10).map((r, i) =>
+    `<tr><td style="font-size:11px;color:var(--text-tertiary);">${i+1}</td><td>${r.currency_code}</td><td style="text-align:right;">${r.rate_avg ?? ''}</td><td style="text-align:right;">${r.rate_eom ?? ''}</td></tr>`
+  ).join('');
+  document.getElementById('importPreviewTable').innerHTML = `<thead><tr><th>#</th><th>通貨</th><th style="text-align:right;">月中平均</th><th style="text-align:right;">月末</th></tr></thead><tbody>${trs}</tbody>`;
+  document.getElementById('importPreviewWrap').style.display = 'block';
+  document.getElementById('importConfirmBtn').disabled = rows.length === 0;
+}
+
+function confirmFxImport() {
+  if (!fxImportRows || !fxSelMonth) return;
+  const importedCc = fxImportRows.map(r => r.currency_code).filter(Boolean);
+  const merged = [...new Set([...currencies, ...importedCc])];
+  if (merged.length !== currencies.length) {
+    currencies = merged;
+    lsSet('currencies', currencies);
+  }
+  fxImportRows.forEach(r => {
+    fxEditing[r.currency_code] = { rate_avg: r.rate_avg ?? '', rate_eom: r.rate_eom ?? '' };
+  });
+  merged.forEach(cc => { if (!fxEditing[cc]) fxEditing[cc] = { rate_avg: '', rate_eom: '' }; });
+  fxDirty = true;
+  closeImportModal();
+  renderFX();
+  showToast(`${fxImportRows.length}件のレートを読み込みました。保存ボタンで確定してください`, 'warning');
+}
+
+function exportFxCSV() {
+  if (!fxSelMonth) return;
+  const rates = (masterData.exchange_rates || []).filter(r => r.year_month === fxSelMonth);
+  const header = '通貨コード,月中平均レート,月末レート';
+  const body = rates.map(r => `${r.currency_code},${r.rate_avg},${r.rate_eom}`).join('\n');
+  downloadCSV(`exchange_rates_${fxSelMonth}.csv`, header + '\n' + body);
+  showToast(`${fmtMonth(fxSelMonth)}の為替レートをエクスポートしました`, 'success');
+}
+
+function downloadFxTemplate() {
+  const header = '通貨コード,月中平均レート,月末レート';
+  const sample = 'USD,150.00,149.50';
+  downloadCSV('exchange_rates_template.csv', header + '\n' + sample);
+  showToast('ひな形CSVをダウンロードしました', 'success');
+}
+
+// ===================================================
+// Toast
+// ===================================================
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icon = type === 'success'
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>'
+    : type === 'error'
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  el.innerHTML = icon + `<span>${msg}</span>`;
+  container.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3500);
+}
+</script>
+</body>
+</html>
