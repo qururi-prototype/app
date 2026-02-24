@@ -1991,7 +1991,8 @@ function parseImportCSV(text) {
 
     const staffResult = resolveMaster(staffCode, staffName,
       masters.staffByCode, masters.staffByName, masters.hasMasterStaff, '担当者');
-    if (staffResult.error) addErr('担当者', staffCode || staffName, staffResult.error);
+    // 担当者は任意項目：コード・名前が未登録でもインポートをブロックしない（警告のみ）
+    // if (staffResult.error) addErr('担当者', ...); ← 意図的にコメントアウト
 
     const prodResult = resolveMaster(productCode, productName,
       masters.productByCode, masters.productByName, masters.hasMasterProducts, '製品');
