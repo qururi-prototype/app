@@ -1532,17 +1532,46 @@ function getCurrencySymbol(currency) {
 
 function updateTotals() {
   const rows = document.querySelectorAll('#productTableBody tr');
-  let subtotal = 0;
-  rows.forEach(row => { subtotal += calcRowTotal(row); });
-  const taxRate   = 10;
-  const taxAmount = Math.floor(subtotal * taxRate / 100);
-  const total     = subtotal + taxAmount;
   const sym = getCurrencySymbol(currentBillingCurrency);
+
+  // 税率別に集計（各行のautofill[1]から税率を読む）
+  const taxMap = {};
+  let subtotal = 0;
+  rows.forEach(function(row) {
+    const lineTotal   = calcRowTotal(row);
+    const autofills   = row.querySelectorAll('input.table-input.autofill');
+    const taxRateStr  = autofills[1] ? autofills[1].value : '10%';
+    const taxRate     = parseFloat(taxRateStr.replace('%','')) || 0;
+    subtotal += lineTotal;
+    if (!taxMap[taxRate]) taxMap[taxRate] = { taxBase: 0, taxAmount: 0 };
+    taxMap[taxRate].taxBase += lineTotal;
+  });
+
+  // 税額合計
+  let totalTax = 0;
+  Object.keys(taxMap).forEach(function(rate) {
+    const amt = Math.floor(taxMap[rate].taxBase * Number(rate) / 100);
+    taxMap[rate].taxAmount = amt;
+    totalTax += amt;
+  });
+  const total = subtotal + totalTax;
+
+  // 税ラベル表示（税率が1種類の場合はその税率を表示）
+  const rates = Object.keys(taxMap);
+  const taxLabelEl = document.getElementById('displayTaxLabel');
+  if (taxLabelEl) {
+    if (rates.length === 1) {
+      taxLabelEl.textContent = rates[0] === '0' ? '消費税(0%・非課税)' : `消費税(${rates[0]}%)`;
+    } else {
+      taxLabelEl.textContent = '消費税(税率混在)';
+    }
+  }
+
   const subtotalEl = document.getElementById('displaySubtotal');
   const taxEl      = document.getElementById('displayTaxAmount');
   const totalEl    = document.getElementById('displayTotal');
   if (subtotalEl) subtotalEl.textContent = sym + formatNumber(subtotal);
-  if (taxEl)      taxEl.textContent      = sym + formatNumber(taxAmount);
+  if (taxEl)      taxEl.textContent      = sym + formatNumber(totalTax);
   if (totalEl)    totalEl.textContent    = sym + formatNumber(total);
 }
 function setupPriceInput(input) {
@@ -1578,7 +1607,7 @@ function addProductRow() {
     <td style="text-align:center;"><input type="text" class="table-input direct qty" value="1"></td>
     <td><input class="table-input direct price" value="0"></td>
     <td><input class="table-input autofill" value="${currentBillingCurrency}" readonly style="text-align:center;"></td>
-    <td><input class="table-input autofill" value="10%" readonly style="text-align:center;"></td>
+    <td><input class="table-input autofill" value="${(document.getElementById('af-region')?.textContent||'JP')==='JP'?'10%':'0%'}" readonly style="text-align:center;"></td>
     <td><span class="table-input calc price">0</span></td>
     <td style="text-align:center;">
       <button class="btn-delete" title="削除">
@@ -2259,13 +2288,22 @@ function onCustomerChange(repriceRows) {
 
   currentBillingCurrency = (cust && cust.billing_currency) ? cust.billing_currency : 'JPY';
 
+  // 地域に応じた税率を決定（JP=10%、それ以外=0%）
+  const region  = cust ? cust.region : 'JP';
+  const taxRate = (region === 'JP') ? '10%' : '0%';
+
   document.querySelectorAll('#productTableBody tr').forEach(function(row) {
+    // 通貨を更新
     const currencyInput = row.querySelectorAll('input.table-input.autofill')[0];
     if (currencyInput) currencyInput.value = currentBillingCurrency;
+    // 税率を更新
+    const taxInput = row.querySelectorAll('input.table-input.autofill')[1];
+    if (taxInput) taxInput.value = taxRate;
+    // 単価を再セット
     if (repriceRows) {
       const nameInput = row.querySelector('.ss-input-product');
-      const name = nameInput ? nameInput.value : '';
-      const prod = MC.products.find(p => p.product_name === name);
+      const prodName  = nameInput ? nameInput.value : '';
+      const prod      = MC.products.find(p => p.product_name === prodName);
       if (prod) setProductPrice(row, prod.product_code);
     }
   });
