@@ -1103,7 +1103,9 @@
 
         <div style="margin-top:12px;font-size:12px;color:var(--text-tertiary);">
           <strong style="color:var(--text-secondary);">CSVフォーマット（必須列）</strong><br>
-          案件名, 取引先名, 担当者名, 納品予定日(YYYY-MM-DD), 受注確度(0-100), 地域, ステータス(draft/quoted/ordered/delivered/invoiced/paid), 合計金額(税抜), 備考
+          案件名, 取引先名, 担当者名, 製品名, 数量, 税抜単価, 納品予定日(YYYY-MM-DD), 受注確度(0-100), ステータス, 備考<br>
+          <span style="color:#d97706;">※ 地域は取引先マスタから自動引き当て（マスタ未登録の取引先はエラー）</span><br>
+          <span style="color:#555;">※ 製品が複数ある場合は同じ案件名・取引先名で複数行に分けて入力</span>
           <br><br>
           <span style="color:var(--accent-blue);cursor:pointer;text-decoration:underline;" onclick="downloadTemplate()">ひな形CSVをダウンロード</span>
         </div>
@@ -1751,10 +1753,13 @@ function downloadTemplate() {
     '\uFEFF# 【ステータスの入力値】',
     '# 見積前=draft  見積済=quoted  受注済=ordered  納品済=delivered  請求済=invoiced  入金済=paid',
     '# 【納品予定日の形式】YYYY-MM-DD（例: 2026-06-30）またはYYYY/MM/DD形式も可',
+    '# 【製品が複数ある場合】同じ案件名・取引先名で複数行に分けて入力してください',
+    '# 【地域】取引先マスタから自動引き当てされます（手入力不要・マスタ未登録はエラー）',
     '# ※「#」で始まる行は読み込み時に自動的に無視されます',
-    '# ※ 6行目（下のヘッダー行の次）からデータを入力してください',
-    '案件名,取引先名,担当者名,納品予定日,受注確度,地域,ステータス,合計金額（税抜）,備考',
-    '"サンプル案件 A","山田製作所","田中 健一","2026-06-30","70","JP","draft","5000000","サンプルデータ"',
+    '案件名,取引先名,担当者名,製品名,数量,税抜単価,納品予定日,受注確度,ステータス,備考',
+    '"Nokia案件","Nokia","渡辺 武","EUV露光装置","1","50000000","2026-09-30","90","quoted","1行目：製品1つ目"',
+    '"Nokia案件","Nokia","渡辺 武","ALD装置","2","30000000","2026-09-30","90","quoted","2行目：同じ案件の製品2つ目"',
+    '"山田製作所 検査装置","山田製作所","田中 健一","","","","2026-06-30","70","draft","製品なしの場合は空欄可"',
   ];
   downloadCSV(lines.join('\n'), 'QURURi_案件インポートひな形.csv');
 }
@@ -1817,18 +1822,33 @@ function parseImportCSV(text) {
     return;
   }
 
+  // ─── 取引先マスタをLocalStorageから読み込み ───
+  let customerMaster = [];
+  try {
+    customerMaster = JSON.parse(localStorage.getItem('qururi:customers') || '[]');
+  } catch(e) {}
+  // 取引先名→地域・業種などのマップを作成（customer_nameをキーに）
+  const customerMap = {};
+  customerMaster.forEach(c => {
+    if (c.customer_name) customerMap[c.customer_name] = c;
+  });
+
   const headers = parseCSVLine(lines[0]);
   const COL = {
-    projectNo:   findCol(headers, ['案件No', 'project_no', 'projectNo']),
-    projectName: findCol(headers, ['案件名', 'project_name', 'projectName']),
-    customer:    findCol(headers, ['取引先名', '取引先', 'customer']),
-    salesPerson: findCol(headers, ['担当者名', '担当者', 'sales_person', 'salesPerson']),
-    deliveryDate:findCol(headers, ['納品予定日', 'delivery_date', 'deliveryDate']),
-    probability: findCol(headers, ['受注確度', 'probability']),
-    salesRegion: findCol(headers, ['地域', '販売地域', 'region', 'salesRegion']),
-    status:      findCol(headers, ['ステータス', 'status']),
-    subtotal:    findCol(headers, ['合計金額（税抜）', '合計金額', 'subtotal']),
-    memo:        findCol(headers, ['備考', 'memo']),
+    projectNo:    findCol(headers, ['案件No', 'project_no', 'projectNo']),
+    projectName:  findCol(headers, ['案件名', 'project_name', 'projectName']),
+    customer:     findCol(headers, ['取引先名', '取引先', 'customer']),
+    salesPerson:  findCol(headers, ['担当者名', '担当者', 'sales_person', 'salesPerson']),
+    productName:  findCol(headers, ['製品名', 'product_name', 'productName']),
+    qty:          findCol(headers, ['数量', 'qty', 'quantity']),
+    unitPrice:    findCol(headers, ['税抜単価', '単価', 'unit_price', 'unitPrice']),
+    deliveryDate: findCol(headers, ['納品予定日', 'delivery_date', 'deliveryDate']),
+    probability:  findCol(headers, ['受注確度', 'probability']),
+    status:       findCol(headers, ['ステータス', 'status']),
+    memo:         findCol(headers, ['備考', 'memo']),
+    // 後方互換：古いCSVに地域・合計金額列があれば読む
+    salesRegion:  findCol(headers, ['地域', '販売地域', 'region', 'salesRegion']),
+    subtotal:     findCol(headers, ['合計金額（税抜）', '合計金額', 'subtotal']),
   };
 
   const existingNos = new Set(allProjects.map(p => p.projectNo));
@@ -1836,50 +1856,118 @@ function parseImportCSV(text) {
   importData.errors  = [];
   importData.updates = [];
 
+  // ─── 1パス目：行パース＆バリデーション ───
+  // 案件キー（案件名＋取引先）ごとにグルーピング
+  const projectMap = new Map(); // key: "案件名\t取引先名" → record
+  const projectOrder = [];      // 挿入順を保持
+
+  const validStatuses = ['draft','quoted','ordered','delivered','invoiced','paid'];
+
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCSVLine(lines[i]);
     if (cols.every(c => !c.trim())) continue;
 
-    const row = {};
-    Object.entries(COL).forEach(([k, idx]) => {
-      if (idx >= 0) row[k] = cols[idx]?.trim() ?? '';
-    });
+    const get = (key) => (COL[key] >= 0 ? cols[COL[key]]?.trim() : '') ?? '';
 
-    // Validation
-    const errs = [];
-    if (!row.projectName) errs.push(`${i+1}行目: 案件名は必須です`);
-    if (!row.customer)    errs.push(`${i+1}行目: 取引先名は必須です`);
-    if (row.probability !== undefined && row.probability !== '' &&
-        (isNaN(Number(row.probability)) || Number(row.probability) < 0 || Number(row.probability) > 100))
-      errs.push(`${i+1}行目: 受注確度は0〜100の数値で入力してください`);
-    if (row.deliveryDate) row.deliveryDate = normalizeDate(row.deliveryDate);
-    if (row.deliveryDate && !/^\d{4}-\d{2}-\d{2}$/.test(row.deliveryDate))
-      errs.push(`${i+1}行目: 納品予定日の形式が認識できません（例: 2026-06-30）`);
-    const validStatuses = ['draft','quoted','ordered','delivered','invoiced','paid'];
-    if (row.status && !validStatuses.includes(row.status))
-      errs.push(`${i+1}行目: ステータス「${row.status}」は無効です（draft/quoted/ordered/delivered/invoiced/paid）`);
+    const projectName = get('projectName');
+    const customer    = get('customer');
+    const lineNo      = i + 1;
 
-    if (errs.length > 0) {
-      importData.errors.push(...errs);
+    // 必須バリデーション
+    if (!projectName) { importData.errors.push(`${lineNo}行目: 案件名は必須です`); continue; }
+    if (!customer)    { importData.errors.push(`${lineNo}行目: 取引先名は必須です`); continue; }
+
+    // ─── 取引先マスタ引き当て ───
+    const custRecord = customerMap[customer];
+    if (!custRecord) {
+      importData.errors.push(`${lineNo}行目: 取引先「${customer}」は取引先マスタに登録されていません。先にマスタへ登録してください。`);
+      continue;
+    }
+    const salesRegion = custRecord.sales_region || custRecord.salesRegion || get('salesRegion') || 'JP';
+
+    // 確度バリデーション
+    const probStr = get('probability');
+    if (probStr !== '' && (isNaN(Number(probStr)) || Number(probStr) < 0 || Number(probStr) > 100)) {
+      importData.errors.push(`${lineNo}行目: 受注確度は0〜100の数値で入力してください`);
       continue;
     }
 
-    const record = {
-      projectName:  row.projectName,
-      customer:     row.customer,
-      salesPerson:  row.salesPerson || '',
-      deliveryDate: row.deliveryDate || null,
-      probability:  row.probability !== '' ? Number(row.probability) : 50,
-      salesRegion:  row.salesRegion || 'JP',
-      status:       row.status || 'draft',
-      subtotal:     row.subtotal ? Number(String(row.subtotal).replace(/[,¥\s]/g, '')) : 0,
-      memo:         row.memo || '',
-      updatedAt:    new Date().toISOString().slice(0, 10),
-    };
-    record.total = Math.round(record.subtotal * 1.1);
+    // 納品予定日バリデーション
+    let deliveryDate = get('deliveryDate');
+    if (deliveryDate) deliveryDate = normalizeDate(deliveryDate);
+    if (deliveryDate && !/^\d{4}-\d{2}-\d{2}$/.test(deliveryDate)) {
+      importData.errors.push(`${lineNo}行目: 納品予定日の形式が認識できません（例: 2026-06-30）`);
+      continue;
+    }
 
-    if (row.projectNo && existingNos.has(row.projectNo)) {
-      record.projectNo = row.projectNo;
+    // ステータスバリデーション
+    const status = get('status') || 'draft';
+    if (!validStatuses.includes(status)) {
+      importData.errors.push(`${lineNo}行目: ステータス「${status}」は無効です（draft/quoted/ordered/delivered/invoiced/paid）`);
+      continue;
+    }
+
+    // ─── グルーピングキー ───
+    const groupKey = `${projectName}\t${customer}`;
+
+    if (!projectMap.has(groupKey)) {
+      // 案件の基本情報（最初の行から取得）
+      const record = {
+        projectName,
+        customer,
+        salesPerson:  get('salesPerson') || '',
+        deliveryDate: deliveryDate || null,
+        probability:  probStr !== '' ? Number(probStr) : 50,
+        salesRegion,
+        billingCurrency: custRecord.billing_currency || custRecord.billingCurrency || 'JPY',
+        status,
+        memo:         get('memo') || '',
+        products:     [],
+        updatedAt:    new Date().toISOString().slice(0, 10),
+      };
+      const projectNo = get('projectNo');
+      if (projectNo) record.projectNo = projectNo;
+      projectMap.set(groupKey, record);
+      projectOrder.push(groupKey);
+    }
+
+    // 製品明細を追加
+    const productName = get('productName');
+    const qty         = get('qty');
+    const unitPrice   = get('unitPrice');
+    if (productName) {
+      const qtyNum       = qty       ? Number(String(qty).replace(/[,\s]/g, ''))       : 1;
+      const unitPriceNum = unitPrice ? Number(String(unitPrice).replace(/[,¥\s]/g, '')) : 0;
+      projectMap.get(groupKey).products.push({
+        productName,
+        qty:       qtyNum,
+        unitPrice: unitPriceNum,
+        lineTotal: qtyNum * unitPriceNum,
+      });
+    }
+
+    // 後方互換：合計金額列がある場合は上書き保存
+    const subtotalStr = get('subtotal');
+    if (subtotalStr) {
+      projectMap.get(groupKey)._subtotalOverride = Number(String(subtotalStr).replace(/[,¥\s]/g, ''));
+    }
+  }
+
+  // ─── 2パス目：案件レコード確定 ───
+  for (const key of projectOrder) {
+    const record = projectMap.get(key);
+
+    // 小計の計算（製品明細から積み上げ、なければ override 値 or 0）
+    const productSubtotal = record.products.reduce((s, p) => s + (p.lineTotal || 0), 0);
+    record.subtotal = productSubtotal > 0
+      ? productSubtotal
+      : (record._subtotalOverride || 0);
+    delete record._subtotalOverride;
+
+    const taxRate   = record.salesRegion === 'JP' ? 0.1 : 0;
+    record.total    = Math.round(record.subtotal * (1 + taxRate));
+
+    if (record.projectNo && existingNos.has(record.projectNo)) {
       importData.updates.push(record);
     } else {
       record.createdAt = new Date().toISOString().slice(0, 10);
