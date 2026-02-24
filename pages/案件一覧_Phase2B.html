@@ -1051,6 +1051,7 @@
                 <th onclick="sortBy('customer')">取引先 <span class="sort-icon" id="sort_customer">↕</span></th>
                 <th onclick="sortBy('status')">ステータス <span class="sort-icon" id="sort_status">↕</span></th>
                 <th>製品名</th>
+                <th style="text-align:right;">明細金額</th>
                 <th onclick="sortBy('subtotal')" style="text-align:right;">合計（税抜） <span class="sort-icon" id="sort_subtotal">↕</span></th>
                 <th onclick="sortBy('probability')" style="text-align:center;">確度 <span class="sort-icon" id="sort_probability">↕</span></th>
                 <th onclick="sortBy('deliveryDate')">納品予定日 <span class="sort-icon" id="sort_deliveryDate">↕</span></th>
@@ -1060,7 +1061,7 @@
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="12"><div class="empty-state"><p>データを読み込み中...</p></div></td></tr>
+              <tr><td colspan="13"><div class="empty-state"><p>データを読み込み中...</p></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -1461,7 +1462,7 @@ function renderTable() {
   document.getElementById('showingCount').textContent = page.length.toLocaleString();
 
   if (page.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state">
+    tbody.innerHTML = `<tr><td colspan="13"><div class="empty-state">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
       <p>案件が見つかりません</p>
       <small>検索条件を変えるか、新規案件を登録してください</small>
@@ -1512,6 +1513,17 @@ function renderTable() {
     const prodTitle = prod ? ((prod.productName || '') + (prod.productCode ? ' (' + prod.productCode + ')' : '')) : '';
     const prodCell = '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + prodTitle + '">' + prodName + '</td>';
 
+    // 明細金額セル（製品行の lineTotal を通貨記号付きで表示）
+    const lineAmt   = prod ? (prod.lineTotal != null ? prod.lineTotal : 0) : null;
+    const lineCurr  = prod ? (prod.currency || currency) : currency;
+    const lineSym   = CURRENCY_SYMBOL[lineCurr] || (lineCurr + ' ');
+    const lineTotalCell = lineAmt != null
+      ? '<td style="text-align:right;white-space:nowrap;">'
+        + '<span style="font-size:10px;color:var(--text-tertiary);margin-right:2px;">' + lineCurr + '</span>'
+        + lineSym + lineAmt.toLocaleString()
+        + '</td>'
+      : '<td></td>';
+
     // 全行フル表示（製品ごとに全列を繰り返す）
     // 2行目以降：案件Noと案件名・取引先をグレーで表示してグルーピングを視覚的に表現
     const noStyle  = isFirst ? '' : ' style="color:var(--text-tertiary);font-size:11px;"';
@@ -1527,6 +1539,7 @@ function renderTable() {
       + '<td style="max-width:140px;" title="' + (p.customer || '') + '">' + (p.customer || '\u2013') + '</td>'
       + '<td><span class="status-badge ' + statusCfg.class + '">' + statusCfg.label + '</span></td>'
       + prodCell
+      + lineTotalCell
       + '<td class="td-amount" style="text-align:right;">' + amountDisplay + '</td>'
       + '<td class="td-prob"><span class="prob-badge" style="background:' + probBg + ';color:' + probColor + ';">' + prob + '%</span></td>'
       + '<td class="' + dateClass + '">' + dateLabel + '</td>'
