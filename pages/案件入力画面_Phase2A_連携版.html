@@ -1340,13 +1340,12 @@
                 <div class="field-number">5</div>
                 <div class="field-label">取引先</div>
                 <div class="field-value">
-                  <div class="select-wrapper">
-                    <input type="text" id="customer" class="input-field"
-                       list="datalist-customers" autocomplete="off"
-                       placeholder="取引先名を入力または選択..."
-                       oninput="onCustomerInput(this.value)"
-                       onchange="onCustomerInput(this.value)">
-                    <datalist id="datalist-customers"></datalist>
+                  <div class="ac-wrapper" id="ac-wrap-customer">
+                    <input type="text" id="customer" class="input-field input-dropdown-type"
+                       autocomplete="off"
+                       placeholder="取引先名またはコードを入力...">
+                    <input type="hidden" id="customerCode">
+                    <div class="ac-dropdown" id="ac-drop-customer" role="listbox"></div>
                   </div>
                 </div>
               </div>
@@ -2072,19 +2071,21 @@ function populateMasterLists() {
     maxResults: 20,
   });
 
-  // 取引先 datalist
-  try {
-    const customers = JSON.parse(localStorage.getItem('qururi:customers') || '[]');
-    const dl = document.getElementById('datalist-customers');
-    if (dl) {
-      dl.innerHTML = '';
-      customers.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.customer_name || '';
-        dl.appendChild(opt);
-      });
-    }
-  } catch(e) {}
+  // ─ 取引先：カスタムオートコンプリート初期化 ─
+  window._customerAC = createAutocomplete({
+    inputId  : 'customer',
+    hiddenId : 'customerCode',
+    dropId   : 'ac-drop-customer',
+    getData  : () => {
+      try { return JSON.parse(localStorage.getItem('qururi:customers') || '[]'); } catch(e) { return []; }
+    },
+    getCode  : c => c.customer_code || '',
+    getLabel : c => c.customer_name || '',
+    getValue : c => c.customer_name || '',
+    getSub   : c => [c.region || c.sales_region, c.industry].filter(Boolean).join('・'),
+    maxResults: 20,
+    onSelect : c => applyCustomerAutofill(c),
+  });
 
   // 製品 select（全行）
   document.querySelectorAll('#productTableBody tr select.table-input.dropdown').forEach(sel => {
@@ -2093,25 +2094,20 @@ function populateMasterLists() {
   });
 }
 
-// 取引先入力時の自動転記（autofill）
-function onCustomerInput(value) {
-  if (!value) return;
-  try {
-    const customers = JSON.parse(localStorage.getItem('qururi:customers') || '[]');
-    const cust = customers.find(c => c.customer_name === value.trim()
-                                  || String(c.customer_code) === value.trim());
-    if (!cust) return;
-    document.querySelectorAll('.autofill-item').forEach(item => {
-      const lbl = item.querySelector('.autofill-label')?.textContent?.trim();
-      const val = item.querySelector('.autofill-value');
-      if (!val) return;
-      if (lbl === '販売地域') val.textContent = cust.region || cust.sales_region || '';
-      if (lbl === '業界')     val.textContent = cust.industry  || '';
-      if (lbl === '商流')     val.textContent = cust.channel   || '';
-      if (lbl === '自社セグ') val.textContent = cust.segment   || '';
-    });
-    updateTotals();
-  } catch(e) {}
+// 取引先選択時の自動転記（autofill）
+// 引数は取引先マスタのオブジェクト（createAutocompleteのonSelectから渡される）
+function applyCustomerAutofill(cust) {
+  if (!cust) return;
+  document.querySelectorAll('.autofill-item').forEach(item => {
+    const lbl = item.querySelector('.autofill-label')?.textContent?.trim();
+    const val = item.querySelector('.autofill-value');
+    if (!val) return;
+    if (lbl === '販売地域') val.textContent = cust.region || cust.sales_region || '';
+    if (lbl === '業界')     val.textContent = cust.industry  || '';
+    if (lbl === '商流')     val.textContent = cust.channel   || '';
+    if (lbl === '自社セグ') val.textContent = cust.segment   || '';
+  });
+  updateTotals();
 }
 
 
@@ -2211,6 +2207,7 @@ function collectFormData() {
   const salesPerson  = document.getElementById('salesPerson')?.value   || '';
   const staffCode    = document.getElementById('staffCode')?.value     || '';
   const customer     = document.getElementById('customer')?.value      || '';
+  const customerCode = document.getElementById('customerCode')?.value  || '';
   const probability  = parseInt(document.getElementById('probValue')?.textContent) || 50;
   const memo         = (document.getElementById('memo')?.value || '').trim();
 
@@ -2262,7 +2259,7 @@ function collectFormData() {
   const total = subtotal + taxDetails.reduce((s, t) => s + t.taxAmount, 0);
 
   return {
-    projectName, probability, deliveryDate, salesPerson, staffCode, customer,
+    projectName, probability, deliveryDate, salesPerson, staffCode, customer, customerCode,
     salesRegion: autoData.salesRegion, industry: autoData.industry,
     channel: autoData.channel, segment: autoData.segment,
     products, subtotal, taxDetails, total, memo, status: 'draft'
@@ -2428,6 +2425,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (document.getElementById('salesPerson'))    document.getElementById('salesPerson').value = '';
     if (document.getElementById('staffCode'))       document.getElementById('staffCode').value   = '';
     if (document.getElementById('customer'))        document.getElementById('customer').value    = '';
+    if (document.getElementById('customerCode'))    document.getElementById('customerCode').value = '';
     const fill  = document.getElementById('probFill');
     const label = document.getElementById('probValue');
     if (fill)  fill.style.width  = '50%';
@@ -2481,11 +2479,25 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     }
 
-    // ─ 取引先 select：同様に動的追加してからセット ─
-    const custInput = document.getElementById('customer');
-    if (custInput && data.customer) {
-      custInput.value = data.customer;
-      onCustomerInput(data.customer);  // 自動転記を再実行
+    // ─ 取引先 カスタムAC：customerCodeまたは名称でマスタ照合してセット ─
+    if (data.customer) {
+      try {
+        const customers = JSON.parse(localStorage.getItem('qururi:customers') || '[]');
+        const match = customers.find(c =>
+          (data.customerCode && String(c.customer_code) === String(data.customerCode)) ||
+          (c.customer_name || '') === data.customer
+        );
+        if (match && window._customerAC) {
+          window._customerAC.setValue(match.customer_name || '', match.customer_code || '');
+          applyCustomerAutofill(match);
+        } else if (document.getElementById('customer')) {
+          document.getElementById('customer').value = data.customer;
+          if (data.customerCode && document.getElementById('customerCode'))
+            document.getElementById('customerCode').value = data.customerCode;
+        }
+      } catch(e) {
+        if (document.getElementById('customer')) document.getElementById('customer').value = data.customer;
+      }
     }
 
     // ─ 受注確度 ─
