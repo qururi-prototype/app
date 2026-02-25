@@ -465,6 +465,27 @@
     padding-right: 32px;
   }
 
+  .input-dropdown-type:focus {
+    border-color: var(--input-dropdown);
+    box-shadow: 0 0 0 2px rgba(217,80,63,0.12);
+    outline: none;
+  }
+
+  /* ac-wrapper内にドロップダウン矢印を表示 */
+  .ac-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--input-dropdown);
+    pointer-events: none;
+  }
+
   .select-wrapper {
     position: relative;
   }
@@ -1297,7 +1318,7 @@
                 <div class="field-label">営業担当</div>
                 <div class="field-value">
                   <div class="ac-wrapper" id="ac-wrap-salesPerson">
-                    <input type="text" id="salesPerson" class="input-field"
+                    <input type="text" id="salesPerson" class="input-field input-dropdown-type"
                        autocomplete="off"
                        placeholder="担当者名またはコードを入力...">
                     <input type="hidden" id="staffCode">
@@ -1970,7 +1991,10 @@ function createAutocomplete({ inputId, hiddenId, dropId, getData,
 
   input.addEventListener('blur', function() {
     // mousedown で confirmSelect が走る場合は 150ms 後に blur 処理
+    // ただし再クリックでフォーカスが戻っていれば何もしない
     setTimeout(() => {
+      if (document.activeElement === input) return;
+      if (dropdown.contains(document.activeElement)) return;
       close();
       validateOnBlur();
     }, 150);
