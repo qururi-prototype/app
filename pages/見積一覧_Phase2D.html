@@ -601,9 +601,9 @@
         <div class="import-preview" id="previewContent"></div>
       </div>
       <div style="font-size:11px;color:var(--text-tertiary);line-height:1.7;">
-        <strong>CSVフォーマット（必須列）：</strong><br>
-        案件名, 取引先, 担当者, 受注確度, 納品予定日, 合計金額（税抜）<br>
-        <strong>任意列：</strong> 販売地域, 申請日, 備考<br>
+        <strong>CSVフォーマット（必須列）：</strong>案件名、取引先コードまたは取引先名<br>
+        <strong>任意列：</strong>担当者コード, 担当者名, 製品コード, 製品名, 数量, 納品予定日, 受注確度, ステータス, 金額, 備考<br>
+        <strong>ステータス値：</strong>draft / quoted / ordered / delivered / invoiced / paid<br>
         <button onclick="downloadTemplate()" style="background:none;border:none;color:var(--accent-blue);cursor:pointer;font-size:11px;padding:4px 0;text-decoration:underline;">
           テンプレートCSVをダウンロード
         </button>
@@ -683,23 +683,36 @@ const EstimateDB = {
 };
 
 // ─── PJ自動生成（ルートB）───
-function createPJAndEST({ projectName, customer, salesPerson, probability, deliveryDate, subtotal, salesRegion, notes, issueDate }) {
-  // PJを自動生成
+function createPJAndEST({ projectName, customer, salesPerson, probability, deliveryDate, subtotal, salesRegion, notes, issueDate, status, productCode, productName, qty }) {
+  const resolvedStatus = status || 'quoted';
   const taxAmount = salesRegion === 'JP' ? Math.floor(subtotal * 0.1) : 0;
   const total = subtotal + taxAmount;
+
+  // 製品明細（製品名があれば1明細を生成）
+  const products = productName ? [{
+    productCode: productCode || '',
+    productName: productName || '',
+    qty:         parseInt(qty) || 1,
+    currency:    'JPY',
+    unitPrice:   qty && qty > 0 ? Math.floor(subtotal / (parseInt(qty)||1)) : subtotal,
+    taxRate:     salesRegion === 'JP' ? 10 : 0,
+    lineTotal:   subtotal,
+    localAmount: subtotal,
+  }] : [];
+
   const pjData = {
-    projectName: projectName || '',
-    customer:    customer    || '',
-    salesPerson: salesPerson || '',
-    probability: parseInt(probability) || 50,
+    projectName:  projectName || '',
+    customer:     customer    || '',
+    salesPerson:  salesPerson || '',
+    probability:  parseInt(probability) || 50,
     deliveryDate: deliveryDate || '',
     salesRegion:  salesRegion  || 'JP',
-    subtotal: subtotal || 0,
-    total:    total,
-    taxDetails: salesRegion === 'JP' ? [{ taxRate: 10, taxBase: subtotal, taxAmount }] : [],
-    products: [],
-    memo: notes || '',
-    status: 'quoted',
+    subtotal:     subtotal || 0,
+    total,
+    taxDetails:   salesRegion === 'JP' ? [{ taxRate: 10, taxBase: subtotal, taxAmount }] : [],
+    products,
+    memo:         notes || '',
+    status:       resolvedStatus,
     latest_estimate_version: 1,
   };
   const savedPJ = LocalDB.saveProject(pjData);
@@ -713,7 +726,7 @@ function createPJAndEST({ projectName, customer, salesPerson, probability, deliv
     version:     1,
     issue_date:  today,
     valid_until: '',
-    status:      'quoted',
+    status:      resolvedStatus,
     notes:       notes || '',
     created_at:  new Date().toISOString(),
     approved_at: null,
@@ -1021,43 +1034,149 @@ function buildFilterOptionsRefresh() {
 }
 
 // ─── CSV エクスポート ───
-const CSV_COLS = [
-  { key:'estimate_no',  label:'EST番号' },
-  { key:'project_no',   label:'案件No' },
-  { key:'version',      label:'版' },
-  { key:'projectName',  label:'案件名' },
-  { key:'customer',     label:'取引先' },
-  { key:'salesPerson',  label:'担当者' },
-  { key:'salesRegion',  label:'販売地域' },
-  { key:'probability',  label:'受注確度(%)' },
-  { key:'deliveryDate', label:'納品予定日' },
-  { key:'issue_date',   label:'申請日' },
-  { key:'subtotal',     label:'合計金額（税抜）' },
-  { key:'total',        label:'合計金額（税込）' },
-  { key:'status',       label:'ステータス' },
-  { key:'notes',        label:'備考' },
-];
+// ─── 為替レートキャッシュ（案件一覧と同一ロジック） ───
+let fxAllRatesCache = new Map();
+function loadFxRates() {
+  try {
+    const fxData = JSON.parse(localStorage.getItem('qururi:exchange_rates') || '[]');
+    fxAllRatesCache = new Map();
+    fxData.forEach(r => {
+      const cc = String(r.currency || '').toUpperCase();
+      const ym = String(r.year_month || '').slice(0, 7);
+      if (cc && ym && r.rate_avg != null) fxAllRatesCache.set(cc + ':' + ym, Number(r.rate_avg));
+    });
+  } catch { fxAllRatesCache = new Map(); }
+}
+function getFxRate(currency, deliveryDate, fxAllRates) {
+  if (!currency || currency === 'JPY') return 1;
+  if (!deliveryDate) return null;
+  const ym = String(deliveryDate).slice(0, 7);
+  const rate = fxAllRates.get(currency.toUpperCase() + ':' + ym);
+  return (rate != null) ? rate : null;
+}
 
-function exportCSV() { exportRows(filtered, 'QURURi_見積一覧'); }
+// ─── CSV エクスポート（案件一覧と同一の29列 + EST固有3列 = 32列） ───
+function exportCSV() {
+  if (!filtered.length) { showToast('エクスポートするデータがありません', 'error'); return; }
+  loadFxRates();
+  const csv = buildEstCSV(filtered);
+  downloadCSV(csv, 'QURURi_見積一覧_' + todayStr() + '.csv');
+  const lineCount = filtered.reduce((s, e) => {
+    const pj = getPJMap().get(e.project_no);
+    return s + (pj?.products?.length || 1);
+  }, 0);
+  showToast(filtered.length + '件（' + lineCount + '明細行）をエクスポートしました', 'success');
+}
 function exportSelectedCSV() {
-  const rows = filtered.filter(e=>selectedRows.has(e.estimate_no));
+  const rows = filtered.filter(e => selectedRows.has(e.estimate_no));
   if (!rows.length) { showToast('行を選択してください', 'error'); return; }
-  exportRows(rows, 'QURURi_見積一覧_選択分');
+  loadFxRates();
+  const csv = buildEstCSV(rows);
+  downloadCSV(csv, 'QURURi_見積一覧_選択分_' + todayStr() + '.csv');
+  showToast(rows.length + '件をエクスポートしました', 'success');
 }
-function exportRows(rows, filename) {
-  const header = CSV_COLS.map(c=>c.label).join(',');
-  const body   = rows.map(e=>CSV_COLS.map(c=>{
-    const v = e[c.key] ?? '';
-    return `"${String(v).replace(/"/g,'""')}"`;
-  }).join(',')).join('\n');
-  const csv = '\uFEFF' + header + '\n' + body;
-  downloadCSV(csv, filename+'_'+todayStr()+'.csv');
+
+function buildEstCSV(estRows) {
+  // EST番号昇順に強制ソート
+  const sorted = [...estRows].sort((a, b) =>
+    String(a.estimate_no) < String(b.estimate_no) ? -1 : 1
+  );
+
+  // 製品マスタMap（大区分・中区分・小区分の取得用）
+  let prodMasterMap = new Map();
+  try {
+    const pm = JSON.parse(localStorage.getItem('qururi:products') || '[]');
+    pm.forEach(r => prodMasterMap.set(String(r.product_code || ''), r));
+  } catch(e) {}
+
+  const pjMap = getPJMap();
+
+  // ヘッダー: EST固有3列 + 案件一覧29列と同一
+  const headers = [
+    'EST番号', '版', '申請日',
+    '案件No', '案件名', '取引先コード', '取引先', '担当者コード', '担当者',
+    '販売地域', '業界', '商流', '自社セグ',
+    'ステータス',
+    '製品コード', '製品名', '大区分', '中区分', '小区分',
+    '数量', '通貨', '税抜単価（現地通貨）', '税率',
+    '明細金額（外貨）', '為替レート', '明細金額（円貨）',
+    '合計金額（税抜）',
+    '受注確度(%)', '納品予定日', '備考', '登録日時', '更新日時'
+  ];
+
+  const dataRows = [];
+  sorted.forEach(e => {
+    const p = pjMap.get(e.project_no) || {};
+    const statusLabel = STATUS_MAP[e.status]?.label || e.status || '';
+    const products = (p.products && p.products.length > 0) ? p.products : [null];
+
+    products.forEach(prod => {
+      const masterRec = prod ? prodMasterMap.get(String(prod.productCode || '')) : null;
+      const cur = prod ? (prod.currency || 'JPY') : 'JPY';
+      const isFx = cur !== 'JPY';
+      const rate = isFx ? getFxRate(cur, e.deliveryDate, fxAllRatesCache) : null;
+
+      // 明細金額（円貨）
+      const lineJpy = (() => {
+        if (!prod) return '';
+        if (!isFx) return prod.lineTotal != null ? prod.lineTotal : 0;
+        return (rate != null && prod.lineTotal != null) ? Math.round(prod.lineTotal * rate) : '';
+      })();
+
+      dataRows.push([
+        // EST固有
+        e.estimate_no || '',
+        String(e.version || 1).padStart(2, '0'),
+        e.issue_date   || '',
+        // 案件基本
+        e.project_no   || '',
+        e.projectName  || '',
+        p.customerCode || '',
+        e.customer     || '',
+        p.staffCode    || '',
+        e.salesPerson  || '',
+        e.salesRegion  || '',
+        p.industry     || '',
+        p.channel      || '',
+        p.segment      || '',
+        statusLabel,
+        // 製品明細
+        prod ? (prod.productCode || '') : '',
+        prod ? (prod.productName || '') : '',
+        masterRec?.category_l || '',
+        masterRec?.category_m || '',
+        masterRec?.category_s || '',
+        prod ? (prod.qty != null ? prod.qty : 1) : '',
+        prod ? cur : '',
+        prod ? (prod.unitPrice != null ? prod.unitPrice : 0) : '',
+        prod ? (prod.taxRate   != null ? prod.taxRate   : '') : '',
+        // 外貨明細金額（JPYは空）
+        (isFx && prod?.localAmount != null) ? prod.localAmount : '',
+        // 為替レート（JPYは空）
+        (isFx && rate != null) ? rate : '',
+        lineJpy,
+        // 合計・確度・納品日・備考・日時
+        e.subtotal     || 0,
+        e.probability  || 0,
+        e.deliveryDate || '',
+        e.notes        || '',
+        p.createdAt    || '',
+        p.updatedAt    || '',
+      ]);
+    });
+  });
+
+  const esc = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const lines = [headers, ...dataRows].map(row => row.map(esc).join(','));
+  return '\uFEFF' + lines.join('\r\n');
 }
+
 function downloadCSV(csv, filename) {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.href = URL.createObjectURL(blob);
   a.download = filename; a.click();
-  showToast('CSVをエクスポートしました', 'success');
+  URL.revokeObjectURL(a.href);
 }
 function todayStr() { return new Date().toISOString().slice(0,10).replace(/-/g,''); }
 
@@ -1065,15 +1184,23 @@ function downloadTemplate() {
   const lines = [
     '\uFEFF# 【QURURi 見積インポートひな形】',
     '# ─────────────────────────────────────────────────────────',
-    '# 【必須列】案件名、取引先名（または取引先コード）',
-    '# 【任意列】担当者、受注確度、納品予定日、合計金額（税抜）、販売地域、申請日、備考',
-    '# 【販売地域】JP / NA / EU / CN / AP のいずれか（省略時はJP）',
-    '# 【申請日の形式】YYYY-MM-DD（例: 2026-06-30）またはYYYY/MM/DD形式も可',
-    '# ※「#」で始まる行は読み込み時に自動的に無視されます',
+    '# 【コードと名前の使い分け】',
+    '#   取引先コード / 担当者コード / 製品コード が入力されている場合は優先して照合します',
+    '#   コードが空の場合は取引先名 / 担当者名 / 製品名 でフォールバック照合します',
+    '#   ※ 取引先コードと取引先名のどちらか一方は必須です',
+    '# 【数量】製品1行あたりの数量を整数で入力してください（省略時は1として扱います）',
+    '# 【地域】CSVへの入力不要。取引先マスタから自動引き継ぎされます',
     '# ─────────────────────────────────────────────────────────',
-    '案件名,取引先コード,取引先名,担当者コード,担当者名,受注確度,納品予定日,合計金額（税抜）,販売地域,申請日,備考',
-    '"山田製作所 検査装置 2026","1001","山田製作所","E001","佐藤 健一","70","2026-07-25","12000000","JP","2026-02-25","サンプル"',
-    '"ABC Electronics センサー","","ABC Electronics","","田中 花子","50","2026-09-30","5000000","NA","2026-02-25",""',
+    '# 【ステータスの入力値】',
+    '#   見積前=draft  見積済=quoted  受注済=ordered  納品済=delivered  請求済=invoiced  入金済=paid',
+    '# 【納品予定日の形式】YYYY-MM-DD（例: 2026-06-30）またはYYYY/MM/DD形式も可',
+    '# ※「#」で始まる行は読み込み時に自動的に無視されます',
+    '# ※ 次のヘッダー行の次の行からデータを入力してください',
+    '# ─────────────────────────────────────────────────────────',
+    '案件名,取引先コード,取引先名,担当者コード,担当者名,製品コード,製品名,数量,納品予定日,受注確度,ステータス,金額,備考',
+    '"山田製作所 検査装置 2026","1001","山田製作所","E001","佐藤 健一","P101","検査装置 TypeA","1","2026-07-25","70","quoted","12000000","CSV直接入力"',
+    '"ABC Electronics センサー","","ABC Electronics","","田中 花子","P102","センサーユニット","2","2026-09-30","50","quoted","","金額ブランク→単価マスタから自動算出"',
+    '"東芝エネルギー案件","","東芝エネルギー","","渡辺 武","","","1","2026-12-31","40","quoted","","コード不明な場合は名前欄に入力"',
   ];
   downloadCSV(lines.join('\n'), 'QURURi_見積インポートひな形.csv');
 }
@@ -1161,11 +1288,11 @@ function executeImport() {
   if (!parsedCsvRows.length) return;
   let success=0, errors=[];
   parsedCsvRows.forEach((row,i)=>{
-    // 取引先名・取引先コードのどちらかは必須
     const projectName = row['案件名']||'';
     const customer    = row['取引先名']||row['取引先']||'';
     if (!projectName) { errors.push(`行${i+2}: 案件名が空`); return; }
-    const subtotal = parseFloat(String(row['合計金額（税抜）']||'0').replace(/,/g,''))||0;
+    // 金額：「金額」列を優先、次に「合計金額（税抜）」
+    const subtotal = parseFloat(String(row['金額']||row['合計金額（税抜）']||'0').replace(/,/g,''))||0;
     try {
       createPJAndEST({
         projectName,
@@ -1177,11 +1304,17 @@ function executeImport() {
         salesRegion:  row['販売地域']||'JP',
         notes:        row['備考']||'',
         issueDate:    normalizeDate(row['申請日']||'')||new Date().toISOString().slice(0,10),
+        status:       row['ステータス']||'quoted',
+        // 製品明細（案件ひな形と同一列）
+        productCode:  row['製品コード']||'',
+        productName:  row['製品名']||'',
+        qty:          parseInt(row['数量'])||1,
       });
       success++;
     } catch(e) { errors.push(`行${i+2}: ${e.message}`); }
   });
   closeImportModal();
+  invalidatePJCache();
   loadEstimates();
   buildFilterOptionsRefresh();
   applyFilters();
