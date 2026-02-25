@@ -1814,8 +1814,10 @@ function collectFormData() {
     const taxRate     = parseFloat((autofills[1]?.value || '10').replace('%', '')) || 10;
     const lineTotal   = qty * unitPrice;
 
+    // 案件入力画面では直接入力のため lineTotal = localAmount（現地通貨=入力値）
+    const localAmount = lineTotal;
     products.push({ lineNo: index + 1, productName, productId: null,
-                    qty, unitPrice, currency, taxRate, lineTotal,
+                    qty, unitPrice, currency, taxRate, lineTotal, localAmount,
                     categoryL: '', categoryM: '', categoryS: '' });
     subtotal += lineTotal;
   });

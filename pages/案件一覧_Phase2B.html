@@ -1053,7 +1053,8 @@
                 <th style="text-align:center;">地域</th>
                 <th>製品名</th>
                 <th style="text-align:center;">通貨</th>
-                <th style="text-align:right;">明細金額</th>
+                <th style="text-align:right;">明細金額（円）</th>
+                <th style="text-align:right;">明細金額（現地通貨）</th>
                 <th onclick="sortBy('subtotal')" style="text-align:right;">合計（税抜） <span class="sort-icon" id="sort_subtotal">↕</span></th>
                 <th onclick="sortBy('probability')" style="text-align:center;">確度 <span class="sort-icon" id="sort_probability">↕</span></th>
                 <th onclick="sortBy('deliveryDate')">納品予定日 <span class="sort-icon" id="sort_deliveryDate">↕</span></th>
@@ -1062,7 +1063,7 @@
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="14"><div class="empty-state"><p>データを読み込み中...</p></div></td></tr>
+              <tr><td colspan="15"><div class="empty-state"><p>データを読み込み中...</p></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -1463,7 +1464,7 @@ function renderTable() {
   document.getElementById('showingCount').textContent = page.length.toLocaleString();
 
   if (page.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="14"><div class="empty-state">
+    tbody.innerHTML = `<tr><td colspan="15"><div class="empty-state">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
       <p>案件が見つかりません</p>
       <small>検索条件を変えるか、新規案件を登録してください</small>
@@ -1506,7 +1507,7 @@ function renderTable() {
     const currency = (prod && prod.currency) ? prod.currency : (p.currency || 'JPY');
     const sym      = CURRENCY_SYMBOL[currency] || (currency + ' ');
 
-    const amountDisplay = sym + (p.subtotal || 0).toLocaleString();
+    const amountDisplay = '¥' + (p.subtotal || 0).toLocaleString();  // subtotalは常にJPY円建て
 
     const prodName = prod ? (prod.productName || '\u2013') : '\u2013';
     const prodTitle = prod ? ((prod.productName || '') + (prod.productCode ? ' (' + prod.productCode + ')' : '')) : '';
@@ -1523,11 +1524,18 @@ function renderTable() {
       + '<span class="currency-badge" style="' + (isForeign ? 'background:#e8f0fe;color:#376ee6;' : '') + '">'
       + lineCurr + '</span></td>';
 
-    // 明細金額セル（通貨バッジなし・金額のみ）
-    const lineAmt   = prod ? (prod.lineTotal != null ? prod.lineTotal : 0) : null;
+    // 明細金額（円）セル: lineTotal は常にJPY円建て → ¥固定
+    const lineAmt       = prod ? (prod.lineTotal   != null ? prod.lineTotal   : 0) : null;
+    const localAmt      = prod ? (prod.localAmount != null ? prod.localAmount : null) : null;
     const lineTotalCell = lineAmt != null
-      ? '<td style="text-align:right;white-space:nowrap;">' + lineSym + lineAmt.toLocaleString() + '</td>'
+      ? '<td style="text-align:right;white-space:nowrap;">¥' + lineAmt.toLocaleString() + '</td>'
       : '<td></td>';
+
+    // 明細金額（現地通貨）セル: JPYの場合は空欄、外貨の場合は現地通貨記号で表示
+    const isLineForeign = lineCurr !== 'JPY';
+    const localAmountCell = (isLineForeign && localAmt != null)
+      ? '<td style="text-align:right;white-space:nowrap;">' + lineSym + localAmt.toLocaleString() + '</td>'
+      : '<td style="text-align:right;color:var(--text-tertiary);font-size:11px;">–</td>';
 
     // 全行フル表示（製品ごとに全列を繰り返す）
     // 2行目以降：案件Noと案件名・取引先をグレーで表示してグルーピングを視覚的に表現
@@ -1547,6 +1555,7 @@ function renderTable() {
       + prodCell
       + currencyCell
       + lineTotalCell
+      + localAmountCell
       + '<td class="td-amount" style="text-align:right;">' + amountDisplay + '</td>'
       + '<td class="td-prob"><span class="prob-badge" style="background:' + probBg + ';color:' + probColor + ';">' + prob + '%</span></td>'
       + '<td class="' + dateClass + '">' + dateLabel + '</td>'
@@ -1703,8 +1712,9 @@ function buildCSV(rows) {
     '販売地域', '業界', '商流', '自社セグ',
     'ステータス',
     '製品コード', '製品名', '大区分', '中区分', '小区分',
-    '数量', '税抜単価', '通貨', '税率', '明細金額',
-    '合計金額（税抜）', '合計金額（税込）',
+    '数量', '税抜単価（現地通貨）', '通貨', '税率',
+    '明細金額（円）', '明細金額（現地通貨）',
+    '合計金額（税抜・円）', '合計金額（税込・円）',
     '受注確度(%)', '納品予定日', '備考', '登録日時', '更新日時'
   ];
 
@@ -1738,10 +1748,11 @@ function buildCSV(rows) {
         categoryM,
         categoryS,
         prod ? (prod.qty       != null ? prod.qty       : 1) : '',
-        prod ? (prod.unitPrice != null ? prod.unitPrice : 0) : '',
-        prod ? (prod.currency  || 'JPY') : '',
-        prod ? (prod.taxRate   != null ? prod.taxRate   : '') : '',
-        prod ? (prod.lineTotal != null ? prod.lineTotal : 0)  : '',
+        prod ? (prod.unitPrice   != null ? prod.unitPrice   : 0) : '',
+        prod ? (prod.currency   || 'JPY') : '',
+        prod ? (prod.taxRate    != null ? prod.taxRate   : '') : '',
+        prod ? (prod.lineTotal  != null ? prod.lineTotal : 0)  : '',   // 円建て
+        prod ? ((prod.currency !== 'JPY' && prod.localAmount != null) ? prod.localAmount : '') : '',  // 現地通貨
         // 案件合計
         p.subtotal    || 0,
         p.total       || 0,
@@ -2142,10 +2153,12 @@ function parseImportCSV(text) {
     let priceNote = '';
     const rawAmount = amount ? String(amount).replace(/[,¥\s]/g, '') : '';
 
+    let localAmount = 0;  // 現地通貨建て明細金額
     if (rawAmount !== '') {
       // CSV直接入力：金額欄の値を lineTotal・unitPrice に使用（数量1として扱う）
       lineTotal = Number(rawAmount);
       unitPrice = lineTotal;
+      localAmount = lineTotal;  // 直接入力は現地通貨=円換算と同一
     } else if (resolvedProdCode && masters.priceByCode.has(resolvedProdCode)) {
       // 単価マスタから通貨別単価を取得
       const priceRec  = masters.priceByCode.get(resolvedProdCode);
@@ -2153,7 +2166,8 @@ function parseImportCSV(text) {
       unitPrice = priceInfo.unitPrice;
 
       if (priceInfo.jpyAmount != null) {
-        lineTotal = priceInfo.jpyAmount;   // JPY換算済み金額をlineTotalに
+        lineTotal    = priceInfo.jpyAmount;   // JPY換算済み金額をlineTotalに
+        localAmount  = priceInfo.unitPrice;   // 現地通貨建て単価を保存
         priceNote = resolvedCurrency === 'JPY'
           ? `単価マスタ参照（JPY ${unitPrice.toLocaleString()}）`
           : `単価マスタ参照（${resolvedCurrency} ${unitPrice.toLocaleString()} × レート${masters.fxRates[resolvedCurrency]}）`;
@@ -2192,6 +2206,7 @@ function parseImportCSV(text) {
         currency:    resolvedCurrency,
         taxRate:     resolvedRegion === 'JP' ? 10 : 0,   // 販売地域JPのみ消費税10%
         lineTotal,
+        localAmount,  // 現地通貨建て金額
         priceNote,
       },
     });
