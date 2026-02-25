@@ -1114,16 +1114,12 @@
   }
   .ac-dropdown {
     display: none;
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
-    z-index: 1000;
+    position: fixed; /* ポータル方式：body直下・fixed配置 */
+    z-index: 9999;
     background: #fff;
     border: 1px solid var(--border-default);
     border-radius: var(--radius-md);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-    max-height: 280px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.13);
     overflow-y: auto;
     overflow-x: hidden;
   }
@@ -1827,16 +1823,42 @@ function updateMasterBadges() {
  *   maxResults  : number   - 最大表示件数（デフォルト20）
  */
 function createAutocomplete({ inputId, hiddenId, dropId, getData,
-    getCode, getLabel, getValue, getSub, onSelect, maxResults = 20 }) {
+    getCode, getLabel, getValue, getSub, onSelect }) {
 
-  const input    = document.getElementById(inputId);
-  const hidden   = hiddenId ? document.getElementById(hiddenId) : null;
+  const input  = document.getElementById(inputId);
+  const hidden = hiddenId ? document.getElementById(hiddenId) : null;
+  // ─ ポータル方式：ドロップダウンをbody直下に移動 ─
   const dropdown = document.getElementById(dropId);
   if (!input || !dropdown) return null;
+  document.body.appendChild(dropdown); // body直下に移動（親のoverflowに切られない）
 
   let activeIndex  = -1;
   let confirmed    = false;
   let currentItems = [];
+
+  // ─ ドロップダウンの位置を input に追従させる ─
+  function positionDropdown() {
+    const rect = input.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const maxH = 320;
+
+    dropdown.style.position = 'fixed';
+    dropdown.style.left     = rect.left + 'px';
+    dropdown.style.width    = rect.width + 'px';
+    dropdown.style.zIndex   = '9999';
+
+    // 下に十分なスペースがあれば下、なければ上に展開
+    if (spaceBelow >= Math.min(maxH, 160) || spaceBelow >= spaceAbove) {
+      dropdown.style.top       = (rect.bottom + 4) + 'px';
+      dropdown.style.bottom    = 'auto';
+      dropdown.style.maxHeight = Math.max(spaceBelow - 12, 120) + 'px';
+    } else {
+      dropdown.style.bottom    = (window.innerHeight - rect.top + 4) + 'px';
+      dropdown.style.top       = 'auto';
+      dropdown.style.maxHeight = Math.max(spaceAbove - 12, 120) + 'px';
+    }
+  }
 
   // ─ ハイライト付きテキスト生成 ─
   function highlight(text, q) {
@@ -1867,12 +1889,13 @@ function createAutocomplete({ inputId, hiddenId, dropId, getData,
 
       dropdown.querySelectorAll('.ac-item').forEach(el => {
         el.addEventListener('mousedown', function(e) {
-          e.preventDefault(); // blurより前に発火させる
+          e.preventDefault();
           const item = filtered[parseInt(this.dataset.index)];
           if (item) confirmSelect(item);
         });
       });
     }
+    positionDropdown();
     dropdown.classList.add('open');
   }
 
@@ -1905,14 +1928,12 @@ function createAutocomplete({ inputId, hiddenId, dropId, getData,
   // ─ フォーカスアウト時のバリデーション ─
   function validateOnBlur() {
     if (!input.value.trim()) {
-      // 空は許可（必須チェックは申請時）
       if (hidden) hidden.value = '';
       confirmed = false;
       return;
     }
-    if (confirmed) return; // 既に確定済み
+    if (confirmed) return;
 
-    // テキストが手入力された場合：マスタと照合
     const all = getData();
     const q   = input.value.trim().toLowerCase();
     const match = all.find(item =>
@@ -1924,57 +1945,41 @@ function createAutocomplete({ inputId, hiddenId, dropId, getData,
       input.value = '';
       if (hidden) hidden.value = '';
       confirmed = false;
-      showToast('マスタに登録されていない担当者です', 'error');
+      showToast('マスタに登録されていない値です', 'error');
     }
+  }
+
+  // ─ 候補を絞り込んで返す（全件、上限なし）─
+  function filterItems(q) {
+    const all   = getData();
+    const lower = q.toLowerCase();
+    return q
+      ? all.filter(item =>
+          getLabel(item).toLowerCase().includes(lower) ||
+          String(getCode(item)).toLowerCase().includes(lower)
+        )
+      : all;
   }
 
   // ─ イベント登録 ─
   input.addEventListener('input', function() {
     confirmed = false;
     if (hidden) hidden.value = '';
-    const q       = this.value.trim();
-    const all     = getData();
-    const lower   = q.toLowerCase();
-    const filtered = q
-      ? all.filter(item =>
-          getLabel(item).toLowerCase().includes(lower) ||
-          String(getCode(item)).toLowerCase().includes(lower)
-        )
-      : all;
-    render(filtered.slice(0, maxResults), q);
+    render(filterItems(this.value.trim()), this.value.trim());
   });
 
   input.addEventListener('focus', function() {
-    const q       = this.value.trim();
-    const all     = getData();
-    const lower   = q.toLowerCase();
-    const filtered = q
-      ? all.filter(item =>
-          getLabel(item).toLowerCase().includes(lower) ||
-          String(getCode(item)).toLowerCase().includes(lower)
-        )
-      : all;
-    render(filtered.slice(0, maxResults), q);
+    render(filterItems(this.value.trim()), this.value.trim());
   });
 
-  // 既にフォーカスがある状態での再クリックでもドロップダウンを開く
+  // 確定後の再クリック → 全件表示 + テキスト全選択
   input.addEventListener('click', function() {
-    if (dropdown.classList.contains('open')) return; // 既に開いていれば何もしない
-    // 確定済みの場合は全件表示してテキストを全選択（選び直しやすくする）
+    if (dropdown.classList.contains('open')) return;
     if (confirmed) {
-      render(getData().slice(0, maxResults), '');
+      render(getData(), '');
       this.select();
     } else {
-      const q     = this.value.trim();
-      const all   = getData();
-      const lower = q.toLowerCase();
-      const filtered = q
-        ? all.filter(item =>
-            getLabel(item).toLowerCase().includes(lower) ||
-            String(getCode(item)).toLowerCase().includes(lower)
-          )
-        : all;
-      render(filtered.slice(0, maxResults), q);
+      render(filterItems(this.value.trim()), this.value.trim());
     }
   });
 
@@ -1983,11 +1988,9 @@ function createAutocomplete({ inputId, hiddenId, dropId, getData,
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (!isOpen) {
-        render(getData().slice(0, maxResults), '');
-      } else {
-        setActive(activeIndex + 1);
-      }
+      if (!isOpen) render(getData(), '');
+      else setActive(activeIndex + 1);
+
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       if (isOpen) setActive(activeIndex - 1);
@@ -2007,7 +2010,6 @@ function createAutocomplete({ inputId, hiddenId, dropId, getData,
         confirmSelect(currentItems[0]);
       }
       close();
-      // Tab のデフォルト動作（フォーカス移動）はそのまま通す
 
     } else if (e.key === 'Escape') {
       e.preventDefault();
@@ -2019,14 +2021,21 @@ function createAutocomplete({ inputId, hiddenId, dropId, getData,
   });
 
   input.addEventListener('blur', function() {
-    // mousedown で confirmSelect が走る場合は 150ms 後に blur 処理
-    // ただし再クリックでフォーカスが戻っていれば何もしない
     setTimeout(() => {
       if (document.activeElement === input) return;
       if (dropdown.contains(document.activeElement)) return;
       close();
       validateOnBlur();
     }, 150);
+  });
+
+  // ─ スクロール・リサイズ時：開いていれば位置を追従 ─
+  window.addEventListener('scroll', function() {
+    if (dropdown.classList.contains('open')) positionDropdown();
+  }, true); // キャプチャフェーズで全スクロールを拾う
+
+  window.addEventListener('resize', function() {
+    if (dropdown.classList.contains('open')) positionDropdown();
   });
 
   // ─ 外側クリックで閉じる ─
@@ -2039,12 +2048,12 @@ function createAutocomplete({ inputId, hiddenId, dropId, getData,
   // ─ 外部向けAPI ─
   return {
     setValue(val, code) {
-      input.value  = val;
+      input.value = val;
       if (hidden) hidden.value = code != null ? code : '';
       confirmed = true;
     },
     clear() {
-      input.value  = '';
+      input.value = '';
       if (hidden) hidden.value = '';
       confirmed = false;
       close();
@@ -2068,7 +2077,6 @@ function populateMasterLists() {
     getLabel : s => (s.staff_name || '') + (s.department ? '（' + s.department + '）' : ''),
     getValue : s => (s.staff_name || '') + (s.department ? '（' + s.department + '）' : ''),
     getSub   : s => s.title || '',
-    maxResults: 20,
   });
 
   // ─ 取引先：カスタムオートコンプリート初期化 ─
@@ -2083,7 +2091,6 @@ function populateMasterLists() {
     getLabel : c => c.customer_name || '',
     getValue : c => c.customer_name || '',
     getSub   : c => [c.region || c.sales_region, c.industry].filter(Boolean).join('・'),
-    maxResults: 20,
     onSelect : c => applyCustomerAutofill(c),
   });
 
