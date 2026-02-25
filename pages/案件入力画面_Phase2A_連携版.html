@@ -764,6 +764,27 @@
     position: relative;
   }
 
+  /* 製品明細用オートコンプリートラッパー */
+  .table-ac-wrapper {
+    position: relative;
+  }
+  .table-ac-wrapper .prod-name-input {
+    width: 100%;
+    padding-right: 20px;
+  }
+  .table-ac-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 4px solid var(--input-dropdown);
+    pointer-events: none;
+  }
+
   .table-select-wrapper::after {
     content: '';
     position: absolute;
@@ -1407,57 +1428,17 @@
                 <tr>
                   <td>1</td>
                   <td>
-                    <div class="table-select-wrapper">
-                      <select class="table-input dropdown">
-                        <option selected>CVD装置</option>
-                      </select>
+                    <div class="table-ac-wrapper">
+                      <input type="text" class="prod-name-input table-input dropdown" autocomplete="off" placeholder="製品名またはコードを入力...">
+                      <input type="hidden" class="prod-code-hidden">
+                      <div class="ac-dropdown" id="ac-drop-prod-1" role="listbox"></div>
                     </div>
                   </td>
                   <td style="text-align: center;"><input type="text" class="table-input direct qty" value="1"></td>
-                  <td><input class="table-input direct price" value="200,000,000"></td>
+                  <td><input class="table-input direct price" value="0"></td>
                   <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
                   <td><input class="table-input autofill" value="10%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
-                  <td><span class="table-input calc price">200,000,000</span></td>
-                  <td style="text-align: center;">
-                    <button class="btn-delete" title="削除">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>
-                    <div class="table-select-wrapper">
-                      <select class="table-input dropdown">
-                        <option selected>マスクアライナー</option>
-                      </select>
-                    </div>
-                  </td>
-                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="2"></td>
-                  <td><input class="table-input direct price" value="150,000,000"></td>
-                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
-                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
-                  <td><span class="table-input calc price">300,000,000</span></td>
-                  <td style="text-align: center;">
-                    <button class="btn-delete" title="削除">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>
-                    <div class="table-select-wrapper">
-                      <select class="table-input dropdown">
-                        <option selected>ウェットエッチング装置</option>
-                      </select>
-                    </div>
-                  </td>
-                  <td style="text-align: center;"><input type="text" class="table-input direct qty" value="1"></td>
-                  <td><input class="table-input direct price" value="300,000,000"></td>
-                  <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
-                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
-                  <td><span class="table-input calc price">300,000,000</span></td>
+                  <td><span class="table-input calc price">0</span></td>
                   <td style="text-align: center;">
                     <button class="btn-delete" title="削除">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1697,74 +1678,55 @@ function setupQtyInput(input) {
   input.addEventListener('input', updateTotals);
 }
 // ─── 製品マスタからselectのoptions一覧を生成するヘルパー ───
-function buildProductOptions(selectedName) {
-  let products = [];
-  try { products = JSON.parse(localStorage.getItem('qururi:products') || '[]'); } catch(e) {}
-  let opts = '<option value="">製品を選択</option>';
-  products.forEach(p => {
-    const name = p.product_name || '';
-    const code = String(p.product_code || '');
-    const sel  = (name === selectedName) ? ' selected' : '';
-    opts += '<option value="' + code + '"' + sel + '>' + name + '</option>';
-  });
-  return opts;
-}
-
-// ─── 製品選択時に単価・通貨・税率を自動入力するヘルパー ───
-function onProductChange(select, row) {
-  const code = select.value;
-  if (!code) return;
-  let products = [];
-  let priceList = [];
-  try { products  = JSON.parse(localStorage.getItem('qururi:products') || '[]'); } catch(e) {}
-  try { priceList = JSON.parse(localStorage.getItem('qururi:prices')   || '[]'); } catch(e) {}
-
-  const prod      = products.find(p => String(p.product_code) === code);
-  const priceRec  = priceList.find(p => String(p.product_code) === code);
-
+// ─── 製品選択確定時：単価・通貨・税率を自動入力 ───
+function applyProductSelect(prod, row) {
   if (!prod) return;
+  let priceList = [];
+  try { priceList = JSON.parse(localStorage.getItem('qururi:prices') || '[]'); } catch(e) {}
+  const priceRec = priceList.find(p => String(p.product_code) === String(prod.product_code));
 
   // 取引先の通貨を取得
-  const custInput2 = document.getElementById('customer');
+  const custVal = document.getElementById('customer')?.value || '';
   let currency = 'JPY';
-  if (custInput2?.value) {
+  if (custVal) {
     try {
       const customers = JSON.parse(localStorage.getItem('qururi:customers') || '[]');
-      const cust = customers.find(c => c.customer_name === custInput2.value || String(c.customer_code) === custInput2.value);
+      const cust = customers.find(c => c.customer_name === custVal || String(c.customer_code) === custVal);
       if (cust?.billing_currency) currency = cust.billing_currency.toUpperCase();
     } catch(e) {}
   }
 
-  // 通貨に対応する単価フィールド
   const PRICE_FIELD = { JPY:'price_jpy', USD:'price_usd', EUR:'price_eur', RMB:'price_rmb' };
   const unitPrice = priceRec ? (Number(priceRec[PRICE_FIELD[currency] || 'price_jpy']) || 0) : 0;
-  const salesReg  = getSalesRegionFromForm();
-  const taxRate   = salesReg === 'JP' ? 10 : 0;
+  const taxRate   = getSalesRegionFromForm() === 'JP' ? 10 : 0;
 
-  // 行の各inputを更新
   const priceInput    = row.querySelector('input.table-input.direct.price');
   const currencyInput = row.querySelector('input.table-input.autofill');
   const taxRateInput  = row.querySelectorAll('input.table-input.autofill')[1];
-  if (priceInput)    { priceInput.value    = unitPrice ? unitPrice.toLocaleString() : '0'; }
-  if (currencyInput) { currencyInput.value = currency; }
-  if (taxRateInput)  { taxRateInput.value  = taxRate + '%'; }
+  if (priceInput)    priceInput.value    = unitPrice ? unitPrice.toLocaleString() : '0';
+  if (currencyInput) currencyInput.value = currency;
+  if (taxRateInput)  taxRateInput.value  = taxRate + '%';
   updateTotals();
 }
+
+let _prodRowCounter = 1; // 初期行1で使用済み
 
 function addProductRow() {
   const tbody = document.getElementById('productTableBody');
   if (!tbody) return;
+  _prodRowCounter++;
   const rowNo   = tbody.querySelectorAll('tr').length + 1;
   const defCurr = getCurrencyFromRows();
   const defTax  = getSalesRegionFromForm() === 'JP' ? '10%' : '0%';
+  const dropId  = 'ac-drop-prod-' + _prodRowCounter;
 
   const tr = document.createElement('tr');
   tr.innerHTML =
     '<td>' + rowNo + '</td>'
-    + '<td><div class="table-select-wrapper">'
-    + '<input type="text" class="prod-search table-input" placeholder="🔍 製品検索..." '
-    + 'style="font-size:11px;padding:2px 4px;width:100%;margin-bottom:2px;border-radius:4px;border:1px solid #dde2ec;">'
-    + '<select class="table-input dropdown">' + buildProductOptions('') + '</select>'
+    + '<td><div class="table-ac-wrapper">'
+    + '<input type="text" class="prod-name-input table-input dropdown" autocomplete="off" placeholder="製品名またはコードを入力...">'
+    + '<input type="hidden" class="prod-code-hidden">'
+    + '<div class="ac-dropdown" id="' + dropId + '" role="listbox"></div>'
     + '</div></td>'
     + '<td style="text-align:center;"><input type="text" class="table-input direct qty" value="1"></td>'
     + '<td><input class="table-input direct price" value="0"></td>'
@@ -1822,10 +1784,10 @@ function updateMasterBadges() {
  *   onSelect    : item=>   - 選択確定時コールバック（省略可）
  *   maxResults  : number   - 最大表示件数（デフォルト20）
  */
-function createAutocomplete({ inputId, hiddenId, dropId, getData,
+function createAutocomplete({ inputId, inputEl, hiddenId, dropId, getData,
     getCode, getLabel, getValue, getSub, onSelect }) {
 
-  const input  = document.getElementById(inputId);
+  const input  = inputEl || document.getElementById(inputId);
   const hidden = hiddenId ? document.getElementById(hiddenId) : null;
   // ─ ポータル方式：ドロップダウンをbody直下に移動 ─
   const dropdown = document.getElementById(dropId);
@@ -2094,11 +2056,7 @@ function populateMasterLists() {
     onSelect : c => applyCustomerAutofill(c),
   });
 
-  // 製品 select（全行）
-  document.querySelectorAll('#productTableBody tr select.table-input.dropdown').forEach(sel => {
-    const current = sel.value;
-    sel.innerHTML = buildProductOptions(current);
-  });
+  // 製品明細は setupRowEvents 内で createAutocomplete を初期化済みのため不要
 }
 
 // 取引先選択時の自動転記（autofill）
@@ -2131,26 +2089,28 @@ function setupRowEvents(row) {
   if (priceInput) setupPriceInput(priceInput);
   if (qtyInput)   setupQtyInput(qtyInput);
 
-  // 製品selectのchangeイベント → 単価・通貨・税率を自動入力
-  const prodSelect = row.querySelector('select.table-input.dropdown');
-  if (prodSelect) {
-    prodSelect.addEventListener('change', function() {
-      onProductChange(this, row);
+  // 製品名カスタムAC初期化（inputEl直接渡し）
+  const prodInput = row.querySelector('input.prod-name-input');
+  const dropEl    = row.querySelector('.ac-dropdown');
+  if (prodInput && dropEl) {
+    if (!dropEl.id) { dropEl.id = 'ac-drop-prod-' + (++_prodRowCounter); }
+    createAutocomplete({
+      inputEl  : prodInput,
+      hiddenId : null,
+      dropId   : dropEl.id,
+      getData  : () => {
+        try { return JSON.parse(localStorage.getItem('qururi:products') || '[]'); } catch(e) { return []; }
+      },
+      getCode  : p => String(p.product_code || ''),
+      getLabel : p => p.product_name || '',
+      getValue : p => p.product_name || '',
+      getSub   : p => p.category_l  || '',
+      onSelect : p => {
+        const h = row.querySelector('input.prod-code-hidden');
+        if (h) h.value = String(p.product_code || '');
+        applyProductSelect(p, row);
+      },
     });
-    // 製品検索input → selectを絞り込む
-    const prodSearch = row.querySelector('input.prod-search');
-    if (prodSearch) {
-      prodSearch.addEventListener('input', function() {
-        const q = this.value.trim().toLowerCase();
-        Array.from(prodSelect.options).forEach(opt => {
-          if (!opt.value) return;  // 「製品を選択」は常に表示
-          opt.hidden = q ? !opt.text.toLowerCase().includes(q) : false;
-        });
-        // 絞り込み後に最初の可視オプションを選択
-        if (q) prodSelect.size = 5;
-        else   prodSelect.size = 1;
-      });
-    }
   }
 
   // 削除ボタン
@@ -2233,13 +2193,15 @@ function collectFormData() {
   const products = [];
   let subtotal = 0;
   document.querySelectorAll('#productTableBody tr').forEach((row, index) => {
-    const productSelect = row.querySelector('select.table-input.dropdown');
+    const prodNameInput = row.querySelector('input.prod-name-input');
+    const prodCodeInput = row.querySelector('input.prod-code-hidden');
     const qtyInput      = row.querySelector('input.table-input.direct.qty');
     const priceInput    = row.querySelector('input.table-input.direct.price');
     const autofills     = row.querySelectorAll('input.table-input.autofill');
-    if (!productSelect || !qtyInput || !priceInput) return;
+    if (!prodNameInput || !qtyInput || !priceInput) return;
 
-    const productName = (productSelect.value || '').trim();
+    const productName = (prodNameInput.value || '').trim();
+    const productCode = (prodCodeInput?.value || '').trim() || null;
     const qty         = parseFloat((qtyInput.value   || '').replace(/,/g, '')) || 0;
     const unitPrice   = parseFloat((priceInput.value || '').replace(/,/g, '')) || 0;
     const currency    = autofills[0]?.value?.trim() || 'JPY';
@@ -2248,7 +2210,7 @@ function collectFormData() {
 
     // 案件入力画面では直接入力のため lineTotal = localAmount（現地通貨=入力値）
     const localAmount = lineTotal;
-    products.push({ lineNo: index + 1, productName, productId: null,
+    products.push({ lineNo: index + 1, productName, productCode,
                     qty, unitPrice, currency, taxRate, lineTotal, localAmount,
                     categoryL: '', categoryM: '', categoryS: '' });
     subtotal += lineTotal;
@@ -2323,7 +2285,7 @@ function validateForSubmit(data) {
     data.products.forEach((p, i) => {
       const row = document.querySelectorAll('#productTableBody tr')[i];
       if (!p.productName) {
-        addFieldError(row?.querySelector('select.table-input.dropdown'), '品名は必須です');
+        addFieldError(row?.querySelector('input.prod-name-input'), '品名は必須です');
         errors.push('明細' + (i+1) + '行目:品名');
       }
       if (!p.qty || p.qty <= 0) {
@@ -2530,17 +2492,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (tbody && data.products && data.products.length > 0) {
       tbody.innerHTML = '';
       data.products.forEach((p, i) => {
-        const taxRateVal = p.taxRate != null ? p.taxRate
-          : (data.salesRegion === 'JP' ? 10 : 0);  // 販売地域JPのみデフォルト10%
+        const taxRateVal = p.taxRate != null ? p.taxRate : (data.salesRegion === 'JP' ? 10 : 0);
+        _prodRowCounter++;
+        const dropId = 'ac-drop-prod-' + _prodRowCounter;
         const tr = document.createElement('tr');
         tr.innerHTML =
           '<td>' + (i + 1) + '</td>'
-          + '<td><div class="table-select-wrapper">'
-          + '<input type="text" class="prod-search table-input" placeholder="🔍 製品検索..." '
-          + 'style="font-size:11px;padding:2px 4px;width:100%;margin-bottom:2px;border-radius:4px;border:1px solid #dde2ec;">'
-          + '<select class="table-input dropdown">'
-          + buildProductOptions(p.productName || '')  // マスタから選択肢を生成
-          + '</select></div></td>'
+          + '<td><div class="table-ac-wrapper">'
+          + '<input type="text" class="prod-name-input table-input dropdown" autocomplete="off"'
+          + ' placeholder="製品名またはコードを入力..."'
+          + ' value="' + (p.productName || '') + '">'
+          + '<input type="hidden" class="prod-code-hidden" value="' + (p.productCode || p.productId || '') + '">'
+          + '<div class="ac-dropdown" id="' + dropId + '" role="listbox"></div>'
+          + '</div></td>'
           + '<td style="text-align:center;"><input type="text" class="table-input direct qty" value="' + (p.qty || 1) + '"></td>'
           + '<td><input class="table-input direct price" value="' + (p.unitPrice || 0).toLocaleString() + '"></td>'
           + '<td><input class="table-input autofill" value="' + (p.currency || 'JPY') + '" readonly style="text-align:center;"></td>'
@@ -2551,7 +2515,16 @@ document.addEventListener('DOMContentLoaded', async function() {
           + '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
           + '</svg></button></td>';
         tbody.appendChild(tr);
+        // prod-name-inputにIDが必要なのでここで付与してからsetupRowEvents
+        const inp = tr.querySelector('input.prod-name-input');
+        if (inp && !inp.id) inp.id = dropId + '-in';
         setupRowEvents(tr);
+        // 復元時：既に productName が入っているので confirmed 状態にする
+        const h = tr.querySelector('input.prod-code-hidden');
+        if (h && h.value) {
+          // ACインスタンスは setupRowEvents 内で生成済み。confirmed フラグを後から立てる
+          if (inp) inp.dataset.confirmed = 'true';
+        }
       });
       updateTotals();
     }
