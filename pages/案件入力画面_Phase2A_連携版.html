@@ -370,6 +370,15 @@
     border-bottom: none;
   }
 
+  /* ドロップダウン入力行：番号・ラベルをオレンジ系に統一 */
+  .form-row--dropdown .field-number {
+    color: var(--input-dropdown);
+    background: var(--input-dropdown-bg);
+  }
+  .form-row--dropdown .field-label {
+    color: var(--input-dropdown);
+  }
+
   .field-number {
     width: 32px;
     height: 32px;
@@ -1313,7 +1322,7 @@
                 </div>
               </div>
 
-              <div class="form-row">
+              <div class="form-row form-row--dropdown">
                 <div class="field-number">4</div>
                 <div class="field-label">営業担当</div>
                 <div class="field-value">
@@ -1327,7 +1336,7 @@
                 </div>
               </div>
 
-              <div class="form-row">
+              <div class="form-row form-row--dropdown">
                 <div class="field-number">5</div>
                 <div class="field-label">取引先</div>
                 <div class="field-value">
@@ -1937,6 +1946,21 @@ function createAutocomplete({ inputId, hiddenId, dropId, getData,
   });
 
   input.addEventListener('focus', function() {
+    const q       = this.value.trim();
+    const all     = getData();
+    const lower   = q.toLowerCase();
+    const filtered = q
+      ? all.filter(item =>
+          getLabel(item).toLowerCase().includes(lower) ||
+          String(getCode(item)).toLowerCase().includes(lower)
+        )
+      : all;
+    render(filtered.slice(0, maxResults), q);
+  });
+
+  // 既にフォーカスがある状態での再クリックでもドロップダウンを開く
+  input.addEventListener('click', function() {
+    if (dropdown.classList.contains('open')) return; // 既に開いていれば何もしない
     const q       = this.value.trim();
     const all     = getData();
     const lower   = q.toLowerCase();
