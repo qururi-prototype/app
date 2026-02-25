@@ -1224,10 +1224,14 @@
         案件入力
       </div>
       <div class="nav-item" onclick="window.location.href='案件一覧_Phase2B.html'" style="cursor:pointer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
         案件一覧
       </div>
-      
+      <div class="nav-item" onclick="window.location.href='見積一覧_Phase2D.html'" style="cursor:pointer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        見積一覧
+      </div>
+
       <div class="nav-section-label">マスター管理</div>
       <div class="nav-item" style="cursor:pointer" onclick="location.href='マスター管理画面_Phase2C.html?tab=products'" id="nav-products">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
@@ -1580,12 +1584,12 @@
         <div class="footer-right">
           <button class="btn btn-ghost" id="btnCancel">キャンセル</button>
           <button class="btn btn-ghost" id="btnSaveDraft">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            下書き保存
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            案件登録
           </button>
-          <button class="btn btn-primary" id="btnRegister">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="20 6 9 17 4 12"/></svg>
-            案件申請
+          <button class="btn btn-primary" id="btnRegister" title="">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            見積申請
           </button>
         </div>
       </div>
@@ -1600,8 +1604,76 @@
 // ===================================================
 
 // ===================================================
-// 数値フォーマット・リアルタイム計算
+// EstimateDB — 見積レコード管理（LocalStorage）
 // ===================================================
+const EstimateDB = {
+  _KEY: 'qururi_estimates',
+  _getAll() {
+    try { return JSON.parse(localStorage.getItem(this._KEY) || '[]'); } catch { return []; }
+  },
+  saveEstimate(est) {
+    const all = this._getAll();
+    const idx = all.findIndex(e => e.estimate_no === est.estimate_no);
+    if (idx >= 0) all[idx] = est; else all.push(est);
+    localStorage.setItem(this._KEY, JSON.stringify(all));
+    return est;
+  },
+  getByProjectNo(projectNo) {
+    return this._getAll().filter(e => e.project_no === projectNo);
+  },
+  getAll() { return this._getAll(); },
+};
+
+// ===================================================
+// 見積申請ボタンの状態制御
+// ===================================================
+function setEstimateButtonState(estNo) {
+  const btn = document.getElementById('btnRegister');
+  if (!btn) return;
+  if (estNo) {
+    btn.disabled = true;
+    btn.style.opacity = '0.45';
+    btn.style.cursor = 'not-allowed';
+    btn.title = '見積申請済みです（' + estNo + '）';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 見積申請済み';
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.style.cursor = '';
+    btn.title = '';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 見積申請';
+  }
+}
+// ===================================================
+// LocalDB フォールバック（DataAPI未ロード時）
+// ===================================================
+if (typeof DataAPI === 'undefined') {
+  window.DataAPI = {
+    _getIndex() { try { return JSON.parse(localStorage.getItem('qururi_projectIndex')||'[]'); } catch { return []; } },
+    _updateIndex(no) { const i=this._getIndex(); if(!i.includes(no)){i.push(no);localStorage.setItem('qururi_projectIndex',JSON.stringify(i));} },
+    _generateNo() {
+      const year=new Date().getFullYear();
+      const all=this.getAllProjects();
+      const max=all.filter(p=>p.projectNo?.startsWith(`PJ-${year}`))
+        .reduce((m,p)=>Math.max(m,parseInt(p.projectNo?.slice(7))||0),0);
+      return `PJ-${year}${String(max+1).padStart(4,'0')}`;
+    },
+    getAllProjects() {
+      return this._getIndex().map(no=>{try{return JSON.parse(localStorage.getItem(`qururi_project_${no}`));}catch{return null;}}).filter(Boolean);
+    },
+    async saveProject(data) {
+      if(!data.projectNo){data.projectNo=this._generateNo();data.createdAt=new Date().toISOString();}
+      data.updatedAt=new Date().toISOString();
+      localStorage.setItem(`qururi_project_${data.projectNo}`,JSON.stringify(data));
+      this._updateIndex(data.projectNo);
+      return data;
+    },
+    async loadProject(no) {
+      try{return JSON.parse(localStorage.getItem(`qururi_project_${no}`));}catch{return null;}
+    },
+  };
+}
+
 function parseNumber(str) {
   return parseFloat((str || '').replace(/,/g, '')) || 0;
 }
@@ -2397,21 +2469,22 @@ document.getElementById('btnSaveDraft').addEventListener('click', async function
 
     const saved = await DataAPI.saveProject(data);
     document.getElementById('projectNoDisplay').textContent = saved.projectNo;
-    showToast('下書きとして保存しました（' + saved.projectNo + '）', 'success');
+    showToast('案件を登録しました（' + saved.projectNo + '）', 'success');
     setTimeout(() => { window.location.href = '案件一覧_Phase2B.html'; }, 800);
   } catch (err) {
     console.error('保存エラー:', err);
     showToast('保存に失敗しました: ' + err.message, 'error');
     btn.disabled = false;
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 下書き保存';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> 案件登録';
   }
 });
 
 // ===================================================
-// 案件申請
+// 見積申請
 // ===================================================
 document.getElementById('btnRegister').addEventListener('click', async function() {
   const btn = this;
+  if (btn.disabled) return;
   const data = collectFormData();
   const errors = validateForSubmit(data);
   if (errors.length > 0) {
@@ -2423,18 +2496,57 @@ document.getElementById('btnRegister').addEventListener('click', async function(
   btn.disabled = true;
   btn.textContent = '申請中...';
   try {
+    // 既存案件Noを取得（新規の場合は採番される）
     const existingNo = getCurrentProjectNo();
     if (existingNo) data.projectNo = existingNo;
 
+    // ステータス: draft → pending → quoted（承認フロー未実装のため即昇格）
+    data.status = 'quoted';
+    data.latest_estimate_version = (data.latest_estimate_version || 0) + 1;
+
+    // 案件を保存（projectNo採番もここで行われる）
     const saved = await DataAPI.saveProject(data);
     document.getElementById('projectNoDisplay').textContent = saved.projectNo;
-    showToast('案件を申請しました（' + saved.projectNo + '）', 'success');
-    setTimeout(() => { window.location.href = '案件一覧_Phase2B.html'; }, 800);
+
+    // ESTレコード生成
+    const version = saved.latest_estimate_version || 1;
+    const versionStr = String(version).padStart(2, '0');
+    const estNo = 'EST-' + saved.projectNo.replace('PJ-', '') + '-' + versionStr;
+    const estRecord = {
+      estimate_no: estNo,
+      project_no:  saved.projectNo,
+      version:     version,
+      issue_date:  new Date().toISOString().slice(0, 10),
+      valid_until: '',
+      status:      'quoted',
+      notes:       '',
+      created_at:  new Date().toISOString(),
+      approved_at: null,
+      // 案件情報のスナップショット（見積一覧で表示するため）
+      projectName:  saved.projectName,
+      customer:     saved.customer,
+      customerCode: saved.customerCode,
+      salesPerson:  saved.salesPerson,
+      salesRegion:  saved.salesRegion,
+      probability:  saved.probability,
+      deliveryDate: saved.deliveryDate,
+      subtotal:     saved.subtotal,
+      total:        saved.total,
+      taxDetails:   saved.taxDetails,
+    };
+    EstimateDB.saveEstimate(estRecord);
+
+    showToast('見積申請しました（' + estNo + '）', 'success');
+
+    // 申請完了後、見積申請ボタンをグレーアウト
+    setEstimateButtonState(estNo);
+
+    setTimeout(() => { window.location.href = '見積一覧_Phase2D.html'; }, 1000);
   } catch (err) {
     console.error('申請エラー:', err);
     showToast('申請に失敗しました: ' + err.message, 'error');
     btn.disabled = false;
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="20 6 9 17 4 12"/></svg> 案件申請';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 見積申請';
   }
 });
 
@@ -2462,6 +2574,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   // 新規案件：全フィールドをクリア
   if (!projectNo) {
     document.getElementById('projectNoDisplay').textContent = '新規案件';
+    setEstimateButtonState(null); // 新規はアクティブ
     if (document.getElementById('projectName'))    document.getElementById('projectName').value = '';
     if (document.getElementById('deliveryDate'))   document.getElementById('deliveryDate').value = '';
     if (document.getElementById('memo'))           document.getElementById('memo').value = '';
@@ -2488,6 +2601,15 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // ─ 案件No表示 ─
     document.getElementById('projectNoDisplay').textContent = data.projectNo;
+
+    // ─ ESTレコード存在チェック → 見積申請ボタンのグレーアウト ─
+    const estList = EstimateDB.getByProjectNo(data.projectNo);
+    if (estList.length > 0) {
+      const latestEst = estList.sort((a, b) => b.version - a.version)[0];
+      setEstimateButtonState(latestEst.estimate_no);
+    } else {
+      setEstimateButtonState(null);
+    }
 
     // ─ テキスト系基本情報 ─
     if (document.getElementById('projectName'))

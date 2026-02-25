@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QURURi – 見積一覧</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #f5f6f8;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f0f1f4;
+    --bg-card: #ffffff;
+    --border-subtle: #e8eaed;
+    --border-default: #d4d7dd;
+    --border-focus: rgba(55,110,230,0.45);
+    --text-primary: #1a1d26;
+    --text-secondary: #5f6577;
+    --text-tertiary: #9198a8;
+    --text-label: #6e7585;
+    --accent-blue: #376ee6;
+    --accent-blue-glow: #eef3fc;
+    --danger: #d9503f;
+    --danger-bg: #fdf0ee;
+    --success: #1a8f5c;
+    --success-bg: #edf8f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app-shell {
+    display: flex;
+    min-height: 100vh;
+    padding-left: 240px;
+  }
+
+  /* ─── Sidebar ─── */
+  .sidebar {
+    width: 240px;
+    background: #1a1d26;
+    padding: 24px 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+  }
+
+  .sidebar-logo { padding: 0 20px; margin-bottom: 32px; }
+  .sidebar-logo-main { font-size: 20px; font-weight: 700; letter-spacing: 1px; color: #fff; margin-bottom: 4px; }
+  .sidebar-logo-sub { font-size: 11px; font-weight: 500; color: #9ca3af; letter-spacing: 0.5px; }
+
+  .sidebar-nav { flex: 1; padding: 0; }
+
+  .nav-section-label {
+    padding: 0 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin: 16px 0 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    font-size: 13px;
+    font-weight: 400;
+    color: #d1d5db;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    background: none;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    width: 100%;
+    text-align: left;
+    text-decoration: none;
+  }
+  .nav-item:hover { color: #e5e7eb; background: rgba(255,255,255,0.05); }
+  .nav-item.active { color: #60a5fa; background: rgba(59,130,246,0.12); border-left-color: #3b82f6; font-weight: 500; }
+  .nav-item svg { width: 18px; height: 18px; opacity: 0.8; flex-shrink: 0; }
+  .nav-item.active svg { opacity: 1; }
+
+  .sidebar-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 10px 20px; }
+
+  /* ─── Main ─── */
+  main { flex: 1; padding: 32px; min-width: 0; }
+
+  .content-wrapper { max-width: 1400px; margin: 0 auto; }
+
+  /* ─── Page Header ─── */
+  .page-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
+  }
+  .page-title-group h1 {
+    font-size: 22px; font-weight: 700; color: var(--text-primary);
+    display: flex; align-items: center; gap: 10px; margin-bottom: 4px;
+  }
+  .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+  .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* ─── Buttons ─── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: all 0.15s; border: 1px solid transparent; white-space: nowrap;
+  }
+  .btn svg { width: 14px; height: 14px; }
+  .btn-primary { background: var(--accent-blue); color: #fff; }
+  .btn-primary:hover { background: #2558cc; }
+  .btn-secondary { background: var(--bg-secondary); color: var(--text-secondary); border-color: var(--border-default); }
+  .btn-secondary:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .btn-ghost { background: transparent; color: var(--text-secondary); border-color: transparent; }
+  .btn-ghost:hover { background: var(--bg-tertiary); }
+
+  /* ─── Summary Bar ─── */
+  .summary-bar {
+    display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .summary-card {
+    background: var(--bg-card); border-radius: var(--radius-md);
+    padding: 14px 20px; border: 1px solid var(--border-subtle);
+    min-width: 160px; flex: 1;
+  }
+  .summary-card.highlight { border-color: var(--accent-blue); }
+  .summary-label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .summary-value { font-size: 22px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .summary-card.highlight .summary-value { color: var(--accent-blue); }
+  .summary-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+
+  /* ─── Filter Card ─── */
+  .filter-card {
+    background: var(--bg-card); border-radius: var(--radius-lg);
+    padding: 16px; border: 1px solid var(--border-subtle);
+    margin-bottom: 16px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .filter-label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+  .search-wrap {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-tertiary); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm); padding: 6px 12px; flex: 1; min-width: 200px;
+  }
+  .search-wrap svg { width: 14px; height: 14px; color: var(--text-tertiary); flex-shrink: 0; }
+  .search-input { border: none; background: transparent; font-size: 13px; color: var(--text-primary); outline: none; width: 100%; }
+  .filter-select {
+    border: 1px solid var(--border-default); border-radius: var(--radius-sm);
+    padding: 7px 10px; font-size: 13px; color: var(--text-primary);
+    background: var(--bg-secondary); cursor: pointer; min-width: 130px;
+  }
+  .filter-date-range { display: flex; align-items: center; gap: 6px; }
+  .filter-date-range input[type="date"] {
+    border: 1px solid var(--border-default); border-radius: var(--radius-sm);
+    padding: 7px 10px; font-size: 13px; color: var(--text-primary);
+  }
+
+  /* ─── Table Card ─── */
+  .table-card {
+    background: var(--bg-card); border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle); overflow: hidden;
+  }
+  .table-toolbar {
+    padding: 12px 16px; border-bottom: 1px solid var(--border-subtle);
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  .table-count { font-size: 13px; color: var(--text-secondary); }
+  .table-count strong { color: var(--text-primary); }
+  .table-wrap { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: var(--bg-tertiary); }
+  th {
+    padding: 10px 12px; text-align: left;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
+    color: var(--text-secondary); white-space: nowrap; cursor: pointer;
+    border-bottom: 1px solid var(--border-subtle); user-select: none;
+  }
+  th:hover { color: var(--text-primary); }
+  .sort-icon { opacity: 0.4; font-size: 10px; }
+  .sort-asc .sort-icon { opacity: 1; }
+  .sort-desc .sort-icon { opacity: 1; }
+
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--accent-blue-glow); }
+
+  .row-checkbox { cursor: pointer; accent-color: var(--accent-blue); width: 15px; height: 15px; }
+
+  .est-no-link {
+    color: var(--accent-blue); font-weight: 600; font-family: 'Inter', monospace;
+    cursor: pointer; text-decoration: none; font-size: 12px;
+  }
+  .est-no-link:hover { text-decoration: underline; }
+
+  .proj-no-link {
+    color: var(--text-secondary); font-size: 11px; font-family: 'Inter', monospace;
+    cursor: pointer;
+  }
+  .proj-no-link:hover { color: var(--accent-blue); text-decoration: underline; }
+
+  /* ─── Status Badge ─── */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 99px;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+  }
+  .status-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status-pending   { color: #d97706; background: #fffbeb; }
+  .status-quoted    { color: #376ee6; background: #eef3fc; }
+
+  /* ─── Probability Bar ─── */
+  .prob-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .prob-bar { height: 4px; background: var(--border-subtle); border-radius: 2px; flex: 1; min-width: 50px; }
+  .prob-fill { height: 100%; border-radius: 2px; background: var(--accent-blue); transition: width 0.3s; }
+  .prob-pct { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; min-width: 32px; text-align: right; }
+
+  /* ─── Empty State ─── */
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--text-tertiary);
+  }
+  .empty-state svg { width: 48px; height: 48px; opacity: 0.3; margin-bottom: 16px; }
+  .empty-state h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text-secondary); }
+  .empty-state p { font-size: 13px; }
+
+  /* ─── Pagination ─── */
+  .pagination { display: flex; justify-content: center; gap: 6px; padding: 16px; align-items: center; }
+  .page-btn {
+    width: 32px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--border-default);
+    background: var(--bg-secondary); cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .page-btn:hover { background: var(--bg-tertiary); }
+  .page-btn.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); font-weight: 600; }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ─── Bulk Bar ─── */
+  .bulk-bar {
+    display: none; align-items: center; gap: 8px;
+    background: #eef3fc; border: 1px solid #c7d7f5;
+    border-radius: var(--radius-sm); padding: 4px 10px; font-size: 12px; color: var(--accent-blue);
+  }
+  .bulk-bar.show { display: flex; }
+  .bulk-bar svg { width: 14px; height: 14px; }
+
+  .per-page-select {
+    border: 1px solid var(--border-default); border-radius: var(--radius-sm);
+    padding: 5px 8px; font-size: 12px; color: var(--text-secondary); background: var(--bg-secondary);
+  }
+
+  /* ─── Modal ─── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 1000;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg-card); border-radius: var(--radius-xl);
+    padding: 28px; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close { background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; border-radius: var(--radius-sm); }
+  .modal-close:hover { background: var(--bg-tertiary); }
+  .modal-close svg { width: 18px; height: 18px; }
+  .modal-body { display: flex; flex-direction: column; gap: 16px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+  .upload-zone {
+    border: 2px dashed var(--border-default); border-radius: var(--radius-md);
+    padding: 32px; text-align: center; cursor: pointer; transition: all 0.15s;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent-blue); background: var(--accent-blue-glow);
+  }
+  .upload-zone svg { width: 36px; height: 36px; color: var(--text-tertiary); margin-bottom: 10px; }
+  .upload-zone p { font-size: 13px; color: var(--text-secondary); }
+  .upload-zone .upload-hint { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; }
+
+  .import-preview {
+    background: var(--bg-tertiary); border-radius: var(--radius-sm);
+    padding: 12px; font-size: 12px; color: var(--text-secondary);
+    max-height: 200px; overflow-y: auto; font-family: monospace; white-space: pre-wrap;
+  }
+
+  /* ─── Toast ─── */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 500; min-width: 280px; max-width: 400px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateX(120%); transition: transform 0.25s ease;
+  }
+  .toast.show { transform: translateX(0); }
+  .toast.success { background: var(--success); color: #fff; }
+  .toast.error   { background: var(--danger); color: #fff; }
+  .toast.info    { background: var(--accent-blue); color: #fff; }
+  .toast-icon { font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ─── Sidebar ─── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-main">QURURi</div>
+      <div class="sidebar-logo-sub">Sales & Budget Mgmt</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">案件管理</div>
+      <div class="nav-item" onclick="showToast('ダッシュボードは準備中です', 'info')" style="cursor:pointer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        ダッシュボード
+      </div>
+      <div class="nav-item" onclick="window.location.href='案件入力画面_Phase2A_連携版.html'" style="cursor:pointer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        案件入力
+      </div>
+      <div class="nav-item" onclick="window.location.href='案件一覧_Phase2B.html'" style="cursor:pointer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+        案件一覧
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        見積一覧
+      </div>
+      <hr class="sidebar-divider">
+      <div class="nav-section-label">マスター管理</div>
+      <div class="nav-item" onclick="location.href='マスター管理画面_Phase2C.html?tab=products'" style="cursor:pointer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        製品マスタ
+      </div>
+      <div class="nav-item" onclick="location.href='マスター管理画面_Phase2C.html?tab=prices'" style="cursor:pointer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        単価マスタ
+      </div>
+      <div class="nav-item" onclick="location.href='マスター管理画面_Phase2C.html?tab=exchange_rates'" style="cursor:pointer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        為替マスタ
+      </div>
+      <div class="nav-item" onclick="location.href='マスター管理画面_Phase2C.html?tab=customers'" style="cursor:pointer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        取引先マスタ
+      </div>
+      <div class="nav-item" onclick="location.href='マスター管理画面_Phase2C.html?tab=staff'" style="cursor:pointer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        担当者マスタ
+      </div>
+    </nav>
+  </aside>
+
+  <!-- ─── Main ─── -->
+  <main>
+    <div class="content-wrapper">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-group">
+          <h1>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px;color:var(--accent-blue)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            見積一覧
+          </h1>
+          <p class="page-subtitle">見積申請済みの案件一覧。EST番号をクリックして案件を編集。CSVで一括登録も可能（PJ自動生成）。</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="openImportModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            CSVインポート
+          </button>
+          <button class="btn btn-secondary" onclick="exportCSV()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            CSVエクスポート
+          </button>
+          <button class="btn btn-primary" onclick="openDirectInputModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新規見積登録
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Bar -->
+      <div class="summary-bar">
+        <div class="summary-card highlight">
+          <div class="summary-label">表示件数</div>
+          <div class="summary-value" id="sumCount">–</div>
+          <div class="summary-sub">件</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">合計金額（税抜）</div>
+          <div class="summary-value" id="sumTotal">–</div>
+          <div class="summary-sub">円</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">受注確度加重平均</div>
+          <div class="summary-value" id="sumProb">–</div>
+          <div class="summary-sub">期待値</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">最新申請日</div>
+          <div class="summary-value" id="sumLatest" style="font-size:16px;">–</div>
+          <div class="summary-sub" id="sumLatestLabel">–</div>
+        </div>
+      </div>
+
+      <!-- Filter Area -->
+      <div class="filter-card">
+        <div class="filter-row">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="search-input" id="searchInput" placeholder="EST番号・案件名・取引先で検索..." oninput="applyFilters()">
+          </div>
+          <select class="filter-select" id="filterRegion" onchange="applyFilters()">
+            <option value="">地域: 全て</option>
+          </select>
+          <select class="filter-select" id="filterSales" onchange="applyFilters()">
+            <option value="">担当者: 全て</option>
+          </select>
+          <button class="btn btn-secondary" onclick="clearFilters()" style="margin-left:auto;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            リセット
+          </button>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">申請日：</span>
+          <div class="filter-date-range">
+            <input type="date" id="filterDateFrom" onchange="applyFilters()">
+            <span class="filter-label">〜</span>
+            <input type="date" id="filterDateTo" onchange="applyFilters()">
+          </div>
+          <select class="filter-select" id="filterProb" onchange="applyFilters()" style="min-width:140px;">
+            <option value="">確度: 全て</option>
+            <option value="high">高（70%以上）</option>
+            <option value="mid">中（40-69%）</option>
+            <option value="low">低（39%以下）</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table Card -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="table-count">
+              <span id="resultCount">0</span>件中 <strong id="showingCount">0</strong>件表示
+            </span>
+            <div class="bulk-bar" id="bulkBar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span id="bulkCount">0</span>件選択中
+              <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;" onclick="exportSelectedCSV()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                選択分をエクスポート
+              </button>
+              <button class="btn" style="padding:4px 10px;font-size:12px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;" onclick="deleteSelected()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                選択削除
+              </button>
+            </div>
+          </div>
+          <div>
+            <select class="per-page-select" id="perPageSelect" onchange="changePerPage()">
+              <option value="20">20件表示</option>
+              <option value="50">50件表示</option>
+              <option value="100">100件表示</option>
+              <option value="0">全件表示</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="estTable">
+            <thead>
+              <tr>
+                <th style="width:36px;padding:10px 12px;">
+                  <input type="checkbox" class="row-checkbox" id="checkAll" onchange="toggleCheckAll()">
+                </th>
+                <th onclick="sortBy('estimate_no')">EST番号 <span class="sort-icon" id="sort_estimate_no">↕</span></th>
+                <th onclick="sortBy('project_no')">案件No <span class="sort-icon" id="sort_project_no">↕</span></th>
+                <th onclick="sortBy('projectName')">案件名 <span class="sort-icon" id="sort_projectName">↕</span></th>
+                <th onclick="sortBy('customer')">取引先 <span class="sort-icon" id="sort_customer">↕</span></th>
+                <th onclick="sortBy('salesPerson')">担当者 <span class="sort-icon" id="sort_salesPerson">↕</span></th>
+                <th onclick="sortBy('issue_date')">申請日 <span class="sort-icon" id="sort_issue_date">↕</span></th>
+                <th onclick="sortBy('deliveryDate')">納品予定日 <span class="sort-icon" id="sort_deliveryDate">↕</span></th>
+                <th onclick="sortBy('probability')" style="text-align:center;">受注確度 <span class="sort-icon" id="sort_probability">↕</span></th>
+                <th style="text-align:right;">合計（税抜）</th>
+                <th style="text-align:right;">合計（税込）</th>
+                <th onclick="sortBy('version')" style="text-align:center;">版 <span class="sort-icon" id="sort_version">↕</span></th>
+              </tr>
+            </thead>
+            <tbody id="estTableBody">
+              <tr>
+                <td colspan="12">
+                  <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                    <h3>見積データがありません</h3>
+                    <p>案件入力画面で「見積申請」を実行するか、CSVインポートで一括登録してください。</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ─── CSVインポート モーダル ─── -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">見積CSVインポート</span>
+      <button class="modal-close" onclick="closeImportModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-secondary);">
+        CSVファイルをインポートします。<strong>PJレコードが自動生成</strong>され、見積一覧・案件一覧の両方に表示されます。
+      </p>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('csvFileInput').click()">
+        <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="handleFileSelect(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p>クリックしてCSVファイルを選択</p>
+        <p class="upload-hint">またはファイルをここにドラッグ&ドロップ</p>
+      </div>
+      <div id="importPreview" style="display:none;">
+        <p style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;" id="previewTitle"></p>
+        <div class="import-preview" id="previewContent"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-tertiary);line-height:1.7;">
+        <strong>CSVフォーマット（必須列）：</strong><br>
+        案件名, 取引先, 担当者, 受注確度, 納品予定日, 合計金額（税抜）<br>
+        <strong>任意列：</strong> 販売地域, 申請日, 備考<br>
+        <button onclick="downloadTemplate()" style="background:none;border:none;color:var(--accent-blue);cursor:pointer;font-size:11px;padding:4px 0;text-decoration:underline;">
+          テンプレートCSVをダウンロード
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeImportModal()">キャンセル</button>
+      <button class="btn btn-primary" id="importExecuteBtn" onclick="executeImport()" disabled>
+        インポート実行
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── 新規見積直接入力 モーダル ─── -->
+<div class="modal-overlay" id="directInputModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">新規見積登録（ルートB）</span>
+      <button class="modal-close" onclick="closeDirectInputModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text-secondary);background:var(--accent-blue-glow);border:1px solid #c7d7f5;border-radius:6px;padding:10px;">
+        スポット案件・小規模案件向け。入力後、PJレコードと ESTレコードがシステムにより自動生成されます。
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">案件名 <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="di_projectName" placeholder="例：山田製作所 検査装置 2026" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">取引先 <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="di_customer" placeholder="取引先名" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">担当者</label>
+          <input type="text" id="di_salesPerson" placeholder="担当者名" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">受注確度（%）</label>
+          <input type="number" id="di_probability" value="50" min="0" max="100" step="10" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">納品予定日</label>
+          <input type="date" id="di_deliveryDate" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">合計金額（税抜・円）</label>
+          <input type="number" id="di_subtotal" placeholder="0" min="0" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">販売地域</label>
+          <select id="di_salesRegion" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
+            <option value="JP">JP（国内）</option>
+            <option value="NA">NA（北米）</option>
+            <option value="EU">EU（欧州）</option>
+            <option value="CN">CN（中国）</option>
+            <option value="AP">AP（アジア太平洋）</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">備考</label>
+          <input type="text" id="di_notes" placeholder="改訂理由など" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDirectInputModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="executeDirectInput()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        見積登録（PJ自動生成）
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast ─── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===================================================
+// QURURi 見積一覧 Phase 2D
+// ===================================================
+
+// ─── Storage Keys ───
+const EST_KEY = 'qururi_estimates';
+const PROJ_KEY_PREFIX = 'qururi_project_';
+const PROJ_INDEX_KEY = 'qururi_projectIndex';
+
+// ─── State ───
+let allEstimates = [];
+let filtered = [];
+let currentPage = 1;
+let perPage = 20;
+let sortKey = 'issue_date';
+let sortDir = 'desc';
+let selectedRows = new Set();
+let parsedCsvRows = [];
+
+// ─── LocalDB (同一キー互換) ───
+const LocalDB = {
+  _getIndex() { try { return JSON.parse(localStorage.getItem(PROJ_INDEX_KEY)||'[]'); } catch { return []; } },
+  _updateIndex(no) { const i=this._getIndex(); if(!i.includes(no)){i.push(no);localStorage.setItem(PROJ_INDEX_KEY,JSON.stringify(i));} },
+  _generateNo() {
+    const year=new Date().getFullYear();
+    const all=this.getAllProjects();
+    const max=all.filter(p=>p.projectNo?.startsWith(`PJ-${year}`))
+      .reduce((m,p)=>Math.max(m,parseInt(p.projectNo?.slice(7))||0),0);
+    return `PJ-${year}${String(max+1).padStart(4,'0')}`;
+  },
+  getAllProjects() {
+    return this._getIndex()
+      .map(no=>{try{return JSON.parse(localStorage.getItem(`${PROJ_KEY_PREFIX}${no}`));}catch{return null;}})
+      .filter(Boolean);
+  },
+  saveProject(data) {
+    if(!data.projectNo){data.projectNo=this._generateNo();data.createdAt=new Date().toISOString();}
+    data.updatedAt=new Date().toISOString();
+    localStorage.setItem(`${PROJ_KEY_PREFIX}${data.projectNo}`,JSON.stringify(data));
+    this._updateIndex(data.projectNo);
+    return data;
+  },
+};
+
+// ─── EstimateDB ───
+const EstimateDB = {
+  getAll() { try { return JSON.parse(localStorage.getItem(EST_KEY)||'[]'); } catch { return []; } },
+  save(est) {
+    const all = this.getAll();
+    const idx = all.findIndex(e=>e.estimate_no===est.estimate_no);
+    if(idx>=0) all[idx]=est; else all.push(est);
+    localStorage.setItem(EST_KEY, JSON.stringify(all));
+    return est;
+  },
+  delete(estNo) {
+    const all = this.getAll().filter(e=>e.estimate_no!==estNo);
+    localStorage.setItem(EST_KEY, JSON.stringify(all));
+  },
+};
+
+// ─── PJ自動生成（ルートB）───
+function createPJAndEST({ projectName, customer, salesPerson, probability, deliveryDate, subtotal, salesRegion, notes, issueDate }) {
+  // PJを自動生成
+  const taxAmount = salesRegion === 'JP' ? Math.floor(subtotal * 0.1) : 0;
+  const total = subtotal + taxAmount;
+  const pjData = {
+    projectName: projectName || '',
+    customer:    customer    || '',
+    salesPerson: salesPerson || '',
+    probability: parseInt(probability) || 50,
+    deliveryDate: deliveryDate || '',
+    salesRegion:  salesRegion  || 'JP',
+    subtotal: subtotal || 0,
+    total:    total,
+    taxDetails: salesRegion === 'JP' ? [{ taxRate: 10, taxBase: subtotal, taxAmount }] : [],
+    products: [],
+    memo: notes || '',
+    status: 'quoted',
+    latest_estimate_version: 1,
+  };
+  const savedPJ = LocalDB.saveProject(pjData);
+
+  // ESTレコードを生成
+  const today = issueDate || new Date().toISOString().slice(0,10);
+  const estNo = 'EST-' + savedPJ.projectNo.replace('PJ-','') + '-01';
+  const estRecord = {
+    estimate_no: estNo,
+    project_no:  savedPJ.projectNo,
+    version:     1,
+    issue_date:  today,
+    valid_until: '',
+    status:      'quoted',
+    notes:       notes || '',
+    created_at:  new Date().toISOString(),
+    approved_at: null,
+    projectName: savedPJ.projectName,
+    customer:    savedPJ.customer,
+    customerCode:'',
+    salesPerson: savedPJ.salesPerson,
+    salesRegion: savedPJ.salesRegion,
+    probability: savedPJ.probability,
+    deliveryDate:savedPJ.deliveryDate,
+    subtotal:    savedPJ.subtotal,
+    total:       savedPJ.total,
+    taxDetails:  savedPJ.taxDetails,
+  };
+  EstimateDB.save(estRecord);
+  return { pj: savedPJ, est: estRecord };
+}
+
+// ─── Init ───
+document.addEventListener('DOMContentLoaded', () => {
+  loadEstimates();
+  buildFilterOptions();
+  applyFilters();
+  setupDragDrop();
+});
+
+function loadEstimates() {
+  allEstimates = EstimateDB.getAll().sort((a,b)=>
+    new Date(b.created_at||b.issue_date) - new Date(a.created_at||a.issue_date)
+  );
+}
+
+// ─── Filter & Sort ───
+function applyFilters() {
+  const q       = document.getElementById('searchInput').value.toLowerCase();
+  const region  = document.getElementById('filterRegion').value;
+  const sales   = document.getElementById('filterSales').value;
+  const dateFrom= document.getElementById('filterDateFrom').value;
+  const dateTo  = document.getElementById('filterDateTo').value;
+  const prob    = document.getElementById('filterProb').value;
+
+  filtered = allEstimates.filter(e => {
+    if (q && ![ e.estimate_no, e.project_no, e.projectName, e.customer ].join('|').toLowerCase().includes(q)) return false;
+    if (region && e.salesRegion !== region) return false;
+    if (sales  && e.salesPerson !== sales)  return false;
+    if (dateFrom && (e.issue_date||'') < dateFrom) return false;
+    if (dateTo   && (e.issue_date||'') > dateTo)   return false;
+    if (prob === 'high' && (e.probability||0) < 70) return false;
+    if (prob === 'mid'  && ((e.probability||0) < 40 || (e.probability||0) >= 70)) return false;
+    if (prob === 'low'  && (e.probability||0) >= 40) return false;
+    return true;
+  });
+
+  // Sort
+  filtered.sort((a,b) => {
+    let va = a[sortKey] ?? ''; let vb = b[sortKey] ?? '';
+    if (typeof va === 'string') { va=va.toLowerCase(); vb=vb.toLowerCase(); }
+    if (va < vb) return sortDir==='asc' ? -1 : 1;
+    if (va > vb) return sortDir==='asc' ? 1  : -1;
+    return 0;
+  });
+
+  currentPage = 1;
+  updateSummary();
+  renderTable();
+  renderPagination();
+}
+
+function sortBy(key) {
+  if (sortKey === key) sortDir = sortDir==='asc' ? 'desc' : 'asc';
+  else { sortKey = key; sortDir = 'desc'; }
+  document.querySelectorAll('.sort-icon').forEach(el => el.textContent = '↕');
+  const el = document.getElementById('sort_' + key);
+  if (el) el.textContent = sortDir==='asc' ? '↑' : '↓';
+  applyFilters();
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filterRegion').value = '';
+  document.getElementById('filterSales').value = '';
+  document.getElementById('filterDateFrom').value = '';
+  document.getElementById('filterDateTo').value = '';
+  document.getElementById('filterProb').value = '';
+  applyFilters();
+}
+
+function buildFilterOptions() {
+  const regions = [...new Set(allEstimates.map(e=>e.salesRegion).filter(Boolean))].sort();
+  const sales   = [...new Set(allEstimates.map(e=>e.salesPerson).filter(Boolean))].sort();
+  const rSel = document.getElementById('filterRegion');
+  regions.forEach(r => { const o=document.createElement('option'); o.value=r; o.textContent=r; rSel.appendChild(o); });
+  const sSel = document.getElementById('filterSales');
+  sales.forEach(s => { const o=document.createElement('option'); o.value=s; o.textContent=s; sSel.appendChild(o); });
+}
+
+// ─── Summary ───
+function updateSummary() {
+  const count   = filtered.length;
+  const total   = filtered.reduce((s,e)=>s+(e.subtotal||0),0);
+  const wProb   = filtered.length > 0
+    ? Math.round(filtered.reduce((s,e)=>s+((e.probability||0)*(e.subtotal||0)),0) / (total||1))
+    : 0;
+
+  document.getElementById('sumCount').textContent = count.toLocaleString('ja-JP');
+  document.getElementById('sumTotal').textContent = total===0 ? '–' : (total/1e4).toFixed(0)+'万';
+
+  if (filtered.length > 0) {
+    document.getElementById('sumProb').textContent = wProb + '%';
+  } else {
+    document.getElementById('sumProb').textContent = '–';
+  }
+
+  const latest = filtered.map(e=>e.issue_date||'').filter(Boolean).sort().reverse()[0];
+  document.getElementById('sumLatest').textContent = latest ? latest.slice(5).replace('-','/') : '–';
+  document.getElementById('sumLatestLabel').textContent = latest ? latest.slice(0,4) + '年' : '–';
+
+  document.getElementById('resultCount').textContent  = count;
+  const showing = perPage===0 ? count : Math.min(perPage * currentPage, count) - (perPage*(currentPage-1));
+  document.getElementById('showingCount').textContent = Math.max(0, Math.min(showing, count - perPage*(currentPage-1)));
+}
+
+// ─── Render Table ───
+function fmt(n) { return Math.floor(n).toLocaleString('ja-JP'); }
+function fmtDate(d) { return d ? d.slice(0,10).replace(/-/g,'/') : '–'; }
+
+function renderTable() {
+  const tbody = document.getElementById('estTableBody');
+  const start = perPage===0 ? 0 : (currentPage-1)*perPage;
+  const end   = perPage===0 ? filtered.length : start + perPage;
+  const page  = filtered.slice(start, end);
+
+  if (page.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+      <h3>${allEstimates.length === 0 ? '見積データがありません' : '条件に一致するデータがありません'}</h3>
+      <p>${allEstimates.length === 0 ? '案件入力画面で「見積申請」を実行するか、CSVインポートで一括登録してください。' : '検索条件を変更してください。'}</p>
+    </div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = page.map(e => {
+    const checked = selectedRows.has(e.estimate_no) ? 'checked' : '';
+    const probW   = e.probability || 0;
+    const probColor = probW>=70 ? '#1a8f5c' : probW>=40 ? '#376ee6' : '#9198a8';
+    return `<tr>
+      <td style="padding:10px 12px;"><input type="checkbox" class="row-checkbox" ${checked} onchange="toggleRow('${e.estimate_no}', this)"></td>
+      <td>
+        <a class="est-no-link" onclick="openEstimate('${e.project_no}')">${e.estimate_no}</a>
+      </td>
+      <td>
+        <span class="proj-no-link" onclick="openProject('${e.project_no}')">${e.project_no}</span>
+      </td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${e.projectName||''}">${e.projectName||'–'}</td>
+      <td>${e.customer||'–'}</td>
+      <td>${e.salesPerson||'–'}</td>
+      <td style="white-space:nowrap;">${fmtDate(e.issue_date)}</td>
+      <td style="white-space:nowrap;">${fmtDate(e.deliveryDate)}</td>
+      <td>
+        <div class="prob-bar-wrap">
+          <div class="prob-bar"><div class="prob-fill" style="width:${probW}%;background:${probColor};"></div></div>
+          <span class="prob-pct" style="color:${probColor};">${probW}%</span>
+        </div>
+      </td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;">¥${fmt(e.subtotal||0)}</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;">¥${fmt(e.total||0)}</td>
+      <td style="text-align:center;"><span style="font-size:11px;background:var(--bg-tertiary);border-radius:4px;padding:2px 7px;font-family:Inter,monospace;">${String(e.version||1).padStart(2,'0')}</span></td>
+    </tr>`;
+  }).join('');
+
+  updateBulkBar();
+}
+
+function openEstimate(projectNo) {
+  window.location.href = `案件入力画面_Phase2A_連携版.html?projectNo=${projectNo}`;
+}
+function openProject(projectNo) {
+  window.location.href = `案件入力画面_Phase2A_連携版.html?projectNo=${projectNo}`;
+}
+
+// ─── Pagination ───
+function renderPagination() {
+  const pag = document.getElementById('pagination');
+  if (perPage === 0 || filtered.length <= perPage) { pag.innerHTML=''; return; }
+  const totalPages = Math.ceil(filtered.length / perPage);
+  let html = `<button class="page-btn" ${currentPage<=1?'disabled':''} onclick="gotoPage(${currentPage-1})">‹</button>`;
+  for (let p=1; p<=totalPages; p++) {
+    if (totalPages<=7 || p===1 || p===totalPages || Math.abs(p-currentPage)<=1)
+      html += `<button class="page-btn ${p===currentPage?'active':''}" onclick="gotoPage(${p})">${p}</button>`;
+    else if (Math.abs(p-currentPage)===2)
+      html += `<span style="padding:0 4px;color:var(--text-tertiary);">…</span>`;
+  }
+  html += `<button class="page-btn" ${currentPage>=totalPages?'disabled':''} onclick="gotoPage(${currentPage+1})">›</button>`;
+  pag.innerHTML = html;
+}
+function gotoPage(p) { currentPage = p; renderTable(); renderPagination(); updateSummary(); window.scrollTo(0,0); }
+function changePerPage() { perPage = parseInt(document.getElementById('perPageSelect').value); applyFilters(); }
+
+// ─── Checkbox ───
+function toggleCheckAll() {
+  const all = document.getElementById('checkAll').checked;
+  const start = perPage===0?0:(currentPage-1)*perPage;
+  const end   = perPage===0?filtered.length:start+perPage;
+  filtered.slice(start,end).forEach(e => {
+    if (all) selectedRows.add(e.estimate_no); else selectedRows.delete(e.estimate_no);
+  });
+  renderTable();
+}
+function toggleRow(estNo, cb) { if(cb.checked) selectedRows.add(estNo); else selectedRows.delete(estNo); updateBulkBar(); }
+function updateBulkBar() {
+  const bar = document.getElementById('bulkBar');
+  if (selectedRows.size > 0) { bar.classList.add('show'); document.getElementById('bulkCount').textContent=selectedRows.size; }
+  else { bar.classList.remove('show'); }
+}
+
+// ─── Delete ───
+function deleteSelected() {
+  if (!selectedRows.size) return;
+  if (!confirm(`${selectedRows.size}件の見積レコードを削除しますか？\n（案件レコードは削除されません）`)) return;
+  selectedRows.forEach(no => EstimateDB.delete(no));
+  selectedRows.clear();
+  loadEstimates();
+  buildFilterOptionsRefresh();
+  applyFilters();
+  showToast(`${selectedRows.size}件を削除しました`, 'success');
+}
+
+function buildFilterOptionsRefresh() {
+  const rSel = document.getElementById('filterRegion');
+  const sSel = document.getElementById('filterSales');
+  const rVal = rSel.value; const sVal = sSel.value;
+  while(rSel.options.length>1) rSel.remove(1);
+  while(sSel.options.length>1) sSel.remove(1);
+  const regions = [...new Set(allEstimates.map(e=>e.salesRegion).filter(Boolean))].sort();
+  const sales   = [...new Set(allEstimates.map(e=>e.salesPerson).filter(Boolean))].sort();
+  regions.forEach(r => { const o=document.createElement('option'); o.value=r; o.textContent=r; rSel.appendChild(o); });
+  sales.forEach(s => { const o=document.createElement('option'); o.value=s; o.textContent=s; sSel.appendChild(o); });
+  rSel.value=rVal; sSel.value=sVal;
+}
+
+// ─── CSV エクスポート ───
+const CSV_COLS = [
+  { key:'estimate_no',  label:'EST番号' },
+  { key:'project_no',   label:'案件No' },
+  { key:'version',      label:'版' },
+  { key:'projectName',  label:'案件名' },
+  { key:'customer',     label:'取引先' },
+  { key:'salesPerson',  label:'担当者' },
+  { key:'salesRegion',  label:'販売地域' },
+  { key:'probability',  label:'受注確度' },
+  { key:'deliveryDate', label:'納品予定日' },
+  { key:'issue_date',   label:'申請日' },
+  { key:'subtotal',     label:'合計金額（税抜）' },
+  { key:'total',        label:'合計金額（税込）' },
+  { key:'status',       label:'ステータス' },
+  { key:'notes',        label:'備考' },
+];
+
+function exportCSV() { exportRows(filtered, 'QURURi_見積一覧'); }
+function exportSelectedCSV() {
+  const rows = filtered.filter(e=>selectedRows.has(e.estimate_no));
+  if (!rows.length) { showToast('行を選択してください', 'error'); return; }
+  exportRows(rows, 'QURURi_見積一覧_選択分');
+}
+function exportRows(rows, filename) {
+  const header = CSV_COLS.map(c=>c.label).join(',');
+  const body   = rows.map(e=>CSV_COLS.map(c=>{
+    const v = e[c.key] ?? '';
+    return `"${String(v).replace(/"/g,'""')}"`;
+  }).join(',')).join('\n');
+  const csv = '\uFEFF' + header + '\n' + body;
+  downloadCSV(csv, filename+'_'+todayStr()+'.csv');
+}
+function downloadCSV(csv, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download = filename; a.click();
+  showToast('CSVをエクスポートしました', 'success');
+}
+function todayStr() { return new Date().toISOString().slice(0,10).replace(/-/g,''); }
+
+function downloadTemplate() {
+  const header = '案件名,取引先,担当者,受注確度,納品予定日,合計金額（税抜）,販売地域,申請日,備考\n';
+  const sample = '"山田製作所 検査装置 2026","山田製作所","佐藤 健一",70,2026-07-25,12000000,JP,2026-02-25,"サンプル"\n';
+  downloadCSV('\uFEFF'+header+sample, 'QURURi_見積インポートテンプレート.csv');
+}
+
+// ─── CSV インポート ───
+function openImportModal() {
+  document.getElementById('importModal').classList.add('open');
+  document.getElementById('importPreview').style.display='none';
+  document.getElementById('importExecuteBtn').disabled=true;
+  document.getElementById('csvFileInput').value='';
+  parsedCsvRows=[];
+}
+function closeImportModal() { document.getElementById('importModal').classList.remove('open'); }
+
+function setupDragDrop() {
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', e=>{e.preventDefault();zone.classList.add('drag-over');});
+  zone.addEventListener('dragleave', ()=>zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e=>{
+    e.preventDefault(); zone.classList.remove('drag-over');
+    const f=e.dataTransfer.files[0]; if(f) processCSVFile(f);
+  });
+}
+
+function handleFileSelect(e) { const f=e.target.files[0]; if(f) processCSVFile(f); }
+
+function processCSVFile(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const text = ev.target.result.replace(/^\uFEFF/,'');
+    parsedCsvRows = parseCSV(text);
+    const prev = document.getElementById('importPreview');
+    const title = document.getElementById('previewTitle');
+    const content = document.getElementById('previewContent');
+    if (parsedCsvRows.length===0) {
+      title.textContent = 'エラー: 有効な行が見つかりません';
+      content.textContent = text.slice(0,500);
+    } else {
+      title.textContent = `${parsedCsvRows.length}件を検出。内容を確認してからインポートを実行してください。`;
+      content.textContent = parsedCsvRows.slice(0,5).map(r=>JSON.stringify(r)).join('\n') + (parsedCsvRows.length>5?'\n...':'' );
+      document.getElementById('importExecuteBtn').disabled=false;
+    }
+    prev.style.display='block';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l=>l.trim());
+  if (lines.length < 2) return [];
+  const headers = splitCSVLine(lines[0]).map(h=>h.trim());
+  return lines.slice(1).map(line=>{
+    const vals = splitCSVLine(line);
+    const row = {};
+    headers.forEach((h,i)=>{ row[h]=vals[i]?.trim()||''; });
+    return row;
+  }).filter(r=>Object.values(r).some(v=>v));
+}
+
+function splitCSVLine(line) {
+  const result=[]; let cur=''; let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+    else if(c===','&&!inQ){result.push(cur);cur='';}
+    else cur+=c;
+  }
+  result.push(cur); return result;
+}
+
+function executeImport() {
+  if (!parsedCsvRows.length) return;
+  let success=0, errors=[];
+  parsedCsvRows.forEach((row,i)=>{
+    const projectName = row['案件名']||'';
+    if (!projectName) { errors.push(`行${i+2}: 案件名が空`); return; }
+    const subtotal = parseFloat(String(row['合計金額（税抜）']||'0').replace(/,/g,''))||0;
+    try {
+      createPJAndEST({
+        projectName,
+        customer:     row['取引先']||'',
+        salesPerson:  row['担当者']||'',
+        probability:  parseInt(row['受注確度'])||50,
+        deliveryDate: row['納品予定日']||'',
+        subtotal,
+        salesRegion:  row['販売地域']||'JP',
+        notes:        row['備考']||'',
+        issueDate:    row['申請日']||new Date().toISOString().slice(0,10),
+      });
+      success++;
+    } catch(e) { errors.push(`行${i+2}: ${e.message}`); }
+  });
+  closeImportModal();
+  loadEstimates();
+  buildFilterOptionsRefresh();
+  applyFilters();
+  if (errors.length) showToast(`${success}件登録 / ${errors.length}件エラー`, 'error', 5000);
+  else showToast(`${success}件の見積を登録しました（PJ自動生成）`, 'success');
+}
+
+// ─── 新規見積直接入力 ───
+function openDirectInputModal() { document.getElementById('directInputModal').classList.add('open'); }
+function closeDirectInputModal() { document.getElementById('directInputModal').classList.remove('open'); }
+
+function executeDirectInput() {
+  const projectName = document.getElementById('di_projectName').value.trim();
+  if (!projectName) { showToast('案件名を入力してください', 'error'); return; }
+  const subtotal = parseFloat(document.getElementById('di_subtotal').value)||0;
+  const result = createPJAndEST({
+    projectName,
+    customer:    document.getElementById('di_customer').value.trim(),
+    salesPerson: document.getElementById('di_salesPerson').value.trim(),
+    probability: parseInt(document.getElementById('di_probability').value)||50,
+    deliveryDate:document.getElementById('di_deliveryDate').value,
+    subtotal,
+    salesRegion: document.getElementById('di_salesRegion').value,
+    notes:       document.getElementById('di_notes').value.trim(),
+  });
+  closeDirectInputModal();
+  loadEstimates();
+  buildFilterOptionsRefresh();
+  applyFilters();
+  showToast(`登録完了：${result.est.estimate_no}（${result.pj.projectNo} 自動生成）`, 'success', 4000);
+}
+
+// ─── Toast ───
+function showToast(message, type='success', duration=3000) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className='toast '+type;
+  toast.innerHTML='<span class="toast-icon">'+(type==='success'?'✓':'✕')+'</span>'
+                 +'<span>'+message+'</span>';
+  container.appendChild(toast);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>toast.classList.add('show')));
+  setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),250);},duration);
+}
+</script>
+</body>
+</html>
