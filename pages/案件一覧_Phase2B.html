@@ -1052,10 +1052,11 @@
                 <th onclick="sortBy('status')">ステータス <span class="sort-icon" id="sort_status">↕</span></th>
                 <th style="text-align:center;">地域</th>
                 <th>製品名</th>
+                <th style="text-align:center;">数量</th>
                 <th style="text-align:center;">通貨</th>
-                <th style="text-align:right;">明細金額（円）</th>
-                <th style="text-align:right;">明細金額（現地通貨）</th>
-                <th onclick="sortBy('subtotal')" style="text-align:right;">合計（税抜） <span class="sort-icon" id="sort_subtotal">↕</span></th>
+                <th style="text-align:right;">明細金額（外貨）</th>
+                <th style="text-align:right;">明細金額（円貨）</th>
+                <th onclick="sortBy('subtotal')" style="text-align:right;">合計金額（税抜） <span class="sort-icon" id="sort_subtotal">↕</span></th>
                 <th onclick="sortBy('probability')" style="text-align:center;">確度 <span class="sort-icon" id="sort_probability">↕</span></th>
                 <th onclick="sortBy('deliveryDate')">納品予定日 <span class="sort-icon" id="sort_deliveryDate">↕</span></th>
                 <th onclick="sortBy('salesPerson')">担当者 <span class="sort-icon" id="sort_salesPerson">↕</span></th>
@@ -1063,7 +1064,7 @@
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="15"><div class="empty-state"><p>データを読み込み中...</p></div></td></tr>
+              <tr><td colspan="16"><div class="empty-state"><p>データを読み込み中...</p></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -1464,7 +1465,7 @@ function renderTable() {
   document.getElementById('showingCount').textContent = page.length.toLocaleString();
 
   if (page.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="15"><div class="empty-state">
+    tbody.innerHTML = `<tr><td colspan="16"><div class="empty-state">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
       <p>案件が見つかりません</p>
       <small>検索条件を変えるか、新規案件を登録してください</small>
@@ -1516,7 +1517,13 @@ function renderTable() {
 
     const prodCell = '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + prodTitle + '">' + prodName + '</td>';
 
-    // 通貨セル（製品名の右）
+    // 数量セル（製品名の右）
+    const prodQty  = prod ? (prod.qty != null ? prod.qty : 1) : null;
+    const qtyCell  = prodQty != null
+      ? '<td style="text-align:center;">' + prodQty.toLocaleString() + '</td>'
+      : '<td></td>';
+
+    // 通貨セル
     const lineCurr    = prod ? (prod.currency || currency) : currency;
     const lineSym     = CURRENCY_SYMBOL[lineCurr] || (lineCurr + ' ');
     const isForeign   = lineCurr !== 'JPY';
@@ -1524,18 +1531,18 @@ function renderTable() {
       + '<span class="currency-badge" style="' + (isForeign ? 'background:#e8f0fe;color:#376ee6;' : '') + '">'
       + lineCurr + '</span></td>';
 
-    // 明細金額（円）セル: lineTotal は常にJPY円建て → ¥固定
-    const lineAmt       = prod ? (prod.lineTotal   != null ? prod.lineTotal   : 0) : null;
-    const localAmt      = prod ? (prod.localAmount != null ? prod.localAmount : null) : null;
-    const lineTotalCell = lineAmt != null
-      ? '<td style="text-align:right;white-space:nowrap;">¥' + lineAmt.toLocaleString() + '</td>'
-      : '<td></td>';
-
-    // 明細金額（現地通貨）セル: JPYの場合は空欄、外貨の場合は現地通貨記号で表示
+    // 明細金額（外貨）セル: JPYは–、外貨のみ現地通貨記号で表示
+    const lineAmt   = prod ? (prod.lineTotal   != null ? prod.lineTotal   : 0) : null;
+    const localAmt  = prod ? (prod.localAmount != null ? prod.localAmount : null) : null;
     const isLineForeign = lineCurr !== 'JPY';
     const localAmountCell = (isLineForeign && localAmt != null)
       ? '<td style="text-align:right;white-space:nowrap;">' + lineSym + localAmt.toLocaleString() + '</td>'
       : '<td style="text-align:right;color:var(--text-tertiary);font-size:11px;">–</td>';
+
+    // 明細金額（円貨）セル: lineTotal は常にJPY円建て → ¥固定
+    const lineTotalCell = lineAmt != null
+      ? '<td style="text-align:right;white-space:nowrap;">¥' + lineAmt.toLocaleString() + '</td>'
+      : '<td></td>';
 
     // 全行フル表示（製品ごとに全列を繰り返す）
     // 2行目以降：案件Noと案件名・取引先をグレーで表示してグルーピングを視覚的に表現
@@ -1553,9 +1560,10 @@ function renderTable() {
       + '<td><span class="status-badge ' + statusCfg.class + '">' + statusCfg.label + '</span></td>'
       + regionCell
       + prodCell
+      + qtyCell
       + currencyCell
-      + lineTotalCell
       + localAmountCell
+      + lineTotalCell
       + '<td class="td-amount" style="text-align:right;">' + amountDisplay + '</td>'
       + '<td class="td-prob"><span class="prob-badge" style="background:' + probBg + ';color:' + probColor + ';">' + prob + '%</span></td>'
       + '<td class="' + dateClass + '">' + dateLabel + '</td>'
@@ -1713,8 +1721,8 @@ function buildCSV(rows) {
     'ステータス',
     '製品コード', '製品名', '大区分', '中区分', '小区分',
     '数量', '税抜単価（現地通貨）', '通貨', '税率',
-    '明細金額（円）', '明細金額（現地通貨）',
-    '合計金額（税抜・円）', '合計金額（税込・円）',
+    '明細金額（外貨）', '明細金額（円貨）',
+    '合計金額（税抜）', '合計金額（税込）',
     '受注確度(%)', '納品予定日', '備考', '登録日時', '更新日時'
   ];
 
