@@ -535,7 +535,7 @@
 </div>
 
 <!-- ─── CSVインポート モーダル ─── -->
-<div class="modal-overlay" id="importModal">
+<div class="modal-overlay" id="importModal" onclick="if(event.target===this)closeImportModal()">
   <div class="modal">
     <div class="modal-header">
       <span class="modal-title">見積CSVインポート</span>
@@ -576,7 +576,7 @@
 </div>
 
 <!-- ─── 新規見積直接入力 モーダル ─── -->
-<div class="modal-overlay" id="directInputModal">
+<div class="modal-overlay" id="directInputModal" onclick="if(event.target===this)closeDirectInputModal()">
   <div class="modal">
     <div class="modal-header">
       <span class="modal-title">新規見積登録（ルートB）</span>
@@ -594,7 +594,7 @@
           <input type="text" id="di_projectName" placeholder="例：山田製作所 検査装置 2026" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
         </div>
         <div>
-          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">取引先 <span style="color:var(--danger)">*</span></label>
+          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">取引先</label>
           <input type="text" id="di_customer" placeholder="取引先名" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
         </div>
         <div>
@@ -905,6 +905,14 @@ function renderTable() {
     </tr>`;
   }).join('');
 
+  // 全選択チェックボックスの状態を現在ページに同期
+  const checkAllEl = document.getElementById('checkAll');
+  if (checkAllEl) {
+    const pageNos = page.map(e => e.estimate_no);
+    checkAllEl.checked = pageNos.length > 0 && pageNos.every(no => selectedRows.has(no));
+    checkAllEl.indeterminate = !checkAllEl.checked && pageNos.some(no => selectedRows.has(no));
+  }
+
   updateBulkBar();
 }
 
@@ -953,13 +961,14 @@ function updateBulkBar() {
 // ─── Delete ───
 function deleteSelected() {
   if (!selectedRows.size) return;
-  if (!confirm(`${selectedRows.size}件の見積レコードを削除しますか？\n（案件レコードは削除されません）`)) return;
+  const deletedCount = selectedRows.size; // ← clear前に件数を退避
+  if (!confirm(`${deletedCount}件の見積レコードを削除しますか？\n（案件レコードは削除されません）`)) return;
   selectedRows.forEach(no => EstimateDB.delete(no));
   selectedRows.clear();
   loadEstimates();
   buildFilterOptionsRefresh();
   applyFilters();
-  showToast(`${selectedRows.size}件を削除しました`, 'success');
+  showToast(`${deletedCount}件を削除しました`, 'success');
 }
 
 function buildFilterOptionsRefresh() {
@@ -1119,7 +1128,18 @@ function executeImport() {
 }
 
 // ─── 新規見積直接入力 ───
-function openDirectInputModal() { document.getElementById('directInputModal').classList.add('open'); }
+function openDirectInputModal() {
+  // フォームを毎回リセット（前回入力値の残留を防ぐ）
+  document.getElementById('di_projectName').value = '';
+  document.getElementById('di_customer').value = '';
+  document.getElementById('di_salesPerson').value = '';
+  document.getElementById('di_probability').value = '50';
+  document.getElementById('di_deliveryDate').value = '';
+  document.getElementById('di_subtotal').value = '';
+  document.getElementById('di_salesRegion').value = 'JP';
+  document.getElementById('di_notes').value = '';
+  document.getElementById('directInputModal').classList.add('open');
+}
 function closeDirectInputModal() { document.getElementById('directInputModal').classList.remove('open'); }
 
 function executeDirectInput() {
