@@ -1935,15 +1935,20 @@ function createAutocomplete({ inputId, inputEl, hiddenId, dropId, getData,
   });
 
   input.addEventListener('focus', function() {
-    render(filterItems(this.value.trim()), this.value.trim());
+    // 確定済みの場合は全件表示（表示値でフィルターしない）
+    if (confirmed) {
+      render(getData(), '');
+    } else {
+      render(filterItems(this.value.trim()), this.value.trim());
+    }
   });
 
-  // 確定後の再クリック → 全件表示 + テキスト全選択
+  // 既にフォーカスがある状態での再クリック → ドロップダウンを再表示
   input.addEventListener('click', function() {
     if (dropdown.classList.contains('open')) return;
     if (confirmed) {
       render(getData(), '');
-      this.select();
+      this.select(); // テキスト全選択で即タイプ可能に
     } else {
       render(filterItems(this.value.trim()), this.value.trim());
     }
