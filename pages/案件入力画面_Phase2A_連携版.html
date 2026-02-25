@@ -1437,7 +1437,7 @@
                   <td style="text-align: center;"><input type="text" class="table-input direct qty" value="1"></td>
                   <td><input class="table-input direct price" value="0"></td>
                   <td><input class="table-input autofill" value="JPY" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
-                  <td><input class="table-input autofill" value="10%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
+                  <td><input class="table-input autofill" value="0%" readonly style="text-align:center;-webkit-appearance:none;-moz-appearance:textfield;"></td>
                   <td><span class="table-input calc price">0</span></td>
                   <td style="text-align: center;">
                     <button class="btn-delete" title="削除">
@@ -1720,7 +1720,21 @@ function applyProductSelect(prod, row) {
 
   const PRICE_FIELD = { JPY:'price_jpy', USD:'price_usd', EUR:'price_eur', RMB:'price_rmb' };
   const unitPrice = priceRec ? (Number(priceRec[PRICE_FIELD[currency] || 'price_jpy']) || 0) : 0;
-  const taxRate   = getSalesRegionFromForm() === 'JP' ? 10 : 0;
+
+  // 税率：販売地域=JPのみ10%（自動転記またはマスタから取得）
+  let salesRegion = getSalesRegionFromForm();
+  if (!salesRegion && (custName || custCode)) {
+    // 自動転記がまだ反映されていない場合はマスタから直接取得
+    try {
+      const customers = JSON.parse(localStorage.getItem('qururi:customers') || '[]');
+      const cust = customers.find(c =>
+        (custCode && String(c.customer_code) === custCode) ||
+        c.customer_name === custName
+      );
+      salesRegion = (cust?.region || cust?.sales_region || '').toUpperCase();
+    } catch(e) {}
+  }
+  const taxRate = salesRegion === 'JP' ? 10 : 0;
 
   const priceInput    = row.querySelector('input.table-input.direct.price');
   const currencyInput = row.querySelector('input.table-input.autofill');
@@ -1739,7 +1753,24 @@ function addProductRow() {
   _prodRowCounter++;
   const rowNo   = tbody.querySelectorAll('tr').length + 1;
   const defCurr = getCurrencyFromRows();
-  const defTax  = getSalesRegionFromForm() === 'JP' ? '10%' : '0%';
+  // 販売地域：自動転記 → なければマスタから直接取得
+  let addRowRegion = getSalesRegionFromForm();
+  if (!addRowRegion) {
+    const custEl2   = document.getElementById('customer');
+    const custName2 = custEl2?.dataset.saveValue || custEl2?.value || '';
+    const custCode2 = document.getElementById('customerCode')?.value || '';
+    if (custName2 || custCode2) {
+      try {
+        const customers = JSON.parse(localStorage.getItem('qururi:customers') || '[]');
+        const cust = customers.find(c =>
+          (custCode2 && String(c.customer_code) === custCode2) ||
+          c.customer_name === custName2
+        );
+        addRowRegion = (cust?.region || cust?.sales_region || '').toUpperCase();
+      } catch(e) {}
+    }
+  }
+  const defTax = addRowRegion === 'JP' ? '10%' : '0%';
   const dropId  = 'ac-drop-prod-' + _prodRowCounter;
 
   const tr = document.createElement('tr');
@@ -2116,6 +2147,11 @@ document.addEventListener('DOMContentLoaded', updateMasterBadges);
 document.addEventListener('DOMContentLoaded', function() {
   const addBtn = document.querySelector('.btn-add-row');
   if (addBtn) addBtn.addEventListener('click', addProductRow);
+
+  // HTML直書きの初期行にもsetupRowEventsを適用
+  document.querySelectorAll('#productTableBody tr').forEach(row => {
+    setupRowEvents(row);
+  });
 });
 
 function setupRowEvents(row) {
