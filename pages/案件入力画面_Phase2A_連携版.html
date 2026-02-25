@@ -1961,16 +1961,22 @@ function createAutocomplete({ inputId, hiddenId, dropId, getData,
   // 既にフォーカスがある状態での再クリックでもドロップダウンを開く
   input.addEventListener('click', function() {
     if (dropdown.classList.contains('open')) return; // 既に開いていれば何もしない
-    const q       = this.value.trim();
-    const all     = getData();
-    const lower   = q.toLowerCase();
-    const filtered = q
-      ? all.filter(item =>
-          getLabel(item).toLowerCase().includes(lower) ||
-          String(getCode(item)).toLowerCase().includes(lower)
-        )
-      : all;
-    render(filtered.slice(0, maxResults), q);
+    // 確定済みの場合は全件表示してテキストを全選択（選び直しやすくする）
+    if (confirmed) {
+      render(getData().slice(0, maxResults), '');
+      this.select();
+    } else {
+      const q     = this.value.trim();
+      const all   = getData();
+      const lower = q.toLowerCase();
+      const filtered = q
+        ? all.filter(item =>
+            getLabel(item).toLowerCase().includes(lower) ||
+            String(getCode(item)).toLowerCase().includes(lower)
+          )
+        : all;
+      render(filtered.slice(0, maxResults), q);
+    }
   });
 
   input.addEventListener('keydown', function(e) {
