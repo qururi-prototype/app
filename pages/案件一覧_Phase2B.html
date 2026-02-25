@@ -1711,6 +1711,18 @@ function exportCSV() {
 function deleteSelected() {
   const count = selectedIds.size;
   if (count === 0) { showToast('削除する案件を選択してください', 'error'); return; }
+
+  // ESTレコードが存在する案件は削除不可チェック
+  const estimates = (() => { try { return JSON.parse(localStorage.getItem('qururi_estimates')||'[]'); } catch { return []; } })();
+  const lockedNos = [...selectedIds].filter(no => estimates.some(e => e.project_no === no));
+  if (lockedNos.length > 0) {
+    const msg = lockedNos.length === count
+      ? `選択した案件は見積申請済みのため削除できません。\n先に見積一覧からESTレコードを削除してください。\n\n対象：${lockedNos.join(', ')}`
+      : `${lockedNos.length}件は見積申請済みのため削除できません。\n先に見積一覧からESTレコードを削除してください。\n\n対象：${lockedNos.join(', ')}`;
+    alert(msg);
+    return;
+  }
+
   if (!confirm(`選択した ${count} 件を削除します。この操作は元に戻せません。よろしいですか？`)) return;
 
   const db = getDB();

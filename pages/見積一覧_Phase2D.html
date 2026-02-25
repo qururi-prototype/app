@@ -222,6 +222,43 @@
   }
   .proj-no-link:hover { color: var(--accent-blue); text-decoration: underline; }
 
+  /* ─── Status Badges ─── */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 12px;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+  }
+  .status-badge::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: currentColor; flex-shrink: 0;
+  }
+  .status-draft     { background: #f0f1f4; color: #6e7585; }
+  .status-quoted    { background: #fffbeb; color: #d97706; }
+  .status-ordered   { background: #edf8f2; color: #1a8f5c; }
+  .status-delivered { background: var(--accent-blue-glow); color: var(--accent-blue); }
+  .status-invoiced  { background: #f3f0ff; color: #7c3aed; }
+  .status-paid      { background: #f0f9f0; color: #15803d; }
+
+  .prob-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 44px; padding: 2px 8px; border-radius: 12px;
+    font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif;
+  }
+
+  .currency-badge {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    color: var(--text-tertiary); background: var(--bg-tertiary);
+    border-radius: 4px; padding: 1px 4px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .selected-row { background: #f0f5ff !important; }
+  .prod-subrow td { border-top: 1px dashed var(--border-subtle); }
+
+  .td-date { font-family: 'Inter', sans-serif; font-size: 12px; }
+  .date-overdue { color: var(--danger); font-weight: 600; }
+  .date-soon { color: var(--warning); }
+
   /* ─── Status Badge ─── */
   .status-badge {
     display: inline-flex; align-items: center; gap: 5px;
@@ -331,7 +368,7 @@
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-main">QURURi</div>
-      <div class="sidebar-logo-sub">Sales & Budget Mgmt</div>
+      <div class="sidebar-logo-sub">Your INTELLIGENCE</div>
     </div>
 
     <nav class="sidebar-nav">
@@ -354,25 +391,30 @@
       </div>
       <hr class="sidebar-divider">
       <div class="nav-section-label">マスター管理</div>
-      <div class="nav-item" onclick="location.href='マスター管理画面_Phase2C.html?tab=products'" style="cursor:pointer">
+      <div class="nav-item" id="nav-products" onclick="location.href='マスター管理画面_Phase2C.html?tab=products'" style="cursor:pointer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         製品マスタ
+        <span id="sidebar-badge-products" style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);color:#e5e7eb;border-radius:10px;padding:1px 7px;min-width:24px;text-align:center;display:none;"></span>
       </div>
-      <div class="nav-item" onclick="location.href='マスター管理画面_Phase2C.html?tab=prices'" style="cursor:pointer">
+      <div class="nav-item" id="nav-prices" onclick="location.href='マスター管理画面_Phase2C.html?tab=prices'" style="cursor:pointer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         単価マスタ
+        <span id="sidebar-badge-prices" style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);color:#e5e7eb;border-radius:10px;padding:1px 7px;min-width:24px;text-align:center;display:none;"></span>
       </div>
-      <div class="nav-item" onclick="location.href='マスター管理画面_Phase2C.html?tab=exchange_rates'" style="cursor:pointer">
+      <div class="nav-item" id="nav-exchange_rates" onclick="location.href='マスター管理画面_Phase2C.html?tab=exchange_rates'" style="cursor:pointer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         為替マスタ
+        <span id="sidebar-badge-exchange_rates" style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);color:#e5e7eb;border-radius:10px;padding:1px 7px;min-width:24px;text-align:center;display:none;"></span>
       </div>
-      <div class="nav-item" onclick="location.href='マスター管理画面_Phase2C.html?tab=customers'" style="cursor:pointer">
+      <div class="nav-item" id="nav-customers" onclick="location.href='マスター管理画面_Phase2C.html?tab=customers'" style="cursor:pointer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         取引先マスタ
+        <span id="sidebar-badge-customers" style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);color:#e5e7eb;border-radius:10px;padding:1px 7px;min-width:24px;text-align:center;display:none;"></span>
       </div>
-      <div class="nav-item" onclick="location.href='マスター管理画面_Phase2C.html?tab=staff'" style="cursor:pointer">
+      <div class="nav-item" id="nav-staff" onclick="location.href='マスター管理画面_Phase2C.html?tab=staff'" style="cursor:pointer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         担当者マスタ
+        <span id="sidebar-badge-staff" style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);color:#e5e7eb;border-radius:10px;padding:1px 7px;min-width:24px;text-align:center;display:none;"></span>
       </div>
     </nav>
   </aside>
@@ -388,7 +430,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px;color:var(--accent-blue)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             見積一覧
           </h1>
-          <p class="page-subtitle">見積申請済みの案件一覧。EST番号をクリックして案件を編集。CSVで一括登録も可能（PJ自動生成）。</p>
+          <p class="page-subtitle">見積申請済みの案件一覧。EST番号をクリックして案件を確認。CSVで一括登録も可能（PJ自動生成）。</p>
         </div>
         <div class="header-actions">
           <button class="btn btn-secondary" onclick="openImportModal()">
@@ -398,10 +440,6 @@
           <button class="btn btn-secondary" onclick="exportCSV()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             CSVエクスポート
-          </button>
-          <button class="btn btn-primary" onclick="openDirectInputModal()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            新規見積登録
           </button>
         </div>
       </div>
@@ -505,18 +543,23 @@
                 <th onclick="sortBy('project_no')">案件No <span class="sort-icon" id="sort_project_no">↕</span></th>
                 <th onclick="sortBy('projectName')">案件名 <span class="sort-icon" id="sort_projectName">↕</span></th>
                 <th onclick="sortBy('customer')">取引先 <span class="sort-icon" id="sort_customer">↕</span></th>
+                <th onclick="sortBy('status')">ステータス <span class="sort-icon" id="sort_status">↕</span></th>
+                <th style="text-align:center;">地域</th>
+                <th>製品名</th>
+                <th style="text-align:center;">数量</th>
+                <th style="text-align:center;">通貨</th>
+                <th style="text-align:right;">明細金額</th>
+                <th onclick="sortBy('subtotal')" style="text-align:right;">合計金額（税抜） <span class="sort-icon" id="sort_subtotal">↕</span></th>
+                <th onclick="sortBy('probability')" style="text-align:center;">確度 <span class="sort-icon" id="sort_probability">↕</span></th>
+                <th onclick="sortBy('deliveryDate')">納品予定日 <span class="sort-icon" id="sort_deliveryDate">↕</span></th>
                 <th onclick="sortBy('salesPerson')">担当者 <span class="sort-icon" id="sort_salesPerson">↕</span></th>
                 <th onclick="sortBy('issue_date')">申請日 <span class="sort-icon" id="sort_issue_date">↕</span></th>
-                <th onclick="sortBy('deliveryDate')">納品予定日 <span class="sort-icon" id="sort_deliveryDate">↕</span></th>
-                <th onclick="sortBy('probability')" style="text-align:center;">受注確度 <span class="sort-icon" id="sort_probability">↕</span></th>
-                <th style="text-align:right;">合計（税抜）</th>
-                <th style="text-align:right;">合計（税込）</th>
                 <th onclick="sortBy('version')" style="text-align:center;">版 <span class="sort-icon" id="sort_version">↕</span></th>
               </tr>
             </thead>
             <tbody id="estTableBody">
               <tr>
-                <td colspan="12">
+                <td colspan="17">
                   <div class="empty-state">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
                     <h3>見積データがありません</h3>
@@ -535,7 +578,7 @@
 </div>
 
 <!-- ─── CSVインポート モーダル ─── -->
-<div class="modal-overlay" id="importModal" onclick="if(event.target===this)closeImportModal()">
+<div class="modal-overlay" id="importModal">
   <div class="modal">
     <div class="modal-header">
       <span class="modal-title">見積CSVインポート</span>
@@ -570,70 +613,6 @@
       <button class="btn btn-ghost" onclick="closeImportModal()">キャンセル</button>
       <button class="btn btn-primary" id="importExecuteBtn" onclick="executeImport()" disabled>
         インポート実行
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ─── 新規見積直接入力 モーダル ─── -->
-<div class="modal-overlay" id="directInputModal" onclick="if(event.target===this)closeDirectInputModal()">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title">新規見積登録（ルートB）</span>
-      <button class="modal-close" onclick="closeDirectInputModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <p style="font-size:12px;color:var(--text-secondary);background:var(--accent-blue-glow);border:1px solid #c7d7f5;border-radius:6px;padding:10px;">
-        スポット案件・小規模案件向け。入力後、PJレコードと ESTレコードがシステムにより自動生成されます。
-      </p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div style="grid-column:1/-1;">
-          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">案件名 <span style="color:var(--danger)">*</span></label>
-          <input type="text" id="di_projectName" placeholder="例：山田製作所 検査装置 2026" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">取引先</label>
-          <input type="text" id="di_customer" placeholder="取引先名" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">担当者</label>
-          <input type="text" id="di_salesPerson" placeholder="担当者名" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">受注確度（%）</label>
-          <input type="number" id="di_probability" value="50" min="0" max="100" step="10" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">納品予定日</label>
-          <input type="date" id="di_deliveryDate" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">合計金額（税抜・円）</label>
-          <input type="number" id="di_subtotal" placeholder="0" min="0" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">販売地域</label>
-          <select id="di_salesRegion" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
-            <option value="JP">JP（国内）</option>
-            <option value="NA">NA（北米）</option>
-            <option value="EU">EU（欧州）</option>
-            <option value="CN">CN（中国）</option>
-            <option value="AP">AP（アジア太平洋）</option>
-          </select>
-        </div>
-        <div style="grid-column:1/-1;">
-          <label style="font-size:12px;font-weight:600;color:var(--text-label);display:block;margin-bottom:4px;">備考</label>
-          <input type="text" id="di_notes" placeholder="改訂理由など" style="width:100%;border:1px solid var(--border-default);border-radius:6px;padding:8px 10px;font-size:13px;">
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeDirectInputModal()">キャンセル</button>
-      <button class="btn btn-primary" onclick="executeDirectInput()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        見積登録（PJ自動生成）
       </button>
     </div>
   </div>
@@ -759,9 +738,11 @@ document.addEventListener('DOMContentLoaded', () => {
   buildFilterOptions();
   applyFilters();
   setupDragDrop();
+  updateMasterBadges();
 });
 
 function loadEstimates() {
+  invalidatePJCache();
   allEstimates = EstimateDB.getAll().sort((a,b)=>
     new Date(b.created_at||b.issue_date) - new Date(a.created_at||a.issue_date)
   );
@@ -857,9 +838,31 @@ function updateSummary() {
   document.getElementById('showingCount').textContent = Math.max(0, Math.min(showing, count - perPage*(currentPage-1)));
 }
 
+// ─── Status Map ───
+const STATUS_MAP = {
+  draft:     { label: '見積前',   class: 'status-draft' },
+  pending:   { label: '承認待ち', class: 'status-quoted' },
+  quoted:    { label: '見積済',   class: 'status-quoted' },
+  ordered:   { label: '受注済',   class: 'status-ordered' },
+  delivered: { label: '納品済',   class: 'status-delivered' },
+  invoiced:  { label: '請求済',   class: 'status-invoiced' },
+  paid:      { label: '入金済',   class: 'status-paid' },
+};
+
 // ─── Render Table ───
 function fmt(n) { return Math.floor(n).toLocaleString('ja-JP'); }
 function fmtDate(d) { return d ? d.slice(0,10).replace(/-/g,'/') : '–'; }
+
+// PJキャッシュ（renderTableのたびに全件取得するのを最適化）
+let _pjCache = null;
+function getPJMap() {
+  if (!_pjCache) {
+    _pjCache = new Map();
+    LocalDB.getAllProjects().forEach(p => _pjCache.set(p.projectNo, p));
+  }
+  return _pjCache;
+}
+function invalidatePJCache() { _pjCache = null; }
 
 function renderTable() {
   const tbody = document.getElementById('estTableBody');
@@ -868,52 +871,86 @@ function renderTable() {
   const page  = filtered.slice(start, end);
 
   if (page.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state">
+    tbody.innerHTML = `<tr><td colspan="17"><div class="empty-state">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
       <h3>${allEstimates.length === 0 ? '見積データがありません' : '条件に一致するデータがありません'}</h3>
       <p>${allEstimates.length === 0 ? '案件入力画面で「見積申請」を実行するか、CSVインポートで一括登録してください。' : '検索条件を変更してください。'}</p>
     </div></td></tr>`;
-    return;
+    syncCheckAll(page); return;
   }
 
-  tbody.innerHTML = page.map(e => {
-    const checked = selectedRows.has(e.estimate_no) ? 'checked' : '';
-    const probW   = e.probability || 0;
-    const probColor = probW>=70 ? '#1a8f5c' : probW>=40 ? '#376ee6' : '#9198a8';
-    return `<tr>
-      <td style="padding:10px 12px;"><input type="checkbox" class="row-checkbox" ${checked} onchange="toggleRow('${e.estimate_no}', this)"></td>
-      <td>
-        <a class="est-no-link" onclick="openEstimate('${e.project_no}')">${e.estimate_no}</a>
-      </td>
-      <td>
-        <span class="proj-no-link" onclick="openProject('${e.project_no}')">${e.project_no}</span>
-      </td>
-      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${e.projectName||''}">${e.projectName||'–'}</td>
-      <td>${e.customer||'–'}</td>
-      <td>${e.salesPerson||'–'}</td>
-      <td style="white-space:nowrap;">${fmtDate(e.issue_date)}</td>
-      <td style="white-space:nowrap;">${fmtDate(e.deliveryDate)}</td>
-      <td>
-        <div class="prob-bar-wrap">
-          <div class="prob-bar"><div class="prob-fill" style="width:${probW}%;background:${probColor};"></div></div>
-          <span class="prob-pct" style="color:${probColor};">${probW}%</span>
-        </div>
-      </td>
+  const CURRENCY_SYMBOL = { JPY: '¥', USD: '$', EUR: '€', RMB: '¥', CNY: '¥' };
+  const today = new Date().toISOString().slice(0,10);
+  const pjMap = getPJMap();
+
+  // ESTレコードをPJの製品明細で展開（1EST = products数分の行）
+  const displayRows = [];
+  for (const e of page) {
+    const pj = pjMap.get(e.project_no);
+    const products = (pj && pj.products && pj.products.length > 0) ? pj.products : [null];
+    products.forEach((prod, idx) => {
+      displayRows.push({ est: e, prod, isFirst: idx === 0 });
+    });
+  }
+
+  tbody.innerHTML = displayRows.map(({ est: e, prod, isFirst }) => {
+    const statusCfg = STATUS_MAP[e.status] || { label: e.status || '–', class: 'status-draft' };
+    const checked   = selectedRows.has(e.estimate_no) ? 'checked' : '';
+    const prob      = e.probability || 0;
+    const probColor = prob >= 70 ? '#1a8f5c' : prob >= 40 ? '#d97706' : '#d9503f';
+    const probBg    = prob >= 70 ? '#edf8f2' : prob >= 40 ? '#fffbeb' : '#fdf0ee';
+
+    let dateClass = 'td-date';
+    const deliveryDate = e.deliveryDate || '';
+    if (deliveryDate && deliveryDate < today) dateClass += ' date-overdue';
+
+    const currency  = prod ? (prod.currency || 'JPY') : 'JPY';
+    const isForeign = currency !== 'JPY';
+    const sym       = CURRENCY_SYMBOL[currency] || (currency + ' ');
+    const localAmt  = prod ? (prod.localAmount != null ? prod.localAmount : (prod.lineTotal || 0)) : null;
+
+    const localAmountCell = (isForeign && localAmt != null)
+      ? `<td style="text-align:right;white-space:nowrap;">${sym}${fmt(localAmt)}</td>`
+      : `<td style="text-align:right;color:var(--text-tertiary);font-size:11px;">–</td>`;
+
+    const noStyle  = isFirst ? '' : ` style="color:var(--text-tertiary);font-size:11px;"`;
+    const rowStyle = isFirst ? '' : ` style="border-top:1px dashed var(--border-subtle);"`;
+    const cbCell   = isFirst
+      ? `<td onclick="event.stopPropagation()" style="padding:12px;"><input type="checkbox" class="row-checkbox" ${checked} onchange="toggleRow('${e.estimate_no}', this)"></td>`
+      : `<td></td>`;
+
+    return `<tr class="${selectedRows.has(e.estimate_no) ? 'selected-row' : ''}${isFirst ? '' : ' prod-subrow'}"${rowStyle}>
+      ${cbCell}
+      <td><a class="est-no-link" onclick="openEstimate('${e.project_no}')">${e.estimate_no}</a></td>
+      <td><span class="proj-no-link" onclick="openProject('${e.project_no}')"${noStyle}>${e.project_no}</span></td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"${noStyle} title="${e.projectName||''}">${e.projectName||'–'}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${e.customer||''}">${e.customer||'–'}</td>
+      <td><span class="status-badge ${statusCfg.class}">${statusCfg.label}</span></td>
+      <td style="text-align:center;font-size:12px;">${e.salesRegion||'–'}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${prod?(prod.productName||''):''}">
+        ${prod ? (prod.productName||'–') : '–'}</td>
+      <td style="text-align:center;">${prod && prod.qty != null ? prod.qty.toLocaleString() : '–'}</td>
+      <td style="text-align:center;"><span class="currency-badge" style="${isForeign ? 'background:#e8f0fe;color:#376ee6;' : ''}">${currency}</span></td>
+      ${localAmountCell}
       <td style="text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;">¥${fmt(e.subtotal||0)}</td>
-      <td style="text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;">¥${fmt(e.total||0)}</td>
+      <td class="td-prob"><span class="prob-badge" style="background:${probBg};color:${probColor};">${prob}%</span></td>
+      <td class="${dateClass}">${fmtDate(deliveryDate)}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.salesPerson||'–'}</td>
+      <td class="td-date" style="white-space:nowrap;">${fmtDate(e.issue_date)}</td>
       <td style="text-align:center;"><span style="font-size:11px;background:var(--bg-tertiary);border-radius:4px;padding:2px 7px;font-family:Inter,monospace;">${String(e.version||1).padStart(2,'0')}</span></td>
     </tr>`;
   }).join('');
 
-  // 全選択チェックボックスの状態を現在ページに同期
-  const checkAllEl = document.getElementById('checkAll');
-  if (checkAllEl) {
-    const pageNos = page.map(e => e.estimate_no);
-    checkAllEl.checked = pageNos.length > 0 && pageNos.every(no => selectedRows.has(no));
-    checkAllEl.indeterminate = !checkAllEl.checked && pageNos.some(no => selectedRows.has(no));
-  }
-
+  syncCheckAll(page);
   updateBulkBar();
+}
+
+function syncCheckAll(page) {
+  const el = document.getElementById('checkAll');
+  if (!el) return;
+  const pageNos = page.map(e => e.estimate_no);
+  el.checked = pageNos.length > 0 && pageNos.every(no => selectedRows.has(no));
+  el.indeterminate = !el.checked && pageNos.some(no => selectedRows.has(no));
 }
 
 function openEstimate(projectNo) {
@@ -961,14 +998,13 @@ function updateBulkBar() {
 // ─── Delete ───
 function deleteSelected() {
   if (!selectedRows.size) return;
-  const deletedCount = selectedRows.size; // ← clear前に件数を退避
-  if (!confirm(`${deletedCount}件の見積レコードを削除しますか？\n（案件レコードは削除されません）`)) return;
+  if (!confirm(`${selectedRows.size}件の見積レコードを削除しますか？\n（案件レコードは削除されません）`)) return;
   selectedRows.forEach(no => EstimateDB.delete(no));
   selectedRows.clear();
   loadEstimates();
   buildFilterOptionsRefresh();
   applyFilters();
-  showToast(`${deletedCount}件を削除しました`, 'success');
+  showToast(`${selectedRows.size}件を削除しました`, 'success');
 }
 
 function buildFilterOptionsRefresh() {
@@ -993,7 +1029,7 @@ const CSV_COLS = [
   { key:'customer',     label:'取引先' },
   { key:'salesPerson',  label:'担当者' },
   { key:'salesRegion',  label:'販売地域' },
-  { key:'probability',  label:'受注確度' },
+  { key:'probability',  label:'受注確度(%)' },
   { key:'deliveryDate', label:'納品予定日' },
   { key:'issue_date',   label:'申請日' },
   { key:'subtotal',     label:'合計金額（税抜）' },
@@ -1026,9 +1062,20 @@ function downloadCSV(csv, filename) {
 function todayStr() { return new Date().toISOString().slice(0,10).replace(/-/g,''); }
 
 function downloadTemplate() {
-  const header = '案件名,取引先,担当者,受注確度,納品予定日,合計金額（税抜）,販売地域,申請日,備考\n';
-  const sample = '"山田製作所 検査装置 2026","山田製作所","佐藤 健一",70,2026-07-25,12000000,JP,2026-02-25,"サンプル"\n';
-  downloadCSV('\uFEFF'+header+sample, 'QURURi_見積インポートテンプレート.csv');
+  const lines = [
+    '\uFEFF# 【QURURi 見積インポートひな形】',
+    '# ─────────────────────────────────────────────────────────',
+    '# 【必須列】案件名、取引先名（または取引先コード）',
+    '# 【任意列】担当者、受注確度、納品予定日、合計金額（税抜）、販売地域、申請日、備考',
+    '# 【販売地域】JP / NA / EU / CN / AP のいずれか（省略時はJP）',
+    '# 【申請日の形式】YYYY-MM-DD（例: 2026-06-30）またはYYYY/MM/DD形式も可',
+    '# ※「#」で始まる行は読み込み時に自動的に無視されます',
+    '# ─────────────────────────────────────────────────────────',
+    '案件名,取引先コード,取引先名,担当者コード,担当者名,受注確度,納品予定日,合計金額（税抜）,販売地域,申請日,備考',
+    '"山田製作所 検査装置 2026","1001","山田製作所","E001","佐藤 健一","70","2026-07-25","12000000","JP","2026-02-25","サンプル"',
+    '"ABC Electronics センサー","","ABC Electronics","","田中 花子","50","2026-09-30","5000000","NA","2026-02-25",""',
+  ];
+  downloadCSV(lines.join('\n'), 'QURURi_見積インポートひな形.csv');
 }
 
 // ─── CSV インポート ───
@@ -1057,7 +1104,9 @@ function processCSVFile(file) {
   const reader = new FileReader();
   reader.onload = ev => {
     const text = ev.target.result.replace(/^\uFEFF/,'');
-    parsedCsvRows = parseCSV(text);
+    // #コメント行を除去
+    const cleaned = text.split(/\r?\n/).filter(l=>!l.trim().startsWith('#')).join('\n');
+    parsedCsvRows = parseCSV(cleaned);
     const prev = document.getElementById('importPreview');
     const title = document.getElementById('previewTitle');
     const content = document.getElementById('previewContent');
@@ -1066,7 +1115,7 @@ function processCSVFile(file) {
       content.textContent = text.slice(0,500);
     } else {
       title.textContent = `${parsedCsvRows.length}件を検出。内容を確認してからインポートを実行してください。`;
-      content.textContent = parsedCsvRows.slice(0,5).map(r=>JSON.stringify(r)).join('\n') + (parsedCsvRows.length>5?'\n...':'' );
+      content.textContent = parsedCsvRows.slice(0,5).map(r=>JSON.stringify(r)).join('\n') + (parsedCsvRows.length>5?'\n...':'');
       document.getElementById('importExecuteBtn').disabled=false;
     }
     prev.style.display='block';
@@ -1097,24 +1146,37 @@ function splitCSVLine(line) {
   result.push(cur); return result;
 }
 
+function normalizeDate(str) {
+  if (!str) return '';
+  str = str.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  let m = str.match(/^(\d{4})[\/](\d{1,2})[\/](\d{1,2})$/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m = str.match(/^(\d{1,2})[\/](\d{1,2})[\/](\d{4})$/);
+  if (m) return `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  return str;
+}
+
 function executeImport() {
   if (!parsedCsvRows.length) return;
   let success=0, errors=[];
   parsedCsvRows.forEach((row,i)=>{
+    // 取引先名・取引先コードのどちらかは必須
     const projectName = row['案件名']||'';
+    const customer    = row['取引先名']||row['取引先']||'';
     if (!projectName) { errors.push(`行${i+2}: 案件名が空`); return; }
     const subtotal = parseFloat(String(row['合計金額（税抜）']||'0').replace(/,/g,''))||0;
     try {
       createPJAndEST({
         projectName,
-        customer:     row['取引先']||'',
-        salesPerson:  row['担当者']||'',
+        customer,
+        salesPerson:  row['担当者名']||row['担当者']||'',
         probability:  parseInt(row['受注確度'])||50,
-        deliveryDate: row['納品予定日']||'',
+        deliveryDate: normalizeDate(row['納品予定日']||''),
         subtotal,
         salesRegion:  row['販売地域']||'JP',
         notes:        row['備考']||'',
-        issueDate:    row['申請日']||new Date().toISOString().slice(0,10),
+        issueDate:    normalizeDate(row['申請日']||'')||new Date().toISOString().slice(0,10),
       });
       success++;
     } catch(e) { errors.push(`行${i+2}: ${e.message}`); }
@@ -1123,44 +1185,30 @@ function executeImport() {
   loadEstimates();
   buildFilterOptionsRefresh();
   applyFilters();
+  updateMasterBadges();
   if (errors.length) showToast(`${success}件登録 / ${errors.length}件エラー`, 'error', 5000);
   else showToast(`${success}件の見積を登録しました（PJ自動生成）`, 'success');
 }
 
-// ─── 新規見積直接入力 ───
-function openDirectInputModal() {
-  // フォームを毎回リセット（前回入力値の残留を防ぐ）
-  document.getElementById('di_projectName').value = '';
-  document.getElementById('di_customer').value = '';
-  document.getElementById('di_salesPerson').value = '';
-  document.getElementById('di_probability').value = '50';
-  document.getElementById('di_deliveryDate').value = '';
-  document.getElementById('di_subtotal').value = '';
-  document.getElementById('di_salesRegion').value = 'JP';
-  document.getElementById('di_notes').value = '';
-  document.getElementById('directInputModal').classList.add('open');
-}
-function closeDirectInputModal() { document.getElementById('directInputModal').classList.remove('open'); }
-
-function executeDirectInput() {
-  const projectName = document.getElementById('di_projectName').value.trim();
-  if (!projectName) { showToast('案件名を入力してください', 'error'); return; }
-  const subtotal = parseFloat(document.getElementById('di_subtotal').value)||0;
-  const result = createPJAndEST({
-    projectName,
-    customer:    document.getElementById('di_customer').value.trim(),
-    salesPerson: document.getElementById('di_salesPerson').value.trim(),
-    probability: parseInt(document.getElementById('di_probability').value)||50,
-    deliveryDate:document.getElementById('di_deliveryDate').value,
-    subtotal,
-    salesRegion: document.getElementById('di_salesRegion').value,
-    notes:       document.getElementById('di_notes').value.trim(),
+// ─── サイドバー マスター件数バッジ更新 ───
+function updateMasterBadges() {
+  const MASTERS = [
+    { key: 'qururi:products',       id: 'sidebar-badge-products' },
+    { key: 'qururi:prices',         id: 'sidebar-badge-prices' },
+    { key: 'qururi:exchange_rates', id: 'sidebar-badge-exchange_rates' },
+    { key: 'qururi:customers',      id: 'sidebar-badge-customers' },
+    { key: 'qururi:staff',          id: 'sidebar-badge-staff' },
+  ];
+  MASTERS.forEach(m => {
+    const el = document.getElementById(m.id);
+    if (!el) return;
+    try {
+      const data = JSON.parse(localStorage.getItem(m.key) || '[]');
+      const count = Array.isArray(data) ? data.length : 0;
+      if (count > 0) { el.textContent = count.toLocaleString(); el.style.display = 'inline-block'; }
+      else { el.style.display = 'none'; }
+    } catch(e) { el.style.display = 'none'; }
   });
-  closeDirectInputModal();
-  loadEstimates();
-  buildFilterOptionsRefresh();
-  applyFilters();
-  showToast(`登録完了：${result.est.estimate_no}（${result.pj.projectNo} 自動生成）`, 'success', 4000);
 }
 
 // ─── Toast ───
