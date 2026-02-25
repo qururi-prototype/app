@@ -1785,7 +1785,7 @@ function updateMasterBadges() {
  *   maxResults  : number   - 最大表示件数（デフォルト20）
  */
 function createAutocomplete({ inputId, inputEl, hiddenId, dropId, getData,
-    getCode, getLabel, getValue, getSub, onSelect }) {
+    getCode, getLabel, getValue, getDisplayAfterSelect, getSub, onSelect }) {
 
   const input  = inputEl || document.getElementById(inputId);
   const hidden = hiddenId ? document.getElementById(hiddenId) : null;
@@ -1863,8 +1863,12 @@ function createAutocomplete({ inputId, inputEl, hiddenId, dropId, getData,
 
   // ─ 候補選択確定 ─
   function confirmSelect(item) {
-    input.value = getValue(item);
+    // 表示：getDisplayAfterSelectがあればそちら、なければgetValue
+    input.value = getDisplayAfterSelect ? getDisplayAfterSelect(item) : getValue(item);
+    // 保存用hidden：常にgetCode
     if (hidden) hidden.value = getCode(item);
+    // データ保存用の「名称のみ」をinput.dataset.saveValueに退避
+    input.dataset.saveValue = getValue(item);
     confirmed = true;
     close();
     if (onSelect) onSelect(item);
@@ -2009,8 +2013,10 @@ function createAutocomplete({ inputId, inputEl, hiddenId, dropId, getData,
 
   // ─ 外部向けAPI ─
   return {
-    setValue(val, code) {
-      input.value = val;
+    setValue(val, code, displayVal) {
+      // displayVal：画面表示用（コード+名称）。省略時はvalをそのまま表示
+      input.value = displayVal || val;
+      input.dataset.saveValue = val; // 保存用は名称のみ
       if (hidden) hidden.value = code != null ? code : '';
       confirmed = true;
     },
@@ -2038,6 +2044,7 @@ function populateMasterLists() {
     getCode  : s => s.staff_code  || '',
     getLabel : s => (s.staff_name || '') + (s.department ? '（' + s.department + '）' : ''),
     getValue : s => (s.staff_name || '') + (s.department ? '（' + s.department + '）' : ''),
+    getDisplayAfterSelect: s => (s.staff_code || '') + '  ' + (s.staff_name || '') + (s.department ? '（' + s.department + '）' : ''),
     getSub   : s => s.title || '',
   });
 
@@ -2052,6 +2059,7 @@ function populateMasterLists() {
     getCode  : c => c.customer_code || '',
     getLabel : c => c.customer_name || '',
     getValue : c => c.customer_name || '',
+    getDisplayAfterSelect: c => (c.customer_code || '') + '  ' + (c.customer_name || ''),
     getSub   : c => [c.region || c.sales_region, c.industry].filter(Boolean).join('・'),
     onSelect : c => applyCustomerAutofill(c),
   });
@@ -2104,6 +2112,7 @@ function setupRowEvents(row) {
       getCode  : p => String(p.product_code || ''),
       getLabel : p => p.product_name || '',
       getValue : p => p.product_name || '',
+      getDisplayAfterSelect: p => (p.product_code || '') + '  ' + (p.product_name || ''),
       getSub   : p => p.category_l  || '',
       onSelect : p => {
         const h = row.querySelector('input.prod-code-hidden');
@@ -2171,9 +2180,11 @@ function showToast(message, type = 'success', duration = 3000) {
 function collectFormData() {
   const projectName  = (document.getElementById('projectName')?.value  || '').trim();
   const deliveryDate = document.getElementById('deliveryDate')?.value  || '';
-  const salesPerson  = document.getElementById('salesPerson')?.value   || '';
-  const staffCode    = document.getElementById('staffCode')?.value     || '';
-  const customer     = document.getElementById('customer')?.value      || '';
+  const spEl        = document.getElementById('salesPerson');
+  const salesPerson = (spEl?.dataset.saveValue || spEl?.value || '').trim();
+  const staffCode   = document.getElementById('staffCode')?.value     || '';
+  const custEl      = document.getElementById('customer');
+  const customer    = (custEl?.dataset.saveValue || custEl?.value || '').trim();
   const customerCode = document.getElementById('customerCode')?.value  || '';
   const probability  = parseInt(document.getElementById('probValue')?.textContent) || 50;
   const memo         = (document.getElementById('memo')?.value || '').trim();
@@ -2200,7 +2211,7 @@ function collectFormData() {
     const autofills     = row.querySelectorAll('input.table-input.autofill');
     if (!prodNameInput || !qtyInput || !priceInput) return;
 
-    const productName = (prodNameInput.value || '').trim();
+    const productName = (prodNameInput.dataset.saveValue || prodNameInput.value || '').trim();
     const productCode = (prodCodeInput?.value || '').trim() || null;
     const qty         = parseFloat((qtyInput.value   || '').replace(/,/g, '')) || 0;
     const unitPrice   = parseFloat((priceInput.value || '').replace(/,/g, '')) || 0;
@@ -2433,10 +2444,9 @@ document.addEventListener('DOMContentLoaded', async function() {
           (s.staff_name || '') === data.salesPerson
         );
         if (match && window._staffAC) {
-          window._staffAC.setValue(
-            (match.staff_name || '') + (match.department ? '（' + match.department + '）' : ''),
-            match.staff_code || ''
-          );
+          const name    = (match.staff_name || '') + (match.department ? '（' + match.department + '）' : '');
+          const display = (match.staff_code || '') + '  ' + name;
+          window._staffAC.setValue(name, match.staff_code || '', display);
         } else if (document.getElementById('salesPerson')) {
           // マスタ未照合でも表示値は保持（後方互換）
           document.getElementById('salesPerson').value = data.salesPerson;
@@ -2457,7 +2467,8 @@ document.addEventListener('DOMContentLoaded', async function() {
           (c.customer_name || '') === data.customer
         );
         if (match && window._customerAC) {
-          window._customerAC.setValue(match.customer_name || '', match.customer_code || '');
+          const display = (match.customer_code || '') + '  ' + (match.customer_name || '');
+          window._customerAC.setValue(match.customer_name || '', match.customer_code || '', display);
           applyCustomerAutofill(match);
         } else if (document.getElementById('customer')) {
           document.getElementById('customer').value = data.customer;
@@ -2501,7 +2512,8 @@ document.addEventListener('DOMContentLoaded', async function() {
           + '<td><div class="table-ac-wrapper">'
           + '<input type="text" class="prod-name-input table-input dropdown" autocomplete="off"'
           + ' placeholder="製品名またはコードを入力..."'
-          + ' value="' + (p.productName || '') + '">'
+          + ' data-save-value="' + (p.productName || '') + '"'
+          + ' value="' + ((p.productCode ? p.productCode + '  ' : '') + (p.productName || '')) + '">'
           + '<input type="hidden" class="prod-code-hidden" value="' + (p.productCode || p.productId || '') + '">'
           + '<div class="ac-dropdown" id="' + dropId + '" role="listbox"></div>'
           + '</div></td>'
