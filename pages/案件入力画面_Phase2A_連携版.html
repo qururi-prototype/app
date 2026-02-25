@@ -1077,6 +1077,82 @@
     background: var(--danger-bg); border-radius: var(--radius-sm); margin-top: 6px;
   }
 
+  /* ===== カスタムオートコンプリート ===== */
+  .ac-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  .ac-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: #fff;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    max-height: 280px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .ac-dropdown.open { display: block; }
+  .ac-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 13px;
+  }
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:hover,
+  .ac-item.active {
+    background: var(--accent-blue-glow);
+  }
+  .ac-item-code {
+    font-family: 'Inter', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    padding: 2px 6px;
+    min-width: 40px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .ac-item.active .ac-item-code {
+    background: rgba(55,110,230,0.12);
+    color: var(--accent-blue);
+  }
+  .ac-item-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ac-item-sub {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .ac-empty {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-tertiary);
+    text-align: center;
+  }
+  .ac-match {
+    color: var(--accent-blue);
+    font-weight: 700;
+  }
+
 </style>
 <script src="https://qururi-prototype.github.io/database/dataManager.js"></script>
 </head>
@@ -1220,11 +1296,12 @@
                 <div class="field-number">4</div>
                 <div class="field-label">営業担当</div>
                 <div class="field-value">
-                  <div class="select-wrapper">
-                    <input type="text" id="salesPerson" class="input-field" 
-                       list="datalist-staff" autocomplete="off"
-                       placeholder="担当者名を入力または選択...">
-                    <datalist id="datalist-staff"></datalist>
+                  <div class="ac-wrapper" id="ac-wrap-salesPerson">
+                    <input type="text" id="salesPerson" class="input-field"
+                       autocomplete="off"
+                       placeholder="担当者名またはコードを入力...">
+                    <input type="hidden" id="staffCode">
+                    <div class="ac-dropdown" id="ac-drop-salesPerson" role="listbox"></div>
                   </div>
                 </div>
               </div>
@@ -1704,22 +1781,242 @@ function updateMasterBadges() {
     } catch(e) { el.style.display = 'none'; }
   });
 }
-// ─── マスタ連携: datalist・select を動的ポピュレート ───
-function populateMasterLists() {
-  // 営業担当 datalist
-  try {
-    const staff = JSON.parse(localStorage.getItem('qururi:staff') || '[]');
-    const dl = document.getElementById('datalist-staff');
-    if (dl) {
-      dl.innerHTML = '';
-      staff.forEach(s => {
-        const opt = document.createElement('option');
-        const dept = s.department ? '(' + s.department + ')' : '';
-        opt.value = (s.staff_name || '') + dept;
-        dl.appendChild(opt);
+// ─── カスタムオートコンプリート 汎用ファクトリ ───
+/**
+ * createAutocomplete(config) → { setValue, getValue, getCode, clear }
+ *
+ * config:
+ *   inputId     : string   - テキスト入力のid
+ *   hiddenId    : string   - 内部コード保存用 hidden inputのid
+ *   dropId      : string   - ac-dropdownのid
+ *   getData     : ()=>[]   - マスタ配列を返す関数
+ *   getCode     : item=>   - コード値を返す（hidden保存用）
+ *   getLabel    : item=>   - ドロップダウン表示名
+ *   getValue    : item=>   - 選択後にinputに表示する値
+ *   getSub      : item=>   - ドロップダウンのサブ情報（省略可）
+ *   onSelect    : item=>   - 選択確定時コールバック（省略可）
+ *   maxResults  : number   - 最大表示件数（デフォルト20）
+ */
+function createAutocomplete({ inputId, hiddenId, dropId, getData,
+    getCode, getLabel, getValue, getSub, onSelect, maxResults = 20 }) {
+
+  const input    = document.getElementById(inputId);
+  const hidden   = hiddenId ? document.getElementById(hiddenId) : null;
+  const dropdown = document.getElementById(dropId);
+  if (!input || !dropdown) return null;
+
+  let activeIndex  = -1;
+  let confirmed    = false;
+  let currentItems = [];
+
+  // ─ ハイライト付きテキスト生成 ─
+  function highlight(text, q) {
+    if (!q) return text;
+    const idx = text.toLowerCase().indexOf(q.toLowerCase());
+    if (idx < 0) return text;
+    return text.slice(0, idx)
+      + '<span class="ac-match">' + text.slice(idx, idx + q.length) + '</span>'
+      + text.slice(idx + q.length);
+  }
+
+  // ─ ドロップダウン描画 ─
+  function render(filtered, q) {
+    currentItems = filtered;
+    activeIndex  = -1;
+
+    if (filtered.length === 0) {
+      dropdown.innerHTML = '<div class="ac-empty">候補がありません</div>';
+    } else {
+      dropdown.innerHTML = filtered.map((item, i) => {
+        const sub = getSub ? getSub(item) : '';
+        return '<div class="ac-item" role="option" data-index="' + i + '">'
+          + '<span class="ac-item-code">' + getCode(item) + '</span>'
+          + '<span class="ac-item-name">' + highlight(getLabel(item), q) + '</span>'
+          + (sub ? '<span class="ac-item-sub">' + sub + '</span>' : '')
+          + '</div>';
+      }).join('');
+
+      dropdown.querySelectorAll('.ac-item').forEach(el => {
+        el.addEventListener('mousedown', function(e) {
+          e.preventDefault(); // blurより前に発火させる
+          const item = filtered[parseInt(this.dataset.index)];
+          if (item) confirmSelect(item);
+        });
       });
     }
-  } catch(e) {}
+    dropdown.classList.add('open');
+  }
+
+  // ─ 候補選択確定 ─
+  function confirmSelect(item) {
+    input.value = getValue(item);
+    if (hidden) hidden.value = getCode(item);
+    confirmed = true;
+    close();
+    if (onSelect) onSelect(item);
+  }
+
+  // ─ ドロップダウンを閉じる ─
+  function close() {
+    dropdown.classList.remove('open');
+    activeIndex = -1;
+  }
+
+  // ─ アクティブ行の移動 ─
+  function setActive(idx) {
+    const els = dropdown.querySelectorAll('.ac-item');
+    if (!els.length) return;
+    idx = Math.max(0, Math.min(idx, els.length - 1));
+    els.forEach(el => el.classList.remove('active'));
+    els[idx].classList.add('active');
+    els[idx].scrollIntoView({ block: 'nearest' });
+    activeIndex = idx;
+  }
+
+  // ─ フォーカスアウト時のバリデーション ─
+  function validateOnBlur() {
+    if (!input.value.trim()) {
+      // 空は許可（必須チェックは申請時）
+      if (hidden) hidden.value = '';
+      confirmed = false;
+      return;
+    }
+    if (confirmed) return; // 既に確定済み
+
+    // テキストが手入力された場合：マスタと照合
+    const all = getData();
+    const q   = input.value.trim().toLowerCase();
+    const match = all.find(item =>
+      getValue(item).toLowerCase() === q || String(getCode(item)).toLowerCase() === q
+    );
+    if (match) {
+      confirmSelect(match);
+    } else {
+      input.value = '';
+      if (hidden) hidden.value = '';
+      confirmed = false;
+      showToast('マスタに登録されていない担当者です', 'error');
+    }
+  }
+
+  // ─ イベント登録 ─
+  input.addEventListener('input', function() {
+    confirmed = false;
+    if (hidden) hidden.value = '';
+    const q       = this.value.trim();
+    const all     = getData();
+    const lower   = q.toLowerCase();
+    const filtered = q
+      ? all.filter(item =>
+          getLabel(item).toLowerCase().includes(lower) ||
+          String(getCode(item)).toLowerCase().includes(lower)
+        )
+      : all;
+    render(filtered.slice(0, maxResults), q);
+  });
+
+  input.addEventListener('focus', function() {
+    const q       = this.value.trim();
+    const all     = getData();
+    const lower   = q.toLowerCase();
+    const filtered = q
+      ? all.filter(item =>
+          getLabel(item).toLowerCase().includes(lower) ||
+          String(getCode(item)).toLowerCase().includes(lower)
+        )
+      : all;
+    render(filtered.slice(0, maxResults), q);
+  });
+
+  input.addEventListener('keydown', function(e) {
+    const isOpen = dropdown.classList.contains('open');
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!isOpen) {
+        render(getData().slice(0, maxResults), '');
+      } else {
+        setActive(activeIndex + 1);
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (isOpen) setActive(activeIndex - 1);
+
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (isOpen && activeIndex >= 0 && currentItems[activeIndex]) {
+        confirmSelect(currentItems[activeIndex]);
+      } else if (isOpen && currentItems.length === 1) {
+        confirmSelect(currentItems[0]);
+      }
+
+    } else if (e.key === 'Tab') {
+      if (isOpen && activeIndex >= 0 && currentItems[activeIndex]) {
+        confirmSelect(currentItems[activeIndex]);
+      } else if (isOpen && currentItems.length === 1) {
+        confirmSelect(currentItems[0]);
+      }
+      close();
+      // Tab のデフォルト動作（フォーカス移動）はそのまま通す
+
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+      input.value = '';
+      if (hidden) hidden.value = '';
+      confirmed = false;
+    }
+  });
+
+  input.addEventListener('blur', function() {
+    // mousedown で confirmSelect が走る場合は 150ms 後に blur 処理
+    setTimeout(() => {
+      close();
+      validateOnBlur();
+    }, 150);
+  });
+
+  // ─ 外側クリックで閉じる ─
+  document.addEventListener('mousedown', function(e) {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+      close();
+    }
+  });
+
+  // ─ 外部向けAPI ─
+  return {
+    setValue(val, code) {
+      input.value  = val;
+      if (hidden) hidden.value = code != null ? code : '';
+      confirmed = true;
+    },
+    clear() {
+      input.value  = '';
+      if (hidden) hidden.value = '';
+      confirmed = false;
+      close();
+    },
+    getDisplayValue() { return input.value; },
+    getCode()         { return hidden ? hidden.value : ''; },
+  };
+}
+
+// ─── マスタ連携: datalist・select を動的ポピュレート ───
+function populateMasterLists() {
+  // ─ 営業担当：カスタムオートコンプリート初期化 ─
+  window._staffAC = createAutocomplete({
+    inputId  : 'salesPerson',
+    hiddenId : 'staffCode',
+    dropId   : 'ac-drop-salesPerson',
+    getData  : () => {
+      try { return JSON.parse(localStorage.getItem('qururi:staff') || '[]'); } catch(e) { return []; }
+    },
+    getCode  : s => s.staff_code  || '',
+    getLabel : s => (s.staff_name || '') + (s.department ? '（' + s.department + '）' : ''),
+    getValue : s => (s.staff_name || '') + (s.department ? '（' + s.department + '）' : ''),
+    getSub   : s => s.title || '',
+    maxResults: 20,
+  });
 
   // 取引先 datalist
   try {
@@ -1858,6 +2155,7 @@ function collectFormData() {
   const projectName  = (document.getElementById('projectName')?.value  || '').trim();
   const deliveryDate = document.getElementById('deliveryDate')?.value  || '';
   const salesPerson  = document.getElementById('salesPerson')?.value   || '';
+  const staffCode    = document.getElementById('staffCode')?.value     || '';
   const customer     = document.getElementById('customer')?.value      || '';
   const probability  = parseInt(document.getElementById('probValue')?.textContent) || 50;
   const memo         = (document.getElementById('memo')?.value || '').trim();
@@ -1910,7 +2208,7 @@ function collectFormData() {
   const total = subtotal + taxDetails.reduce((s, t) => s + t.taxAmount, 0);
 
   return {
-    projectName, probability, deliveryDate, salesPerson, customer,
+    projectName, probability, deliveryDate, salesPerson, staffCode, customer,
     salesRegion: autoData.salesRegion, industry: autoData.industry,
     channel: autoData.channel, segment: autoData.segment,
     products, subtotal, taxDetails, total, memo, status: 'draft'
@@ -2074,7 +2372,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (document.getElementById('deliveryDate'))   document.getElementById('deliveryDate').value = '';
     if (document.getElementById('memo'))           document.getElementById('memo').value = '';
     if (document.getElementById('salesPerson'))    document.getElementById('salesPerson').value = '';
-    if (document.getElementById('customer'))       document.getElementById('customer').value = '';
+    if (document.getElementById('staffCode'))       document.getElementById('staffCode').value   = '';
+    if (document.getElementById('customer'))        document.getElementById('customer').value    = '';
     const fill  = document.getElementById('probFill');
     const label = document.getElementById('probValue');
     if (fill)  fill.style.width  = '50%';
@@ -2103,9 +2402,30 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (document.getElementById('memo'))
       document.getElementById('memo').value = data.memo || '';
 
-    // ─ 営業担当 select：マスタから選択肢を動的生成してからセット ─
-    const spInput = document.getElementById('salesPerson');
-    if (spInput && data.salesPerson) spInput.value = data.salesPerson;
+    // ─ 営業担当 カスタムAC：staffCodeまたは名称でマスタ照合してセット ─
+    if (data.salesPerson) {
+      try {
+        const staff = JSON.parse(localStorage.getItem('qururi:staff') || '[]');
+        const match = staff.find(s =>
+          (data.staffCode && String(s.staff_code) === String(data.staffCode)) ||
+          ((s.staff_name || '') + (s.department ? '（' + s.department + '）' : '')) === data.salesPerson ||
+          (s.staff_name || '') === data.salesPerson
+        );
+        if (match && window._staffAC) {
+          window._staffAC.setValue(
+            (match.staff_name || '') + (match.department ? '（' + match.department + '）' : ''),
+            match.staff_code || ''
+          );
+        } else if (document.getElementById('salesPerson')) {
+          // マスタ未照合でも表示値は保持（後方互換）
+          document.getElementById('salesPerson').value = data.salesPerson;
+          if (data.staffCode && document.getElementById('staffCode'))
+            document.getElementById('staffCode').value = data.staffCode;
+        }
+      } catch(e) {
+        if (document.getElementById('salesPerson')) document.getElementById('salesPerson').value = data.salesPerson;
+      }
+    }
 
     // ─ 取引先 select：同様に動的追加してからセット ─
     const custInput = document.getElementById('customer');
