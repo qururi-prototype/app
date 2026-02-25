@@ -2177,17 +2177,6 @@ function parseImportCSV(text) {
     // 担当者は任意項目：コード・名前が未登録でもインポートをブロックしない（警告のみ）
     // if (staffResult.error) addErr('担当者', ...); ← 意図的にコメントアウト
 
-    // 為替レートチェック: 外貨かつ納品月のレートが未登録 → エラー
-    if (resolvedCurrency !== 'JPY') {
-      const fxRate = getFxRate(resolvedCurrency, resolvedDeliveryDate, masters.fxAllRates);
-      if (fxRate == null) {
-        const ym = resolvedDeliveryDate ? String(resolvedDeliveryDate).slice(0, 7) : '（納品日未設定）';
-        addErr('為替レート',
-          resolvedCurrency,
-          `${resolvedCurrency}/${ym} の為替レートが未登録です。マスター管理画面で登録してください`);
-      }
-    }
-
     const prodResult = resolveMaster(productCode, productName,
       masters.productByCode, masters.productByName, masters.hasMasterProducts, '製品');
     if (prodResult.error) addErr('製品', productCode || productName, prodResult.error);
@@ -2202,6 +2191,17 @@ function parseImportCSV(text) {
     const resolvedCustName = custRecord?.customer_name || customerName;
     const resolvedRegion   = custRecord?.region || g('salesRegionRaw') || 'JP';
     const resolvedCurrency = (custRecord?.billing_currency || 'JPY').toUpperCase();
+
+    // 為替レートチェック: 外貨かつ納品月のレートが未登録 → エラー
+    if (resolvedCurrency !== 'JPY') {
+      const fxRate = getFxRate(resolvedCurrency, deliveryDate, masters.fxAllRates);
+      if (fxRate == null) {
+        const ym = deliveryDate ? String(deliveryDate).slice(0, 7) : '（納品日未設定）';
+        addErr('為替レート',
+          resolvedCurrency,
+          `${resolvedCurrency}/${ym} の為替レートが未登録です。マスター管理画面で登録してください`);
+      }
+    }
     const resolvedCustCode  = String(custRecord?.customer_code || customerCode || '');
     const resolvedIndustry  = custRecord?.industry || '';
     const resolvedChannel   = custRecord?.channel  || '';

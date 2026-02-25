@@ -1221,11 +1221,10 @@
                 <div class="field-label">営業担当</div>
                 <div class="field-value">
                   <div class="select-wrapper">
-                    <select id="salesPerson" class="input-field input-dropdown-type">
-                      <option selected>佐藤 健一(営業第一部)</option>
-                      <option>田中 美咲(営業第二部)</option>
-                      <option>鈴木 大輔(営業第三部)</option>
-                    </select>
+                    <input type="text" id="salesPerson" class="input-field" 
+                       list="datalist-staff" autocomplete="off"
+                       placeholder="担当者名を入力または選択...">
+                    <datalist id="datalist-staff"></datalist>
                   </div>
                 </div>
               </div>
@@ -1235,11 +1234,12 @@
                 <div class="field-label">取引先</div>
                 <div class="field-value">
                   <div class="select-wrapper">
-                    <select id="customer" class="input-field input-dropdown-type">
-                      <option selected>トヨタ自動車</option>
-                      <option>デンソー</option>
-                      <option>本田技研工業</option>
-                    </select>
+                    <input type="text" id="customer" class="input-field"
+                       list="datalist-customers" autocomplete="off"
+                       placeholder="取引先名を入力または選択..."
+                       oninput="onCustomerInput(this.value)"
+                       onchange="onCustomerInput(this.value)">
+                    <datalist id="datalist-customers"></datalist>
                   </div>
                 </div>
               </div>
@@ -1623,12 +1623,12 @@ function onProductChange(select, row) {
   if (!prod) return;
 
   // 取引先の通貨を取得
-  const custSelect = document.getElementById('customer');
+  const custInput2 = document.getElementById('customer');
   let currency = 'JPY';
-  if (custSelect?.value) {
+  if (custInput2?.value) {
     try {
       const customers = JSON.parse(localStorage.getItem('qururi:customers') || '[]');
-      const cust = customers.find(c => c.customer_name === custSelect.value || String(c.customer_code) === custSelect.value);
+      const cust = customers.find(c => c.customer_name === custInput2.value || String(c.customer_code) === custInput2.value);
       if (cust?.billing_currency) currency = cust.billing_currency.toUpperCase();
     } catch(e) {}
   }
@@ -1660,6 +1660,8 @@ function addProductRow() {
   tr.innerHTML =
     '<td>' + rowNo + '</td>'
     + '<td><div class="table-select-wrapper">'
+    + '<input type="text" class="prod-search table-input" placeholder="🔍 製品検索..." '
+    + 'style="font-size:11px;padding:2px 4px;width:100%;margin-bottom:2px;border-radius:4px;border:1px solid #dde2ec;">'
     + '<select class="table-input dropdown">' + buildProductOptions('') + '</select>'
     + '</div></td>'
     + '<td style="text-align:center;"><input type="text" class="table-input direct qty" value="1"></td>'
@@ -1702,6 +1704,66 @@ function updateMasterBadges() {
     } catch(e) { el.style.display = 'none'; }
   });
 }
+// ─── マスタ連携: datalist・select を動的ポピュレート ───
+function populateMasterLists() {
+  // 営業担当 datalist
+  try {
+    const staff = JSON.parse(localStorage.getItem('qururi:staff') || '[]');
+    const dl = document.getElementById('datalist-staff');
+    if (dl) {
+      dl.innerHTML = '';
+      staff.forEach(s => {
+        const opt = document.createElement('option');
+        const dept = s.department ? '(' + s.department + ')' : '';
+        opt.value = (s.staff_name || '') + dept;
+        dl.appendChild(opt);
+      });
+    }
+  } catch(e) {}
+
+  // 取引先 datalist
+  try {
+    const customers = JSON.parse(localStorage.getItem('qururi:customers') || '[]');
+    const dl = document.getElementById('datalist-customers');
+    if (dl) {
+      dl.innerHTML = '';
+      customers.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.customer_name || '';
+        dl.appendChild(opt);
+      });
+    }
+  } catch(e) {}
+
+  // 製品 select（全行）
+  document.querySelectorAll('#productTableBody tr select.table-input.dropdown').forEach(sel => {
+    const current = sel.value;
+    sel.innerHTML = buildProductOptions(current);
+  });
+}
+
+// 取引先入力時の自動転記（autofill）
+function onCustomerInput(value) {
+  if (!value) return;
+  try {
+    const customers = JSON.parse(localStorage.getItem('qururi:customers') || '[]');
+    const cust = customers.find(c => c.customer_name === value.trim()
+                                  || String(c.customer_code) === value.trim());
+    if (!cust) return;
+    document.querySelectorAll('.autofill-item').forEach(item => {
+      const lbl = item.querySelector('.autofill-label')?.textContent?.trim();
+      const val = item.querySelector('.autofill-value');
+      if (!val) return;
+      if (lbl === '販売地域') val.textContent = cust.region || cust.sales_region || '';
+      if (lbl === '業界')     val.textContent = cust.industry  || '';
+      if (lbl === '商流')     val.textContent = cust.channel   || '';
+      if (lbl === '自社セグ') val.textContent = cust.segment   || '';
+    });
+    updateTotals();
+  } catch(e) {}
+}
+
+
 document.addEventListener('DOMContentLoaded', updateMasterBadges);
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1721,6 +1783,20 @@ function setupRowEvents(row) {
     prodSelect.addEventListener('change', function() {
       onProductChange(this, row);
     });
+    // 製品検索input → selectを絞り込む
+    const prodSearch = row.querySelector('input.prod-search');
+    if (prodSearch) {
+      prodSearch.addEventListener('input', function() {
+        const q = this.value.trim().toLowerCase();
+        Array.from(prodSelect.options).forEach(opt => {
+          if (!opt.value) return;  // 「製品を選択」は常に表示
+          opt.hidden = q ? !opt.text.toLowerCase().includes(q) : false;
+        });
+        // 絞り込み後に最初の可視オプションを選択
+        if (q) prodSelect.size = 5;
+        else   prodSelect.size = 1;
+      });
+    }
   }
 
   // 削除ボタン
@@ -1983,6 +2059,8 @@ document.getElementById('btnCancel').addEventListener('click', function() {
 // ページ読み込み時の初期化（編集モード対応）
 // ===================================================
 document.addEventListener('DOMContentLoaded', async function() {
+  // マスタからdatalist・select を動的生成
+  populateMasterLists();
   // 既存行にイベント設定
   document.querySelectorAll('#productTableBody tr').forEach(row => setupRowEvents(row));
   updateTotals();
@@ -2026,30 +2104,14 @@ document.addEventListener('DOMContentLoaded', async function() {
       document.getElementById('memo').value = data.memo || '';
 
     // ─ 営業担当 select：マスタから選択肢を動的生成してからセット ─
-    const spSelect = document.getElementById('salesPerson');
-    if (spSelect && data.salesPerson) {
-      // 既存optionにマッチするものがなければ先頭に追加
-      const spExists = Array.from(spSelect.options).some(o => o.value === data.salesPerson || o.text === data.salesPerson);
-      if (!spExists) {
-        const opt = document.createElement('option');
-        opt.value = data.salesPerson;
-        opt.text  = data.salesPerson;
-        spSelect.insertBefore(opt, spSelect.firstChild);
-      }
-      spSelect.value = data.salesPerson;
-    }
+    const spInput = document.getElementById('salesPerson');
+    if (spInput && data.salesPerson) spInput.value = data.salesPerson;
 
     // ─ 取引先 select：同様に動的追加してからセット ─
-    const custSelect = document.getElementById('customer');
-    if (custSelect && data.customer) {
-      const custExists = Array.from(custSelect.options).some(o => o.value === data.customer || o.text === data.customer);
-      if (!custExists) {
-        const opt = document.createElement('option');
-        opt.value = data.customer;
-        opt.text  = data.customer;
-        custSelect.insertBefore(opt, custSelect.firstChild);
-      }
-      custSelect.value = data.customer;
+    const custInput = document.getElementById('customer');
+    if (custInput && data.customer) {
+      custInput.value = data.customer;
+      onCustomerInput(data.customer);  // 自動転記を再実行
     }
 
     // ─ 受注確度 ─
@@ -2080,7 +2142,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         const tr = document.createElement('tr');
         tr.innerHTML =
           '<td>' + (i + 1) + '</td>'
-          + '<td><div class="table-select-wrapper"><select class="table-input dropdown">'
+          + '<td><div class="table-select-wrapper">'
+          + '<input type="text" class="prod-search table-input" placeholder="🔍 製品検索..." '
+          + 'style="font-size:11px;padding:2px 4px;width:100%;margin-bottom:2px;border-radius:4px;border:1px solid #dde2ec;">'
+          + '<select class="table-input dropdown">'
           + buildProductOptions(p.productName || '')  // マスタから選択肢を生成
           + '</select></div></td>'
           + '<td style="text-align:center;"><input type="text" class="table-input direct qty" value="' + (p.qty || 1) + '"></td>'
