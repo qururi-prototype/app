@@ -1620,9 +1620,26 @@ function calcRowTotal(row) {
 const CURRENCY_SYMBOL = { JPY: '¥', USD: '$', EUR: '€', RMB: '¥', CNY: '¥', GBP: '£' };
 
 function getCurrencyFromRows() {
-  // 製品明細の1行目の通貨inputから取得（全行同一通貨を前提）
+  // 既存行に通貨が設定済みなら、その値を使う
   const firstCurrencyInput = document.querySelector('#productTableBody tr input.autofill');
-  return (firstCurrencyInput?.value?.trim() || 'JPY').toUpperCase();
+  const rowCurrency = firstCurrencyInput?.value?.trim().toUpperCase();
+  if (rowCurrency && rowCurrency !== 'JPY') return rowCurrency;
+
+  // 取引先マスタの billing_currency をフォールバックとして使う
+  const custEl   = document.getElementById('customer');
+  const custName = custEl?.dataset.saveValue || custEl?.value || '';
+  const custCode = document.getElementById('customerCode')?.value || '';
+  if (custName || custCode) {
+    try {
+      const customers = JSON.parse(localStorage.getItem('qururi:customers') || '[]');
+      const cust = customers.find(c =>
+        (custCode && String(c.customer_code) === custCode) ||
+        c.customer_name === custName
+      );
+      if (cust?.billing_currency) return cust.billing_currency.toUpperCase();
+    } catch(e) {}
+  }
+  return rowCurrency || 'JPY';
 }
 
 function getSalesRegionFromForm() {
@@ -1685,13 +1702,18 @@ function applyProductSelect(prod, row) {
   try { priceList = JSON.parse(localStorage.getItem('qururi:prices') || '[]'); } catch(e) {}
   const priceRec = priceList.find(p => String(p.product_code) === String(prod.product_code));
 
-  // 取引先の通貨を取得
-  const custVal = document.getElementById('customer')?.value || '';
+  // 取引先の通貨を取得（表示値ではなく保存用の名称・コードで照合）
+  const custEl  = document.getElementById('customer');
+  const custName = custEl?.dataset.saveValue || custEl?.value || '';
+  const custCode = document.getElementById('customerCode')?.value || '';
   let currency = 'JPY';
-  if (custVal) {
+  if (custName || custCode) {
     try {
       const customers = JSON.parse(localStorage.getItem('qururi:customers') || '[]');
-      const cust = customers.find(c => c.customer_name === custVal || String(c.customer_code) === custVal);
+      const cust = customers.find(c =>
+        (custCode && String(c.customer_code) === custCode) ||
+        c.customer_name === custName
+      );
       if (cust?.billing_currency) currency = cust.billing_currency.toUpperCase();
     } catch(e) {}
   }
