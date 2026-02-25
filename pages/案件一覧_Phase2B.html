@@ -1177,6 +1177,19 @@ let currentPage = 1;
 let perPage = 20;
 let sortKey = 'projectNo';
 let sortDir = 'asc';
+// 為替マスタキャッシュ（renderTable内でlocalStorageを毎回読まないよう）
+let fxAllRatesCache = new Map();
+function refreshFxCache() {
+  try {
+    const fxData = JSON.parse(localStorage.getItem('qururi:exchange_rates') || '[]');
+    fxAllRatesCache = new Map();
+    fxData.forEach(r => {
+      const cc = (r.currency_code || '').toUpperCase();
+      const ym = (r.year_month   || '').trim();
+      if (cc && ym && r.rate_avg != null) fxAllRatesCache.set(cc + ':' + ym, Number(r.rate_avg));
+    });
+  } catch { fxAllRatesCache = new Map(); }
+}
 let selectedIds = new Set();
 let importData = { valid: [], errors: [], updates: [], fileName: '', masterWarn: false };
 
@@ -1238,6 +1251,7 @@ const STATUS_MAP = {
 // ─── Init ───
 document.addEventListener('DOMContentLoaded', async () => {
   await loadProjects();
+  refreshFxCache();  // 為替キャッシュを更新
   buildFilterOptions();
   applyFilters();
 });
@@ -1508,7 +1522,15 @@ function renderTable() {
     const currency = (prod && prod.currency) ? prod.currency : (p.currency || 'JPY');
     const sym      = CURRENCY_SYMBOL[currency] || (currency + ' ');
 
-    const amountDisplay = '¥' + (p.subtotal || 0).toLocaleString();  // subtotalは常にJPY円建て
+    // 合計金額（税抜）: 製品明細の円換算合計をリアルタイム計算
+    const realtimeSubtotal = (p.products && p.products.length > 0)
+      ? p.products.reduce((sum, prod) => {
+          const rate = (prod.currency && prod.currency !== 'JPY')
+            ? getFxRate(prod.currency, p.deliveryDate, fxAllRatesCache) : 1;
+          return sum + (rate != null ? Math.round((prod.lineTotal || 0) * rate) : (prod.lineTotal || 0));
+        }, 0)
+      : (p.subtotal || 0);
+    const amountDisplay = '¥' + realtimeSubtotal.toLocaleString();
 
     const prodName = prod ? (prod.productName || '\u2013') : '\u2013';
     const prodTitle = prod ? ((prod.productName || '') + (prod.productCode ? ' (' + prod.productCode + ')' : '')) : '';
@@ -1532,17 +1554,22 @@ function renderTable() {
       + lineCurr + '</span></td>';
 
     // 明細金額（外貨）セル: JPYは–、外貨のみ現地通貨記号で表示
-    const lineAmt   = prod ? (prod.lineTotal   != null ? prod.lineTotal   : 0) : null;
-    const localAmt  = prod ? (prod.localAmount != null ? prod.localAmount : null) : null;
+    const localAmt      = prod ? (prod.localAmount != null ? prod.localAmount
+                                                           : (prod.lineTotal || 0)) : null;
     const isLineForeign = lineCurr !== 'JPY';
     const localAmountCell = (isLineForeign && localAmt != null)
       ? '<td style="text-align:right;white-space:nowrap;">' + lineSym + localAmt.toLocaleString() + '</td>'
       : '<td style="text-align:right;color:var(--text-tertiary);font-size:11px;">–</td>';
 
-    // 明細金額（円貨）セル: lineTotal は常にJPY円建て → ¥固定
-    const lineTotalCell = lineAmt != null
-      ? '<td style="text-align:right;white-space:nowrap;">¥' + lineAmt.toLocaleString() + '</td>'
-      : '<td></td>';
+    // 明細金額（円貨）セル: 納品月レートでリアルタイム換算
+    const fxRateVal = isLineForeign
+      ? getFxRate(lineCurr, p.deliveryDate, fxAllRatesCache)
+      : 1;
+    const lineAmtJpy = (prod && prod.lineTotal != null && fxRateVal != null)
+      ? Math.round(prod.lineTotal * fxRateVal) : null;
+    const lineTotalCell = lineAmtJpy != null
+      ? '<td style="text-align:right;white-space:nowrap;">¥' + lineAmtJpy.toLocaleString() + '</td>'
+      : '<td style="text-align:right;color:var(--danger);font-size:11px);" title="為替レート未登録">–</td>';
 
     // 全行フル表示（製品ごとに全列を繰り返す）
     // 2行目以降：案件Noと案件名・取引先をグレーで表示してグルーピングを視覚的に表現
@@ -1759,11 +1786,27 @@ function buildCSV(rows) {
         prod ? (prod.unitPrice   != null ? prod.unitPrice   : 0) : '',
         prod ? (prod.currency   || 'JPY') : '',
         prod ? (prod.taxRate    != null ? prod.taxRate   : '') : '',
-        prod ? (prod.lineTotal  != null ? prod.lineTotal : 0)  : '',   // 円建て
-        prod ? ((prod.currency !== 'JPY' && prod.localAmount != null) ? prod.localAmount : '') : '',  // 現地通貨
+        // 明細金額（外貨）: JPYは空、外貨はlocalAmount
+        prod ? ((prod.currency && prod.currency !== 'JPY' && prod.localAmount != null) ? prod.localAmount : '') : '',
+        // 明細金額（円貨）: 納品月レートでリアルタイム換算
+        (() => {
+          if (!prod) return '';
+          const cur = prod.currency || 'JPY';
+          if (cur === 'JPY') return prod.lineTotal != null ? prod.lineTotal : 0;
+          const rate = getFxRate(cur, p.deliveryDate, fxAllRatesCache);
+          return (rate != null && prod.lineTotal != null) ? Math.round(prod.lineTotal * rate) : '';
+        })(),
         // 案件合計
-        p.subtotal    || 0,
-        p.total       || 0,
+        // 合計金額（税抜・円）: リアルタイム換算
+        (() => {
+          if (!p.products || p.products.length === 0) return p.subtotal || 0;
+          return p.products.reduce((sum, prod) => {
+            const rate = (prod.currency && prod.currency !== 'JPY')
+              ? getFxRate(prod.currency, p.deliveryDate, fxAllRatesCache) : 1;
+            return sum + (rate != null ? Math.round((prod.lineTotal || 0) * rate) : (prod.lineTotal || 0));
+          }, 0);
+        })(),
+        p.total    || 0,
         p.probability || 0,
         p.deliveryDate || '',
         p.memo         || '',
@@ -1946,25 +1989,18 @@ function loadMasterSets() {
     }
   } catch { /* 単価マスタ未登録は無視 */ }
 
-  // ─── 為替マスタ（最新月のレートを取得） ───
-  // { USD: rate_avg, EUR: rate_avg, RMB: rate_avg } の形式で返す
-  let fxRates = {};
+  // ─── 為替マスタ（全月・全通貨を読み込む） ───
+  // fxAllRates: Map<"USD:2026-02" → rate_avg> 形式
+  const fxAllRates = new Map();
   try {
     const fxData = JSON.parse(localStorage.getItem('qururi:exchange_rates') || '[]');
-    if (fxData.length > 0) {
-      // 最新年月を取得
-      const latestMonth = fxData
-        .map(r => r.year_month || '')
-        .filter(Boolean)
-        .sort()
-        .at(-1);
-      fxData
-        .filter(r => r.year_month === latestMonth)
-        .forEach(r => {
-          const cc = (r.currency_code || '').toUpperCase();
-          if (cc && r.rate_avg != null) fxRates[cc] = Number(r.rate_avg);
-        });
-    }
+    fxData.forEach(r => {
+      const cc = (r.currency_code || '').toUpperCase();
+      const ym = (r.year_month   || '').trim();   // 例: "2026-02"
+      if (cc && ym && r.rate_avg != null) {
+        fxAllRates.set(cc + ':' + ym, Number(r.rate_avg));
+      }
+    });
   } catch { /* 為替マスタ未登録は無視 */ }
 
   return {
@@ -1975,28 +2011,42 @@ function loadMasterSets() {
     productByCode:  p.byCode,
     productByName:  p.byName,
     priceByCode,
-    fxRates,
+    fxAllRates,
     hasMasterCustomers: c.byCode.size > 0 || c.byName.size > 0,
     hasMasterStaff:     s.byCode.size > 0 || s.byName.size > 0,
     hasMasterProducts:  p.byCode.size > 0 || p.byName.size > 0,
   };
 }
 
+// ─── 納品予定日の年月から為替レートを取得するヘルパー ───
+// deliveryDate: "YYYY-MM-DD" 形式
+// 戻り値: レート数値（number）または null（未登録）
+function getFxRate(currency, deliveryDate, fxAllRates) {
+  if (!currency || currency === 'JPY') return 1;
+  if (!deliveryDate) return null;
+  const ym = String(deliveryDate).slice(0, 7);  // "YYYY-MM"
+  const rate = fxAllRates.get(currency.toUpperCase() + ':' + ym);
+  return (rate != null) ? rate : null;
+}
+
+// ─── 現地通貨→円換算（表示・合計計算に使用） ───
+function toJPY(localAmount, currency, deliveryDate, fxAllRates) {
+  if (!localAmount) return 0;
+  if (!currency || currency === 'JPY') return localAmount;
+  const rate = getFxRate(currency, deliveryDate, fxAllRates);
+  if (rate == null) return null;  // 為替未登録 → null
+  return Math.round(localAmount * rate);
+}
+
 // ─── 通貨別単価を取得するヘルパー ───
 // currency: 'JPY'|'USD'|'EUR'|'RMB'
 // 戻り値: { unitPrice: number, currency: string, jpyAmount: number|null }
-function getPriceForCurrency(priceRecord, currency, fxRates) {
+function getPriceForCurrency(priceRecord, currency) {
+  // 単価マスタから現地通貨建て単価のみ返す（円換算は表示時リアルタイムに行う）
   const CURRENCY_FIELD = { JPY: 'price_jpy', USD: 'price_usd', EUR: 'price_eur', RMB: 'price_rmb' };
   const field = CURRENCY_FIELD[currency] || 'price_jpy';
   const unitPrice = Number(priceRecord[field] || 0);
-
-  let jpyAmount = null;
-  if (currency === 'JPY') {
-    jpyAmount = unitPrice;
-  } else if (fxRates[currency]) {
-    jpyAmount = Math.round(unitPrice * fxRates[currency]);
-  }
-  return { unitPrice, currency, jpyAmount };
+  return { unitPrice, currency };
 }
 
 // ─── コード優先でマスタ照合するヘルパー ───
@@ -2127,6 +2177,17 @@ function parseImportCSV(text) {
     // 担当者は任意項目：コード・名前が未登録でもインポートをブロックしない（警告のみ）
     // if (staffResult.error) addErr('担当者', ...); ← 意図的にコメントアウト
 
+    // 為替レートチェック: 外貨かつ納品月のレートが未登録 → エラー
+    if (resolvedCurrency !== 'JPY') {
+      const fxRate = getFxRate(resolvedCurrency, resolvedDeliveryDate, masters.fxAllRates);
+      if (fxRate == null) {
+        const ym = resolvedDeliveryDate ? String(resolvedDeliveryDate).slice(0, 7) : '（納品日未設定）';
+        addErr('為替レート',
+          resolvedCurrency,
+          `${resolvedCurrency}/${ym} の為替レートが未登録です。マスター管理画面で登録してください`);
+      }
+    }
+
     const prodResult = resolveMaster(productCode, productName,
       masters.productByCode, masters.productByName, masters.hasMasterProducts, '製品');
     if (prodResult.error) addErr('製品', productCode || productName, prodResult.error);
@@ -2165,24 +2226,22 @@ function parseImportCSV(text) {
     let localAmount = 0;  // 現地通貨建て明細金額
     if (rawAmount !== '') {
       // CSV直接入力：金額欄の値を lineTotal・unitPrice に使用（数量1として扱う）
-      lineTotal = Number(rawAmount);
-      unitPrice = lineTotal;
-      localAmount = lineTotal;  // 直接入力は現地通貨=円換算と同一
+      lineTotal   = Number(rawAmount);
+      unitPrice   = lineTotal;
+      localAmount = lineTotal;  // 直接入力は入力値=現地通貨建て
     } else if (resolvedProdCode && masters.priceByCode.has(resolvedProdCode)) {
       // 単価マスタから通貨別単価を取得
       const priceRec  = masters.priceByCode.get(resolvedProdCode);
-      const priceInfo = getPriceForCurrency(priceRec, resolvedCurrency, masters.fxRates);
+      const priceInfo = getPriceForCurrency(priceRec, resolvedCurrency);
       unitPrice = priceInfo.unitPrice;
 
-      if (priceInfo.jpyAmount != null) {
-        lineTotal    = priceInfo.jpyAmount;   // JPY換算済み金額をlineTotalに
-        localAmount  = priceInfo.unitPrice;   // 現地通貨建て単価を保存
-        priceNote = resolvedCurrency === 'JPY'
+      if (unitPrice > 0) {
+        // lineTotal = 現地通貨建て（円換算は表示時リアルタイム）
+        lineTotal   = unitPrice;   // qty は prodLine push 時に適用
+        localAmount = lineTotal;
+        priceNote   = resolvedCurrency === 'JPY'
           ? `単価マスタ参照（JPY ${unitPrice.toLocaleString()}）`
-          : `単価マスタ参照（${resolvedCurrency} ${unitPrice.toLocaleString()} × レート${masters.fxRates[resolvedCurrency]}）`;
-      } else if (unitPrice > 0) {
-        lineTotal = 0;
-        priceNote = `単価マスタ参照（${resolvedCurrency} ${unitPrice.toLocaleString()}・為替レート未設定）`;
+          : `単価マスタ参照（${resolvedCurrency} ${unitPrice.toLocaleString()}）`;
       }
     }
 
@@ -2214,8 +2273,17 @@ function parseImportCSV(text) {
         unitPrice,
         currency:    resolvedCurrency,
         taxRate:     resolvedRegion === 'JP' ? 10 : 0,   // 販売地域JPのみ消費税10%
-        lineTotal,
-        localAmount,  // 現地通貨建て金額
+        lineTotal:   (() => {
+          // lineTotal = 現地通貨建て × 数量
+          const raw = g('qty'); const n = raw ? parseInt(String(raw).replace(/[^0-9]/g,''), 10) : NaN;
+          const qty = (!isNaN(n) && n > 0) ? n : 1;
+          return lineTotal * qty;
+        })(),
+        localAmount: (() => {
+          const raw = g('qty'); const n = raw ? parseInt(String(raw).replace(/[^0-9]/g,''), 10) : NaN;
+          const qty = (!isNaN(n) && n > 0) ? n : 1;
+          return localAmount * qty;
+        })(),
         priceNote,
       },
     });
@@ -2267,9 +2335,12 @@ function parseImportCSV(text) {
     const currency = proj.products[0]?.currency || 'JPY';
 
     proj.products.forEach(p => {
-      subtotal += p.lineTotal;
+      // lineTotal は現地通貨建て → 納品月レートで円換算
+      const jpyLine = toJPY(p.lineTotal, p.currency || currency, proj.deliveryDate, masters.fxAllRates);
+      const jpyForTax = jpyLine != null ? jpyLine : p.lineTotal;  // レート未登録時は生値（インポートエラーで弾くので通常到達しない）
+      subtotal += jpyForTax;
       if (!taxMap[p.taxRate]) taxMap[p.taxRate] = { taxRate: p.taxRate, taxBase: 0, taxAmount: 0 };
-      taxMap[p.taxRate].taxBase += p.lineTotal;
+      taxMap[p.taxRate].taxBase += jpyForTax;
     });
 
     const taxDetails = Object.values(taxMap).map(t => ({
