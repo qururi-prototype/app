@@ -2279,7 +2279,7 @@ function collectFormData() {
     const qty         = parseFloat((qtyInput.value   || '').replace(/,/g, '')) || 0;
     const unitPrice   = parseFloat((priceInput.value || '').replace(/,/g, '')) || 0;
     const currency    = autofills[0]?.value?.trim() || 'JPY';
-    const taxRate     = parseFloat((autofills[1]?.value || '10').replace('%', '')) || 10;
+    const taxRate     = parseFloat((autofills[1]?.value || '0').replace('%', ''));
     const lineTotal   = qty * unitPrice;
 
     // 案件入力画面では直接入力のため lineTotal = localAmount（現地通貨=入力値）

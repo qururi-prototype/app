@@ -1747,8 +1747,8 @@ function buildCSV(rows) {
     '販売地域', '業界', '商流', '自社セグ',
     'ステータス',
     '製品コード', '製品名', '大区分', '中区分', '小区分',
-    '数量', '税抜単価（現地通貨）', '通貨', '税率',
-    '明細金額（外貨）', '明細金額（円貨）',
+    '数量', '通貨', '税抜単価（現地通貨）', '税率',
+    '明細金額（外貨）', '為替レート', '明細金額（円貨）',
     '合計金額（税抜）',
     '受注確度(%)', '納品予定日', '備考', '登録日時', '更新日時'
   ];
@@ -1783,11 +1783,19 @@ function buildCSV(rows) {
         categoryM,
         categoryS,
         prod ? (prod.qty       != null ? prod.qty       : 1) : '',
-        prod ? (prod.unitPrice   != null ? prod.unitPrice   : 0) : '',
         prod ? (prod.currency   || 'JPY') : '',
+        prod ? (prod.unitPrice  != null ? prod.unitPrice : 0) : '',
         prod ? (prod.taxRate    != null ? prod.taxRate   : '') : '',
         // 明細金額（外貨）: JPYは空、外貨はlocalAmount
         prod ? ((prod.currency && prod.currency !== 'JPY' && prod.localAmount != null) ? prod.localAmount : '') : '',
+        // 為替レート: JPYは空、外貨は納品月レート
+        (() => {
+          if (!prod) return '';
+          const cur = prod.currency || 'JPY';
+          if (cur === 'JPY') return '';
+          const rate = getFxRate(cur, p.deliveryDate, fxAllRatesCache);
+          return rate != null ? rate : '';
+        })(),
         // 明細金額（円貨）: 納品月レートでリアルタイム換算
         (() => {
           if (!prod) return '';
@@ -1796,7 +1804,6 @@ function buildCSV(rows) {
           const rate = getFxRate(cur, p.deliveryDate, fxAllRatesCache);
           return (rate != null && prod.lineTotal != null) ? Math.round(prod.lineTotal * rate) : '';
         })(),
-        // 案件合計
         // 合計金額（税抜・円）: リアルタイム換算
         (() => {
           if (!p.products || p.products.length === 0) return p.subtotal || 0;
