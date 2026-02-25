@@ -1743,7 +1743,7 @@ function buildCSV(rows) {
 
   // ヘッダー
   const headers = [
-    '案件No', '案件名', '取引先', '担当者',
+    '案件No', '案件名', '取引先コード', '取引先', '担当者コード', '担当者',
     '販売地域', '業界', '商流', '自社セグ',
     'ステータス',
     '製品コード', '製品名', '大区分', '中区分', '小区分',
@@ -1768,7 +1768,9 @@ function buildCSV(rows) {
       dataRows.push([
         p.projectNo    || '',
         p.projectName  || '',
+        p.customerCode || '',
         p.customer     || '',
+        p.staffCode    || '',
         p.salesPerson  || '',
         // 案件レコードから自動転記項目
         p.salesRegion  || '',
