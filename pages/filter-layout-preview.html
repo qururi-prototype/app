@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>絞り込みレイアウト 比較案</title>
+<title>絞り込みレイアウト 比較案（改訂版）</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -11,480 +11,417 @@
     color: #1e293b;
     padding: 32px 24px;
   }
-  h1 {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    color: #0f172a;
-  }
-  .page-note {
-    font-size: 13px;
-    color: #64748b;
-    margin-bottom: 32px;
-  }
-  .section {
-    margin-bottom: 48px;
-  }
+  h1 { font-size: 18px; font-weight: 700; margin-bottom: 4px; color: #0f172a; }
+  .page-note { font-size: 13px; color: #64748b; margin-bottom: 32px; }
+
+  .section { margin-bottom: 48px; }
   .section-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #2563eb;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 6px;
-    padding: 4px 12px;
-    margin-bottom: 12px;
-    letter-spacing: 0.04em;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 700; color: #2563eb;
+    background: #eff6ff; border: 1px solid #bfdbfe;
+    border-radius: 6px; padding: 4px 12px; margin-bottom: 10px;
   }
-  .section-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 4px;
-  }
-  .section-desc {
-    font-size: 13px;
-    color: #64748b;
-    margin-bottom: 16px;
-    line-height: 1.6;
-  }
-  .pros {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-  }
+  .section-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 3px; }
+  .section-desc { font-size: 13px; color: #64748b; margin-bottom: 12px; line-height: 1.6; }
+  .pros { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
   .pro {
-    font-size: 12px;
-    background: #f0fdf4;
-    color: #16a34a;
-    border: 1px solid #bbf7d0;
-    border-radius: 4px;
-    padding: 3px 8px;
+    font-size: 12px; background: #f0fdf4; color: #16a34a;
+    border: 1px solid #bbf7d0; border-radius: 4px; padding: 2px 8px;
   }
 
-  /* ─── 共通変数 ─── */
   :root {
     --bg-card: #ffffff;
-    --border-subtle: #e2e8f0;
-    --border-default: #cbd5e1;
-    --text-secondary: #475569;
-    --text-tertiary: #94a3b8;
-    --accent-blue: #3b82f6;
-    --accent-blue-glow: rgba(59,130,246,.15);
-    --radius-md: 10px;
+    --border: #cbd5e1;
+    --border-light: #e2e8f0;
+    --text-sub: #475569;
+    --text-muted: #94a3b8;
+    --blue: #3b82f6;
+    --blue-glow: rgba(59,130,246,.15);
   }
 
-  /* ─── 案A: ラベル付きグリッド ─── */
-  .filter-card-a {
+  /* ─── 案C: タイト2段インライン ─── */
+  .card-c {
     background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    padding: 16px 20px;
-    box-shadow: 0 1px 4px rgba(0,0,0,.05);
-  }
-  .search-wrap-a {
-    position: relative;
-    margin-bottom: 14px;
-  }
-  .search-wrap-a svg {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 16px;
-    height: 16px;
-    color: #94a3b8;
-  }
-  .search-input-a {
-    width: 100%;
-    padding: 9px 12px 9px 36px;
-    border: 1px solid var(--border-default);
-    border-radius: 8px;
-    font-size: 14px;
-    color: #1e293b;
-    background: #f8fafc;
-    outline: none;
-  }
-  .search-input-a::placeholder { color: var(--text-tertiary); }
-  .search-input-a:focus {
-    border-color: var(--accent-blue);
-    box-shadow: 0 0 0 3px var(--accent-blue-glow);
-    background: #fff;
-  }
-  .divider {
-    height: 1px;
-    background: var(--border-subtle);
-    margin: 0 -20px 14px;
-  }
-  .filter-grid-a {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 14px;
-  }
-  .filter-field {
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 12px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
   }
-  .field-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-tertiary);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .filter-select-a {
-    padding: 8px 10px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    font-size: 13px;
-    color: #1e293b;
-    background: #fff;
-    cursor: pointer;
-    outline: none;
-    width: 100%;
-  }
-  .filter-select-a:focus { border-color: var(--accent-blue); }
-  .date-row-a {
-    display: flex;
-    align-items: flex-end;
-    gap: 12px;
-  }
-  .date-field {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 0 0 auto;
-  }
-  .date-inputs-a {
+  .row-c {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    flex-wrap: wrap;
   }
-  .date-input-a {
-    padding: 8px 10px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    font-size: 13px;
-    color: #1e293b;
-    background: #fff;
-    outline: none;
-  }
-  .date-sep {
-    color: var(--text-tertiary);
-    font-size: 13px;
-  }
-  .btn-reset-a {
-    margin-left: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    font-size: 13px;
-    color: var(--text-secondary);
-    background: #f8fafc;
-    cursor: pointer;
-  }
-  .btn-reset-a:hover { background: #f1f5f9; }
-  .btn-reset-a svg { width: 13px; height: 13px; }
-
-  /* ─── 案B: 左右分割 ─── */
-  .filter-card-b {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    box-shadow: 0 1px 4px rgba(0,0,0,.05);
-    display: grid;
-    grid-template-columns: 260px 1fr;
-  }
-  .filter-left-b {
-    background: #f8fafc;
-    border-right: 1px solid var(--border-subtle);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  .filter-left-label-b {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-tertiary);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-  .search-wrap-b {
+  /* 検索バー */
+  .search-c {
     position: relative;
-  }
-  .search-wrap-b svg {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 15px;
-    height: 15px;
-    color: #94a3b8;
-  }
-  .search-input-b {
-    width: 100%;
-    padding: 9px 10px 9px 32px;
-    border: 1px solid var(--border-default);
-    border-radius: 7px;
-    font-size: 13px;
-    color: #1e293b;
-    background: #fff;
-    outline: none;
-  }
-  .search-input-b::placeholder { color: var(--text-tertiary); }
-  .search-input-b:focus {
-    border-color: var(--accent-blue);
-    box-shadow: 0 0 0 3px var(--accent-blue-glow);
-  }
-  .filter-right-b {
-    padding: 16px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .filter-row-b {
-    display: flex;
-    align-items: flex-end;
-    gap: 10px;
-  }
-  .filter-field-b {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
     flex: 1;
+    min-width: 200px;
   }
-  .field-label-b {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-tertiary);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+  .search-c svg {
+    position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+    width: 14px; height: 14px; color: var(--text-muted); pointer-events: none;
   }
-  .filter-select-b {
-    padding: 7px 8px;
-    border: 1px solid var(--border-default);
+  .search-c input {
+    width: 100%;
+    padding: 6px 10px 6px 30px;
+    border: 1px solid var(--border);
     border-radius: 6px;
     font-size: 13px;
     color: #1e293b;
-    background: #fff;
-    cursor: pointer;
+    background: #f8fafc;
     outline: none;
-    width: 100%;
   }
-  .filter-row-b-inner {
-    height: 1px;
-    background: var(--border-subtle);
-    margin: 0 -20px;
-  }
-  .date-inputs-b {
+  .search-c input::placeholder { color: var(--text-muted); }
+  .search-c input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-glow); background: #fff; }
+
+  /* ラベル付きセレクト（インライン） */
+  .filter-unit-c {
     display: flex;
     align-items: center;
-    gap: 6px;
-  }
-  .date-input-b {
-    padding: 7px 8px;
-    border: 1px solid var(--border-default);
+    border: 1px solid var(--border);
     border-radius: 6px;
+    background: #fff;
+    overflow: hidden;
+    height: 30px;
+  }
+  .filter-unit-c .lbl {
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: #f8fafc;
+    border-right: 1px solid var(--border-light);
+    white-space: nowrap;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .filter-unit-c select {
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: #1e293b;
+    background: transparent;
+    padding: 0 6px;
+    cursor: pointer;
+    height: 100%;
+  }
+
+  /* 日付レンジ */
+  .date-unit-c {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    overflow: hidden;
+    height: 30px;
+  }
+  .date-unit-c .lbl {
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: #f8fafc;
+    border-right: 1px solid var(--border-light);
+    white-space: nowrap;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .date-unit-c input[type="date"] {
+    border: none;
+    outline: none;
     font-size: 12px;
     color: #1e293b;
-    background: #fff;
-    outline: none;
-    width: 128px;
+    background: transparent;
+    padding: 0 6px;
+    height: 100%;
+    cursor: pointer;
+    width: 126px;
   }
-  .btn-reset-b {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 12px;
-    border: 1px solid var(--border-default);
+  .date-unit-c .sep {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 0 2px;
+  }
+  .date-unit-c .right-date {
+    border-left: 1px solid var(--border-light);
+  }
+
+  /* リセットボタン */
+  .btn-reset-c {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 0 10px;
+    height: 30px;
+    border: 1px solid var(--border);
     border-radius: 6px;
     font-size: 12px;
-    color: var(--text-secondary);
+    color: var(--text-sub);
     background: #f8fafc;
     cursor: pointer;
     white-space: nowrap;
-    align-self: flex-end;
+    margin-left: auto;
   }
-  .btn-reset-b:hover { background: #f1f5f9; }
-  .btn-reset-b svg { width: 12px; height: 12px; }
+  .btn-reset-c:hover { background: #f1f5f9; }
+  .btn-reset-c svg { width: 11px; height: 11px; }
+
+  .divider-c {
+    height: 1px;
+    background: var(--border-light);
+    margin: 0 -16px;
+  }
+
+
+  /* ─── 案D: フラットチップバー ─── */
+  .card-d {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 10px 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .row-d {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* 検索バー */
+  .search-d {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+  }
+  .search-d svg {
+    position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+    width: 14px; height: 14px; color: var(--text-muted); pointer-events: none;
+  }
+  .search-d input {
+    width: 100%;
+    padding: 5px 10px 5px 28px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    color: #1e293b;
+    background: #f8fafc;
+    outline: none;
+  }
+  .search-d input::placeholder { color: var(--text-muted); }
+  .search-d input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-glow); background: #fff; }
+
+  /* フィルターセレクト（チップ型） */
+  .chip-select-d {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: #fff;
+    overflow: hidden;
+    height: 28px;
+    padding: 0 2px 0 10px;
+    cursor: pointer;
+  }
+  .chip-select-d:has(select:focus) {
+    border-color: var(--blue);
+  }
+  .chip-select-d .lbl {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-sub);
+    white-space: nowrap;
+    margin-right: 2px;
+  }
+  .chip-select-d select {
+    border: none;
+    outline: none;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: transparent;
+    cursor: pointer;
+    padding: 0 4px;
+    height: 100%;
+    max-width: 70px;
+  }
+
+  /* 日付チップ */
+  .chip-date-d {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: #fff;
+    overflow: hidden;
+    height: 28px;
+    padding: 0 10px;
+  }
+  .chip-date-d .lbl {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-sub);
+    white-space: nowrap;
+    margin-right: 4px;
+  }
+  .chip-date-d input[type="date"] {
+    border: none;
+    outline: none;
+    font-size: 11px;
+    color: #1e293b;
+    background: transparent;
+    cursor: pointer;
+    width: 112px;
+  }
+  .chip-date-d .sep {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* リセットボタン（チップ型） */
+  .btn-reset-d {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 0 10px;
+    height: 28px;
+    border: 1px solid #fca5a5;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #dc2626;
+    background: #fff5f5;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-reset-d:hover { background: #fee2e2; }
+  .btn-reset-d svg { width: 10px; height: 10px; }
 </style>
 </head>
 <body>
 
-<h1>絞り込みエリア レイアウト比較</h1>
-<p class="page-note">案A・案Bの実際の見た目を確認できます。同じ要素で構成されています。</p>
+<h1>絞り込みエリア レイアウト比較（改訂版）</h1>
+<p class="page-note">コンパクト重視で再設計。ラベルをselectの内側に組み込み、縦の余白を排除しています。</p>
 
-<!-- ─── 案A ─── -->
+<!-- ─── 案C ─── -->
 <div class="section">
-  <div class="section-label">案A</div>
-  <div class="section-title">ラベル付きグリッド</div>
+  <div class="section-label">案C（推奨）</div>
+  <div class="section-title">タイト2段インライン</div>
   <div class="section-desc">
-    各フィルターの上にラベルを配置し、4列グリッドで整列。<br>
-    検索バーを全幅で独立させ、条件フィルター群を下段にまとめる。
+    ラベルをselectの左側に直接付けた「ユニット型」コントロール。<br>
+    各コントロール高さ30px統一。縦のラベル→select間のスキマをゼロに。
   </div>
   <div class="pros">
-    <span class="pro">各フィルターの役割が一目で分かる</span>
-    <span class="pro">列が揃って整然と見える</span>
-    <span class="pro">現状からの変更量が少ない</span>
+    <span class="pro">ラベルとselectが同じ行に収まる</span>
+    <span class="pro">高さが均一で整列しやすい</span>
+    <span class="pro">業務ツールらしい密度感</span>
   </div>
 
-  <div class="filter-card-a">
-    <!-- 検索バー -->
-    <div class="search-wrap-a">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" class="search-input-a" placeholder="案件名・取引先・案件Noで検索...">
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- フィルター4列 -->
-    <div class="filter-grid-a">
-      <div class="filter-field">
-        <span class="field-label">ステータス</span>
-        <select class="filter-select-a">
+  <div class="card-c">
+    <!-- 1段目 -->
+    <div class="row-c">
+      <div class="search-c">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="案件名・取引先・案件Noで検索...">
+      </div>
+      <div class="filter-unit-c">
+        <span class="lbl">ステータス</span>
+        <select>
           <option>全て</option>
-          <option>見積前</option>
-          <option>見積済</option>
-          <option>受注済</option>
-          <option>納品済</option>
-          <option>請求済</option>
-          <option>入金済</option>
+          <option>見積前</option><option>見積済</option><option>受注済</option>
+          <option>納品済</option><option>請求済</option><option>入金済</option>
         </select>
       </div>
-      <div class="filter-field">
-        <span class="field-label">地域</span>
-        <select class="filter-select-a">
-          <option>全て</option>
-        </select>
+      <div class="filter-unit-c">
+        <span class="lbl">地域</span>
+        <select><option>全て</option></select>
       </div>
-      <div class="filter-field">
-        <span class="field-label">担当者</span>
-        <select class="filter-select-a">
-          <option>全て</option>
-        </select>
-      </div>
-      <div class="filter-field">
-        <span class="field-label">確度</span>
-        <select class="filter-select-a">
-          <option>全て</option>
-          <option>高（70%以上）</option>
-          <option>中（40-69%）</option>
-          <option>低（39%以下）</option>
-        </select>
+      <div class="filter-unit-c">
+        <span class="lbl">担当者</span>
+        <select><option>全て</option></select>
       </div>
     </div>
 
-    <!-- 日付＋リセット -->
-    <div class="date-row-a">
-      <div class="date-field">
-        <span class="field-label">納品予定日</span>
-        <div class="date-inputs-a">
-          <input type="date" class="date-input-a">
-          <span class="date-sep">〜</span>
-          <input type="date" class="date-input-a">
-        </div>
+    <div class="divider-c"></div>
+
+    <!-- 2段目 -->
+    <div class="row-c">
+      <div class="filter-unit-c">
+        <span class="lbl">確度</span>
+        <select>
+          <option>全て</option>
+          <option>高（70%以上）</option><option>中（40-69%）</option><option>低（39%以下）</option>
+        </select>
       </div>
-      <button class="btn-reset-a">
+      <div class="date-unit-c">
+        <span class="lbl">納品予定日</span>
+        <input type="date">
+        <span class="sep">〜</span>
+        <input type="date" class="right-date">
+      </div>
+      <button class="btn-reset-c">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        絞り込みリセット
+        リセット
       </button>
     </div>
   </div>
 </div>
 
-<!-- ─── 案B ─── -->
+<!-- ─── 案D ─── -->
 <div class="section">
-  <div class="section-label">案B</div>
-  <div class="section-title">左右2ペイン分割</div>
+  <div class="section-label">案D</div>
+  <div class="section-title">フラットチップバー</div>
   <div class="section-desc">
-    左ペイン（やや濃いトーン）にキーワード検索を独立配置。<br>
-    右ペインに全フィルターをラベル付き2段で整理。
+    すべてのコントロールを丸角「チップ」に統一。<br>
+    1段にまとめてラップさせる。より軽量・モダンな印象。
   </div>
   <div class="pros">
-    <span class="pro">検索とフィルターの役割が視覚的に分離</span>
-    <span class="pro">左ペインで「まず探す」動線が明確</span>
-    <span class="pro">右ペインが構造的で高密度</span>
+    <span class="pro">全コントロールが同じ形で統一感がある</span>
+    <span class="pro">1行に収まることが多い</span>
+    <span class="pro">リセットが赤チップで目立つ</span>
   </div>
 
-  <div class="filter-card-b">
-    <!-- 左: キーワード検索 -->
-    <div class="filter-left-b">
-      <div class="filter-left-label-b">キーワード検索</div>
-      <div class="search-wrap-b">
+  <div class="card-d">
+    <div class="row-d">
+      <div class="search-d">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" class="search-input-b" placeholder="案件名・取引先・案件No...">
+        <input type="text" placeholder="案件名・取引先・案件Noで検索...">
       </div>
-    </div>
-
-    <!-- 右: フィルター群 -->
-    <div class="filter-right-b">
-      <!-- 上段 -->
-      <div class="filter-row-b">
-        <div class="filter-field-b">
-          <span class="field-label-b">ステータス</span>
-          <select class="filter-select-b">
-            <option>全て</option>
-            <option>見積前</option>
-            <option>見積済</option>
-            <option>受注済</option>
-            <option>納品済</option>
-            <option>請求済</option>
-            <option>入金済</option>
-          </select>
-        </div>
-        <div class="filter-field-b">
-          <span class="field-label-b">地域</span>
-          <select class="filter-select-b">
-            <option>全て</option>
-          </select>
-        </div>
-        <div class="filter-field-b">
-          <span class="field-label-b">担当者</span>
-          <select class="filter-select-b">
-            <option>全て</option>
-          </select>
-        </div>
+      <div class="chip-select-d">
+        <span class="lbl">ステータス</span>
+        <select>
+          <option>全て</option>
+          <option>見積前</option><option>見積済</option><option>受注済</option>
+          <option>納品済</option><option>請求済</option><option>入金済</option>
+        </select>
       </div>
-
-      <!-- 区切り -->
-      <div style="height:1px;background:#e2e8f0;margin:0 -20px;"></div>
-
-      <!-- 下段 -->
-      <div class="filter-row-b">
-        <div class="filter-field-b" style="flex: 0 0 auto;">
-          <span class="field-label-b">確度</span>
-          <select class="filter-select-b" style="width:140px;">
-            <option>全て</option>
-            <option>高（70%以上）</option>
-            <option>中（40-69%）</option>
-            <option>低（39%以下）</option>
-          </select>
-        </div>
-        <div class="filter-field-b" style="flex: 0 0 auto;">
-          <span class="field-label-b">納品予定日</span>
-          <div class="date-inputs-b">
-            <input type="date" class="date-input-b">
-            <span class="date-sep" style="font-size:13px;color:#94a3b8;">〜</span>
-            <input type="date" class="date-input-b">
-          </div>
-        </div>
-        <button class="btn-reset-b" style="margin-left:auto;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          絞り込みリセット
-        </button>
+      <div class="chip-select-d">
+        <span class="lbl">地域</span>
+        <select><option>全て</option></select>
       </div>
+      <div class="chip-select-d">
+        <span class="lbl">担当者</span>
+        <select><option>全て</option></select>
+      </div>
+      <div class="chip-select-d">
+        <span class="lbl">確度</span>
+        <select>
+          <option>全て</option>
+          <option>高（70%以上）</option><option>中（40-69%）</option><option>低（39%以下）</option>
+        </select>
+      </div>
+      <div class="chip-date-d">
+        <span class="lbl">納品予定日</span>
+        <input type="date">
+        <span class="sep">〜</span>
+        <input type="date">
+      </div>
+      <button class="btn-reset-d">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        リセット
+      </button>
     </div>
   </div>
 </div>
