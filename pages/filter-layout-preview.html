@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>絞り込みレイアウト 比較案</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+    padding: 32px 24px;
+  }
+  h1 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #0f172a;
+  }
+  .page-note {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 32px;
+  }
+  .section {
+    margin-bottom: 48px;
+  }
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #2563eb;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    padding: 4px 12px;
+    margin-bottom: 12px;
+    letter-spacing: 0.04em;
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+  }
+  .section-desc {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+  .pros {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .pro {
+    font-size: 12px;
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+    border-radius: 4px;
+    padding: 3px 8px;
+  }
+
+  /* ─── 共通変数 ─── */
+  :root {
+    --bg-card: #ffffff;
+    --border-subtle: #e2e8f0;
+    --border-default: #cbd5e1;
+    --text-secondary: #475569;
+    --text-tertiary: #94a3b8;
+    --accent-blue: #3b82f6;
+    --accent-blue-glow: rgba(59,130,246,.15);
+    --radius-md: 10px;
+  }
+
+  /* ─── 案A: ラベル付きグリッド ─── */
+  .filter-card-a {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  }
+  .search-wrap-a {
+    position: relative;
+    margin-bottom: 14px;
+  }
+  .search-wrap-a svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: #94a3b8;
+  }
+  .search-input-a {
+    width: 100%;
+    padding: 9px 12px 9px 36px;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1e293b;
+    background: #f8fafc;
+    outline: none;
+  }
+  .search-input-a::placeholder { color: var(--text-tertiary); }
+  .search-input-a:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px var(--accent-blue-glow);
+    background: #fff;
+  }
+  .divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 0 -20px 14px;
+  }
+  .filter-grid-a {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .field-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .filter-select-a {
+    padding: 8px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1e293b;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+    width: 100%;
+  }
+  .filter-select-a:focus { border-color: var(--accent-blue); }
+  .date-row-a {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+  }
+  .date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 0 0 auto;
+  }
+  .date-inputs-a {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .date-input-a {
+    padding: 8px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1e293b;
+    background: #fff;
+    outline: none;
+  }
+  .date-sep {
+    color: var(--text-tertiary);
+    font-size: 13px;
+  }
+  .btn-reset-a {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: #f8fafc;
+    cursor: pointer;
+  }
+  .btn-reset-a:hover { background: #f1f5f9; }
+  .btn-reset-a svg { width: 13px; height: 13px; }
+
+  /* ─── 案B: 左右分割 ─── */
+  .filter-card-b {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    display: grid;
+    grid-template-columns: 260px 1fr;
+  }
+  .filter-left-b {
+    background: #f8fafc;
+    border-right: 1px solid var(--border-subtle);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .filter-left-label-b {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .search-wrap-b {
+    position: relative;
+  }
+  .search-wrap-b svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    color: #94a3b8;
+  }
+  .search-input-b {
+    width: 100%;
+    padding: 9px 10px 9px 32px;
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
+    font-size: 13px;
+    color: #1e293b;
+    background: #fff;
+    outline: none;
+  }
+  .search-input-b::placeholder { color: var(--text-tertiary); }
+  .search-input-b:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px var(--accent-blue-glow);
+  }
+  .filter-right-b {
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .filter-row-b {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+  }
+  .filter-field-b {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+  .field-label-b {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .filter-select-b {
+    padding: 7px 8px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1e293b;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+    width: 100%;
+  }
+  .filter-row-b-inner {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 0 -20px;
+  }
+  .date-inputs-b {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .date-input-b {
+    padding: 7px 8px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    font-size: 12px;
+    color: #1e293b;
+    background: #fff;
+    outline: none;
+    width: 128px;
+  }
+  .btn-reset-b {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: #f8fafc;
+    cursor: pointer;
+    white-space: nowrap;
+    align-self: flex-end;
+  }
+  .btn-reset-b:hover { background: #f1f5f9; }
+  .btn-reset-b svg { width: 12px; height: 12px; }
+</style>
+</head>
+<body>
+
+<h1>絞り込みエリア レイアウト比較</h1>
+<p class="page-note">案A・案Bの実際の見た目を確認できます。同じ要素で構成されています。</p>
+
+<!-- ─── 案A ─── -->
+<div class="section">
+  <div class="section-label">案A</div>
+  <div class="section-title">ラベル付きグリッド</div>
+  <div class="section-desc">
+    各フィルターの上にラベルを配置し、4列グリッドで整列。<br>
+    検索バーを全幅で独立させ、条件フィルター群を下段にまとめる。
+  </div>
+  <div class="pros">
+    <span class="pro">各フィルターの役割が一目で分かる</span>
+    <span class="pro">列が揃って整然と見える</span>
+    <span class="pro">現状からの変更量が少ない</span>
+  </div>
+
+  <div class="filter-card-a">
+    <!-- 検索バー -->
+    <div class="search-wrap-a">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="search-input-a" placeholder="案件名・取引先・案件Noで検索...">
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- フィルター4列 -->
+    <div class="filter-grid-a">
+      <div class="filter-field">
+        <span class="field-label">ステータス</span>
+        <select class="filter-select-a">
+          <option>全て</option>
+          <option>見積前</option>
+          <option>見積済</option>
+          <option>受注済</option>
+          <option>納品済</option>
+          <option>請求済</option>
+          <option>入金済</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <span class="field-label">地域</span>
+        <select class="filter-select-a">
+          <option>全て</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <span class="field-label">担当者</span>
+        <select class="filter-select-a">
+          <option>全て</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <span class="field-label">確度</span>
+        <select class="filter-select-a">
+          <option>全て</option>
+          <option>高（70%以上）</option>
+          <option>中（40-69%）</option>
+          <option>低（39%以下）</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 日付＋リセット -->
+    <div class="date-row-a">
+      <div class="date-field">
+        <span class="field-label">納品予定日</span>
+        <div class="date-inputs-a">
+          <input type="date" class="date-input-a">
+          <span class="date-sep">〜</span>
+          <input type="date" class="date-input-a">
+        </div>
+      </div>
+      <button class="btn-reset-a">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        絞り込みリセット
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── 案B ─── -->
+<div class="section">
+  <div class="section-label">案B</div>
+  <div class="section-title">左右2ペイン分割</div>
+  <div class="section-desc">
+    左ペイン（やや濃いトーン）にキーワード検索を独立配置。<br>
+    右ペインに全フィルターをラベル付き2段で整理。
+  </div>
+  <div class="pros">
+    <span class="pro">検索とフィルターの役割が視覚的に分離</span>
+    <span class="pro">左ペインで「まず探す」動線が明確</span>
+    <span class="pro">右ペインが構造的で高密度</span>
+  </div>
+
+  <div class="filter-card-b">
+    <!-- 左: キーワード検索 -->
+    <div class="filter-left-b">
+      <div class="filter-left-label-b">キーワード検索</div>
+      <div class="search-wrap-b">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="search-input-b" placeholder="案件名・取引先・案件No...">
+      </div>
+    </div>
+
+    <!-- 右: フィルター群 -->
+    <div class="filter-right-b">
+      <!-- 上段 -->
+      <div class="filter-row-b">
+        <div class="filter-field-b">
+          <span class="field-label-b">ステータス</span>
+          <select class="filter-select-b">
+            <option>全て</option>
+            <option>見積前</option>
+            <option>見積済</option>
+            <option>受注済</option>
+            <option>納品済</option>
+            <option>請求済</option>
+            <option>入金済</option>
+          </select>
+        </div>
+        <div class="filter-field-b">
+          <span class="field-label-b">地域</span>
+          <select class="filter-select-b">
+            <option>全て</option>
+          </select>
+        </div>
+        <div class="filter-field-b">
+          <span class="field-label-b">担当者</span>
+          <select class="filter-select-b">
+            <option>全て</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 区切り -->
+      <div style="height:1px;background:#e2e8f0;margin:0 -20px;"></div>
+
+      <!-- 下段 -->
+      <div class="filter-row-b">
+        <div class="filter-field-b" style="flex: 0 0 auto;">
+          <span class="field-label-b">確度</span>
+          <select class="filter-select-b" style="width:140px;">
+            <option>全て</option>
+            <option>高（70%以上）</option>
+            <option>中（40-69%）</option>
+            <option>低（39%以下）</option>
+          </select>
+        </div>
+        <div class="filter-field-b" style="flex: 0 0 auto;">
+          <span class="field-label-b">納品予定日</span>
+          <div class="date-inputs-b">
+            <input type="date" class="date-input-b">
+            <span class="date-sep" style="font-size:13px;color:#94a3b8;">〜</span>
+            <input type="date" class="date-input-b">
+          </div>
+        </div>
+        <button class="btn-reset-b" style="margin-left:auto;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          絞り込みリセット
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
