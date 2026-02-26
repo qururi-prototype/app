@@ -426,5 +426,76 @@
   </div>
 </div>
 
+<!-- ─── 案E ─── -->
+<div class="section">
+  <div class="section-label">案E</div>
+  <div class="section-title">3段インライン（論理グループ分け）</div>
+  <div class="section-desc">
+    1段目: キーワード検索（全幅）<br>
+    2段目: 属性フィルター（ステータス / 地域 / 担当者）<br>
+    3段目: 値・期間フィルター（確度 / 納品予定日 / リセット）
+  </div>
+  <div class="pros">
+    <span class="pro">論理的なグループが視覚的に分かれる</span>
+    <span class="pro">1行あたりの項目数が減り読みやすい</span>
+    <span class="pro">各行が均等な密度</span>
+  </div>
+
+  <div class="card-c">
+    <!-- 1段目: 検索バー -->
+    <div class="row-c">
+      <div class="search-c">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="案件名・取引先・案件Noで検索...">
+      </div>
+    </div>
+
+    <div class="divider-c"></div>
+
+    <!-- 2段目: 属性フィルター -->
+    <div class="row-c">
+      <div class="filter-unit-c">
+        <span class="lbl">ステータス</span>
+        <select>
+          <option>全て</option>
+          <option>見積前</option><option>見積済</option><option>受注済</option>
+          <option>納品済</option><option>請求済</option><option>入金済</option>
+        </select>
+      </div>
+      <div class="filter-unit-c">
+        <span class="lbl">地域</span>
+        <select><option>全て</option></select>
+      </div>
+      <div class="filter-unit-c">
+        <span class="lbl">担当者</span>
+        <select><option>全て</option></select>
+      </div>
+    </div>
+
+    <div class="divider-c"></div>
+
+    <!-- 3段目: 値・期間フィルター -->
+    <div class="row-c">
+      <div class="filter-unit-c">
+        <span class="lbl">確度</span>
+        <select>
+          <option>全て</option>
+          <option>高（70%以上）</option><option>中（40-69%）</option><option>低（39%以下）</option>
+        </select>
+      </div>
+      <div class="date-unit-c">
+        <span class="lbl">納品予定日</span>
+        <input type="date">
+        <span class="sep">〜</span>
+        <input type="date" class="right-date">
+      </div>
+      <button class="btn-reset-c">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        リセット
+      </button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
