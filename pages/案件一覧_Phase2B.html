@@ -275,17 +275,17 @@
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
-    padding: 16px 20px;
+    padding: 12px 16px;
     margin-bottom: 16px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
   }
 
   .filter-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
   }
 
@@ -297,70 +297,134 @@
 
   .search-wrap svg {
     position: absolute;
-    left: 10px;
+    left: 9px;
     top: 50%;
     transform: translateY(-50%);
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
     color: var(--text-tertiary);
     pointer-events: none;
   }
 
   .search-input {
     width: 100%;
-    padding: 8px 10px 8px 34px;
+    padding: 6px 10px 6px 30px;
     border: 1px solid var(--border-default);
     border-radius: var(--radius-sm);
     font-size: 13px;
     font-family: inherit;
     color: var(--text-primary);
     background: var(--bg-secondary);
-    transition: border-color 0.15s;
     outline: none;
   }
 
   .search-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px var(--accent-blue-glow); }
 
-  .filter-select {
-    padding: 8px 10px;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-family: inherit;
-    color: var(--text-primary);
-    background: var(--bg-secondary);
-    cursor: pointer;
-    outline: none;
-    transition: border-color 0.15s;
-    min-width: 120px;
-  }
-
-  .filter-select:focus { border-color: var(--accent-blue); }
-
-  .filter-date-range {
+  .filter-unit {
     display: flex;
     align-items: center;
-    gap: 6px;
-  }
-
-  .filter-date-range input[type="date"] {
-    padding: 8px 10px;
     border: 1px solid var(--border-default);
     border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    overflow: hidden;
+    height: 30px;
+  }
+
+  .filter-unit .lbl {
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-subtle);
+    white-space: nowrap;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  .filter-unit select {
+    border: none;
+    outline: none;
     font-size: 13px;
     font-family: inherit;
     color: var(--text-primary);
-    background: var(--bg-secondary);
-    outline: none;
+    background: transparent;
+    padding: 0 6px;
+    cursor: pointer;
+    height: 100%;
   }
 
-  .filter-date-range input[type="date"]:focus { border-color: var(--accent-blue); }
+  .date-unit {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    overflow: hidden;
+    height: 30px;
+  }
 
-  .filter-label {
+  .date-unit .lbl {
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-subtle);
+    white-space: nowrap;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  .date-unit input[type="date"] {
+    border: none;
+    outline: none;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: transparent;
+    padding: 0 6px;
+    height: 100%;
+    cursor: pointer;
+    width: 126px;
+  }
+
+  .date-unit .sep {
     font-size: 12px;
     color: var(--text-tertiary);
+    padding: 0 2px;
+  }
+
+  .date-unit .right-date {
+    border-left: 1px solid var(--border-subtle);
+  }
+
+  .filter-divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 0 -16px;
+  }
+
+  .btn-filter-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 10px;
+    height: 30px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    cursor: pointer;
     white-space: nowrap;
   }
+
+  .btn-filter-reset:hover { background: var(--border-subtle); }
+  .btn-filter-reset svg { width: 11px; height: 11px; }
 
   .active-filters {
     display: flex;
@@ -964,43 +1028,62 @@
 
       <!-- Filter Area -->
       <div class="filter-card">
+        <!-- 1段目: キーワード検索 -->
         <div class="filter-row">
           <div class="search-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" class="search-input" id="searchInput" placeholder="案件名・取引先・案件Noで検索..." oninput="applyFilters()">
           </div>
-          <select class="filter-select" id="filterStatus" onchange="applyFilters()">
-            <option value="">ステータス: 全て</option>
-            <option value="draft">見積前</option>
-            <option value="quoted">見積済</option>
-            <option value="ordered">受注済</option>
-            <option value="delivered">納品済</option>
-            <option value="invoiced">請求済</option>
-            <option value="paid">入金済</option>
-          </select>
-          <select class="filter-select" id="filterRegion" onchange="applyFilters()">
-            <option value="">地域: 全て</option>
-          </select>
-          <select class="filter-select" id="filterSales" onchange="applyFilters()">
-            <option value="">担当者: 全て</option>
-          </select>
         </div>
+        <div class="filter-divider"></div>
+        <!-- 2段目: ステータス / 地域 / 担当者 / 確度 -->
         <div class="filter-row">
-          <span class="filter-label">納品予定日：</span>
-          <div class="filter-date-range">
-            <input type="date" id="filterDateFrom" onchange="applyFilters()">
-            <span class="filter-label">〜</span>
-            <input type="date" id="filterDateTo" onchange="applyFilters()">
+          <div class="filter-unit">
+            <span class="lbl">ステータス</span>
+            <select id="filterStatus" onchange="applyFilters()">
+              <option value="">全て</option>
+              <option value="draft">見積前</option>
+              <option value="quoted">見積済</option>
+              <option value="ordered">受注済</option>
+              <option value="delivered">納品済</option>
+              <option value="invoiced">請求済</option>
+              <option value="paid">入金済</option>
+            </select>
           </div>
-          <select class="filter-select" id="filterProb" onchange="applyFilters()" style="min-width:140px;">
-            <option value="">確度: 全て</option>
-            <option value="high">高（70%以上）</option>
-            <option value="mid">中（40-69%）</option>
-            <option value="low">低（39%以下）</option>
-          </select>
-          <button class="btn btn-secondary" onclick="clearFilters()" style="margin-left:auto;">
+          <div class="filter-unit">
+            <span class="lbl">地域</span>
+            <select id="filterRegion" onchange="applyFilters()">
+              <option value="">全て</option>
+            </select>
+          </div>
+          <div class="filter-unit">
+            <span class="lbl">担当者</span>
+            <select id="filterSales" onchange="applyFilters()">
+              <option value="">全て</option>
+            </select>
+          </div>
+          <div class="filter-unit">
+            <span class="lbl">確度</span>
+            <select id="filterProb" onchange="applyFilters()">
+              <option value="">全て</option>
+              <option value="high">高（70%以上）</option>
+              <option value="mid">中（40-69%）</option>
+              <option value="low">低（39%以下）</option>
+            </select>
+          </div>
+        </div>
+        <div class="filter-divider"></div>
+        <!-- 3段目: 納品予定日 -->
+        <div class="filter-row">
+          <div class="date-unit">
+            <span class="lbl">納品予定日</span>
+            <input type="date" id="filterDateFrom" onchange="applyFilters()">
+            <span class="sep">〜</span>
+            <input type="date" id="filterDateTo" class="right-date" onchange="applyFilters()">
+          </div>
+          <button class="btn-filter-reset" onclick="clearFilters()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            絞り込みリセット
+            リセット
           </button>
         </div>
         <div class="active-filters" id="activeFilters" style="display:none;"></div>
