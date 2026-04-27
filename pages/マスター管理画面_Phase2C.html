@@ -1314,7 +1314,7 @@ function parseFxCSV(text) {
   document.getElementById('importPreviewTable').innerHTML = `<thead><tr><th>#</th><th>通貨</th><th style="text-align:right;">月中平均</th><th style="text-align:right;">月末</th></tr></thead><tbody>${trs}</tbody>`;
   document.getElementById('importPreviewWrap').style.display = 'block';
   document.getElementById('importConfirmBtn').disabled = rows.length === 0;
-  if (rows.length === 0) showToast('列名が認識できませんでした。CSVをUTF-8形式で保存し直してください', 'error');
+  if (rows.length === 0) showToast(`列名を認識できませんでした（検出列: ${headers.join(' / ')}）`, 'error');
 }
 
 function confirmFxImport() {
