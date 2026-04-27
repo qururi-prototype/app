@@ -932,6 +932,14 @@ function handleImportFile(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
     const text = e.target.result;
+    const firstLine = text.replace(/^﻿/, '').split('\n')[0];
+    const hasMatch = Object.keys(cfg.hmap).some(k => firstLine.includes(k));
+    if (!hasMatch) {
+      const reader2 = new FileReader();
+      reader2.onload = (e2) => parseCSV(e2.target.result, cfg);
+      reader2.readAsText(file, 'Shift-JIS');
+      return;
+    }
     parseCSV(text, cfg);
   };
   reader.readAsText(file, 'UTF-8');
@@ -963,6 +971,7 @@ function parseCSV(text, cfg) {
 
   importRows = rows;
   showImportPreview(cfg, rows);
+  if (rows.length === 0) showToast(`列名を認識できませんでした（検出列: ${headers.join(' / ')}）`, 'error');
 }
 
 function splitCSVLine(line) {
