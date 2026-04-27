@@ -926,6 +926,7 @@ function handleDropFile(e) {
 
 function handleImportFile(file) {
   if (!file) return;
+  if (activeMaster === 'exchange_rates') { handleFxImportFile(file); return; }
   document.getElementById('importFileName').textContent = file.name;
   const cfg = MASTERS.find(m => m.id === activeMaster);
   const reader = new FileReader();
