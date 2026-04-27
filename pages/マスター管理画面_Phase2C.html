@@ -1270,7 +1270,18 @@ function handleFxImportFile(file) {
   if (!file) return;
   document.getElementById('importFileName').textContent = file.name;
   const reader = new FileReader();
-  reader.onload = (e) => parseFxCSV(e.target.result.replace(/^\uFEFF/, ''));
+  reader.onload = (e) => {
+    const text = e.target.result.replace(/^\uFEFF/, '');
+    const firstLine = text.split('\n')[0];
+    const hasMatch = Object.keys(FX_HMAP).some(k => firstLine.includes(k));
+    if (!hasMatch) {
+      const reader2 = new FileReader();
+      reader2.onload = (e2) => parseFxCSV(e2.target.result.replace(/^\uFEFF/, ''));
+      reader2.readAsText(file, 'Shift-JIS');
+      return;
+    }
+    parseFxCSV(text);
+  };
   reader.readAsText(file, 'UTF-8');
 }
 
