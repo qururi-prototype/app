@@ -124,6 +124,7 @@
   .btn-primary:hover { background: #2858c4; border-color: #2858c4; }
   .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: #f5bdb8; }
   .btn-danger:hover { background: #fbe8e6; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 
   /* ─── Search ─── */
   .search-bar {
@@ -1313,6 +1314,7 @@ function parseFxCSV(text) {
   document.getElementById('importPreviewTable').innerHTML = `<thead><tr><th>#</th><th>通貨</th><th style="text-align:right;">月中平均</th><th style="text-align:right;">月末</th></tr></thead><tbody>${trs}</tbody>`;
   document.getElementById('importPreviewWrap').style.display = 'block';
   document.getElementById('importConfirmBtn').disabled = rows.length === 0;
+  if (rows.length === 0) showToast('列名が認識できませんでした。CSVをUTF-8形式で保存し直してください', 'error');
 }
 
 function confirmFxImport() {
